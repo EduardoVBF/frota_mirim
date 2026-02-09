@@ -19,7 +19,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
       <HeaderBar isPublicPage={isPublicPage} />
 
       <main className={`${layoutOffset} pt-16 transition-all duration-300`}>
-        <div className="p-6">
+        <div className="p-3">
            {children}
         </div>
       </main>

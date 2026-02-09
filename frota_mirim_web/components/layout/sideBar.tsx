@@ -1,6 +1,7 @@
 "use client";
 import { LayoutDashboard, Truck, Users, Settings, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { FadeIn } from "../motion/fadeIn";
 import Link from "next/link";
 
 const menuItems = [
@@ -10,7 +11,7 @@ const menuItems = [
     icon: <LayoutDashboard size={20} />,
   },
   { name: "Veículos", path: "/veiculos", icon: <Truck size={20} /> },
-  { name: "Motoristas", path: "/motoristas", icon: <Users size={20} /> },
+  { name: "Usuários", path: "/usuarios", icon: <Users size={20} /> },
   { name: "Configurações", path: "/settings", icon: <Settings size={20} /> },
 ];
 
@@ -35,25 +36,27 @@ export default function Sidebar() {
           {menuItems.map((item) => {
             const active = pathname === item.path;
             return (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={`group flex items-center justify-between rounded-xl px-3 py-2.5 transition-all duration-200 ${
-                  active
-                    ? "bg-accent/10 text-accent shadow-sm"
-                    : "text-muted hover:bg-alternative-bg hover:text-foreground"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`${active ? "text-accent" : "text-muted group-hover:text-foreground"}`}
-                  >
-                    {item.icon}
-                  </span>
-                  <span className="text-sm font-medium">{item.name}</span>
-                </div>
-                {active && <div className="h-1 w-1 rounded-full bg-accent" />}
-              </Link>
+              <FadeIn key={item.path} delay={0.1}>
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`group flex items-center justify-between rounded-xl px-3 py-2.5 transition-all duration-200 ${
+                    active
+                      ? "bg-accent/10 text-accent shadow-sm"
+                      : "text-muted hover:bg-alternative-bg hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`${active ? "text-accent" : "text-muted group-hover:text-foreground"}`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="text-sm font-medium">{item.name}</span>
+                  </div>
+                  {active && <div className="h-1 w-1 rounded-full bg-accent" />}
+                </Link>
+              </FadeIn>
             );
           })}
         </nav>
