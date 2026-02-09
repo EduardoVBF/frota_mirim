@@ -17,7 +17,7 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
             </span>
-            Nova atualização: Dashboards 2.0 disponíveis
+            Nova atualização: Projeto iniciado!
           </div>
 
           <h1 className="text-6xl md:text-7xl font-bold tracking-tighter leading-[1.1] mb-8 bg-linear-to-r from-accent to-foreground/70 bg-clip-text text-transparent">

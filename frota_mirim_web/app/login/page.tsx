@@ -73,7 +73,12 @@ export default function Login() {
             type="submit"
             className="w-full h-12 bg-accent text-background font-semibold rounded-xl hover:opacity-90 active:scale-[0.98] transition-all mt-2 cursor-pointer"
           >
-            Entrar no Dashboard
+            <Link
+              href="/dashboard"
+              className="w-full h-full flex items-center justify-center"
+            >
+              Entrar no Dashboard
+            </Link>
           </button>
         </form>
 
