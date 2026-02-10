@@ -65,7 +65,7 @@ export function UserFormModal({
           e.preventDefault();
           console.log(formData);
         }}
-        className="space-y-6"
+        className="space-y-4"
       >
         <PrimaryInput
           label="Nome Completo"
