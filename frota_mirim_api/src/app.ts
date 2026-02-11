@@ -1,4 +1,5 @@
 import { errorHandler } from "./infra/http/error-handler";
+import { authRoutes } from "./modules/auth/auth.routes";
 import { registerPlugins } from "./config/fastify";
 import Fastify from "fastify";
 
@@ -11,6 +12,8 @@ app.register(async (app) => {
   app.setErrorHandler(errorHandler);
 
   await registerPlugins(app);
+
+  await app.register(authRoutes);
 });
 
 export { app };
