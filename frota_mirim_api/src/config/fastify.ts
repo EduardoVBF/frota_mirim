@@ -6,8 +6,7 @@ import { env } from "./env";
 export async function registerPlugins(app: FastifyInstance) {
   // CORS
   await app.register(fastifyCors, {
-    origin: true, // Permite todas as origens (ajuste conforme necessário)
-    // origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "https://frota-mirim.vercel.app"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   });
