@@ -18,7 +18,7 @@ const handler = NextAuth({
         try {
           const response = await axios.post(
             // "http://localhost:3333/auth/login",
-            "https://lasiesta-ceramica-api.vercel.app/auth/login",
+            "https://frota-mirim-api.vercel.app/auth/login",
             {
               email: credentials?.email,
               password: credentials?.password,
