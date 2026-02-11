@@ -1,5 +1,5 @@
 "use client";
-import { Search, Bell, ChevronDown, User } from "lucide-react";
+import { Search, Bell, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ThemeToggle } from "./themeToggle";
@@ -78,7 +78,9 @@ export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
                   </span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
-                  <User size={18} />
+                  {session?.user?.firstName?.[0] && session?.user?.lastName?.[0]
+                    ? `${session.user.firstName[0]}${session.user.lastName[0]}`
+                    : ""}
                 </div>
                 <ChevronDown size={14} className="text-muted" />
               </button>
