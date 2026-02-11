@@ -1,3 +1,4 @@
+import { usersRoutes } from "./modules/users/users.routes";
 import { errorHandler } from "./infra/http/error-handler";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { registerPlugins } from "./config/fastify";
@@ -14,6 +15,7 @@ app.register(async (app) => {
   await registerPlugins(app);
 
   await app.register(authRoutes);
+  await app.register(usersRoutes);
 });
 
 export { app };
