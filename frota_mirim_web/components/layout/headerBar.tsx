@@ -1,10 +1,12 @@
 "use client";
 import { Search, Bell, ChevronDown, User } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { ThemeToggle } from "./themeToggle";
 import Link from "next/link";
 
 export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
+  const { data: session } = useSession();
   const pathname = usePathname();
 
   return (
@@ -68,7 +70,9 @@ export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
 
               <button className="flex items-center gap-2 p-1 pl-2 rounded-full hover:bg-alternative-bg transition-all border border-transparent hover:border-border">
                 <div className="flex flex-col items-end">
-                  <span className="text-xs font-bold leading-none">Admin</span>
+                  <span className="text-xs font-bold leading-none">
+                    {session?.user?.firstName || "Usuário"}
+                  </span>
                   <span className="text-[10px] text-success font-medium">
                     Online
                   </span>

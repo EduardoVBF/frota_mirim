@@ -1,7 +1,9 @@
 "use client";
 import { LayoutDashboard, Truck, Users, Settings, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { FadeIn } from "../motion/fadeIn";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 
 const menuItems = [
@@ -16,6 +18,7 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
+  const { data: session } = useSession();
   const pathname = usePathname();
 
   return (
@@ -65,16 +68,25 @@ export default function Sidebar() {
         <div className="mt-auto border-t border-border pt-6">
           <div className="mb-3 flex items-center gap-3 px-2">
             <div className="h-9 w-9 rounded-full bg-alternative-bg border border-border flex items-center justify-center overflow-hidden font-bold text-xs">
-              AD
+              {session?.user?.firstName?.[0] && session?.user?.lastName?.[0]
+                ? `${session.user.firstName[0]}${session.user.lastName[0]}`
+                : ""}
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-foreground leading-none">
-                Admin
+                {session?.user?.firstName || "Usuário"}
               </span>
-              <span className="text-xs text-muted">admin@frotamirim.com</span>
+              {session?.user?.email && (
+                <span className="text-xs text-muted">
+                  {session?.user?.email}
+                </span>
+              )}
             </div>
           </div>
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-muted hover:bg-error/10 hover:text-error transition-all">
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-muted hover:bg-error/10 hover:text-error transition-all cursor-pointer"
+          >
             <LogOut size={20} />
             <span className="text-sm font-medium">Sair</span>
           </button>

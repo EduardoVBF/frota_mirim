@@ -1,11 +1,16 @@
 "use client";
 import Sidebar from "@/components/layout/sideBar";
+import { SessionProvider } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import HeaderBar from "./headerBar";
 
 const publicPaths = ["/", "/login"];
 
-export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
+export default function ConditionalLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const isPublicPage = publicPaths.includes(pathname);
 
@@ -14,15 +19,15 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-background">
-      {!isPublicPage && <Sidebar />}
+      <SessionProvider>
+        {!isPublicPage && <Sidebar />}
 
-      <HeaderBar isPublicPage={isPublicPage} />
+        <HeaderBar isPublicPage={isPublicPage} />
 
-      <main className={`${layoutOffset} pt-16 transition-all duration-300`}>
-        <div className="p-3">
-           {children}
-        </div>
-      </main>
+        <main className={`${layoutOffset} pt-16 transition-all duration-300`}>
+          <div className="p-3">{children}</div>
+        </main>
+      </SessionProvider>
     </div>
   );
 }
