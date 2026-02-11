@@ -22,6 +22,9 @@
     "fastify-plugin": "^5.1.0",
     "zod": "^4.3.6"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^25.2.3",
