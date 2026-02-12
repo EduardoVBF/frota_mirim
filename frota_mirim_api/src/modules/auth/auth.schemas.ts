@@ -10,6 +10,6 @@ export const registerSchema = z.object({
   lastName: z.string().min(1),
   email: z.email(),
   password: z.string().min(6),
-  role: z.enum(["admin", "editor"]).optional(),
+  role: z.enum(["admin", "motorista", "editor"]).optional(),
   isActive: z.boolean(),
 });
