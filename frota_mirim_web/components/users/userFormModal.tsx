@@ -21,7 +21,7 @@ type Props = {
 
 export default function UserFormModal({
   open,
-  loading,
+  loading = false,
   initialData,
   onClose,
   onSubmit,

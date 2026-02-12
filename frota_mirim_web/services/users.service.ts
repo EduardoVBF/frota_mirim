@@ -9,6 +9,15 @@ export type User = {
   isActive: boolean;
 };
 
+export type UsersResponse = {
+  users: User[];
+  meta: {
+    total: number;
+    active: number;
+    newThisMonth: number;
+  };
+};
+
 export type CreateUserPayload = {
   firstName: string;
   lastName: string;
@@ -36,7 +45,7 @@ export async function createUser(payload: CreateUserPayload): Promise<User> {
   return data;
 }
 
-export async function getAdminUsers(filters: UserFilters): Promise<User[]> {
+export async function getAdminUsers(filters: UserFilters): Promise<UsersResponse> {
   const { data } = await api.get("/users", {
     params: filters,
   });

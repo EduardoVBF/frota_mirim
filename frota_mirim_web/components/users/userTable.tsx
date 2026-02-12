@@ -1,7 +1,6 @@
 "use client";
 import {
   User,
-  getAdminUsers,
   createUser,
   updateUser,
   CreateUserPayload,
@@ -13,24 +12,27 @@ import { Edit2, Phone, Search, Filter, UserPlus, Key } from "lucide-react";
 import ResetPasswordModal from "./resetPasswordModal";
 import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import UserFormModal from "./userFormModal";
-import DynamicFilters from "../dinamicFilters";
-import { FilterConfig } from "../dinamicFilters";
+import DynamicFilters, { FilterConfig } from "../dinamicFilters";
 
-export function UserTable() {
+export function UserTable({
+  users,
+  setUsers,
+  filter,
+  setFilter,
+}: {
+  users: User[];
+  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+  filter: UserFilters;
+  setFilter: React.Dispatch<React.SetStateAction<UserFilters>>;
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [resetUser, setResetUser] = useState<User | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
-  const [filters, setFilters] = useState<UserFilters>({
-    search: "",
-    role: undefined,
-    isActive: undefined,
-  });
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
@@ -41,25 +43,6 @@ export function UserTable() {
     setEditingUser(null);
     setIsModalOpen(true);
   };
-
-  const fetchUsers = useCallback(async (currentFilters: UserFilters) => {
-    setLoading(true);
-    try {
-      const data = await getAdminUsers(currentFilters);
-      setUsers(data);
-    } catch {
-      toast.error("Erro ao carregar usuários");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      fetchUsers(filters);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [filters, fetchUsers]);
 
   const handleFormSubmit = async (data: Partial<User>) => {
     setLoading(true);
@@ -81,8 +64,8 @@ export function UserTable() {
 
       setIsModalOpen(false);
       setEditingUser(null);
-    } catch (error) {
-      throw error;
+    } catch {
+      toast.error("Erro ao salvar usuário");
     } finally {
       setLoading(false);
     }
@@ -96,8 +79,8 @@ export function UserTable() {
       toast.success("Senha redefinida");
       setResetOpen(false);
       setResetUser(null);
-    } catch (error) {
-      throw error;
+    } catch {
+      toast.error("Erro ao redefinir senha");
     } finally {
       setLoading(false);
     }
@@ -108,8 +91,8 @@ export function UserTable() {
       key: "isActive",
       label: "Status",
       options: [
-        { label: "Ativos", value: "true" },
-        { label: "Inativos", value: "false" },
+        { label: "Ativos", value: true },
+        { label: "Inativos", value: false },
       ],
     },
     {
@@ -126,6 +109,7 @@ export function UserTable() {
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       <Toaster />
+
       {/* Modal de cadastro/edição */}
       <UserFormModal
         key={editingUser ? `edit-${editingUser.id}` : "new-user"}
@@ -133,7 +117,11 @@ export function UserTable() {
         onSubmit={handleFormSubmit}
         loading={loading}
         initialData={editingUser || undefined}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingUser(null);
+          setLoading(false);
+        }}
       />
 
       {/* Modal de reset de senha */}
@@ -145,20 +133,22 @@ export function UserTable() {
         onSubmit={handleResetPassword}
       />
 
-      <div className="">
+      <div>
         <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
+          {/* Search */}
           <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm focus-within:border-accent/50 transition-all">
             <Search size={18} className="text-muted" />
             <input
               type="text"
               placeholder="Buscar..."
               className="bg-transparent outline-none text-sm w-full"
-              value={filters.search}
+              value={filter.search}
               onChange={(e) =>
-                setFilters((prev) => ({ ...prev, search: e.target.value }))
+                setFilter((prev) => ({ ...prev, search: e.target.value }))
               }
             />
           </div>
+
           <div className="flex items-center gap-2">
             <button
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted hover:text-foreground border border-border rounded-lg transition-colors"
@@ -166,6 +156,7 @@ export function UserTable() {
             >
               <Filter size={16} /> Filtros
             </button>
+
             <button
               onClick={handleCreate}
               className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-accent/20"
@@ -178,9 +169,15 @@ export function UserTable() {
         {showFilters && (
           <DynamicFilters
             configs={userFilterConfigs}
-            filters={filters}
-            setFilters={setFilters}
-            onClear={() => setFilters({ search: "" })}
+            filters={filter}
+            setFilters={setFilter}
+            onClear={() =>
+              setFilter({
+                search: "",
+                role: undefined,
+                isActive: undefined,
+              })
+            }
           />
         )}
       </div>
@@ -196,41 +193,59 @@ export function UserTable() {
               <th className="px-6 py-4 font-bold text-right">Ações</th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-border">
-            {users.map((user, i) => (
+            {users.map((user) => (
               <tr
-                key={i}
+                key={user.id}
                 className="group hover:bg-background/50 transition-colors"
               >
+                {/* Avatar */}
                 <td className="px-6 py-4 text-center">
                   <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mx-auto uppercase">
                     {user.firstName[0]}
                     {user.lastName[0]}
                   </div>
                 </td>
+
+                {/* Nome + Email */}
                 <td className="px-6 py-4">
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-foreground">
                       {user.firstName} {user.lastName}
                     </span>
-                    <span className="text-xs text-muted">{user.email}</span>
+                    <span className="text-xs text-muted">
+                      {user.email}
+                    </span>
                   </div>
                 </td>
+
+                {/* Role */}
                 <td className="px-6 py-4">
                   <span className="text-[10px] font-bold uppercase px-2 py-1 rounded bg-background border border-border text-muted">
                     {user.role}
                   </span>
                 </td>
+
+                {/* Status */}
                 <td className="px-6 py-4">
                   <div
-                    className={`flex items-center gap-2 text-xs font-bold ${user.isActive ? "text-success" : "text-error"}`}
+                    className={`flex items-center gap-2 text-xs font-bold ${
+                      user.isActive ? "text-success" : "text-error"
+                    }`}
                   >
                     <StatusDot
-                      color={user.isActive ? "var(--success)" : "var(--error)"}
+                      color={
+                        user.isActive
+                          ? "var(--success)"
+                          : "var(--error)"
+                      }
                     />
                     {user.isActive ? "Ativo" : "Inativo"}
                   </div>
                 </td>
+
+                {/* Actions */}
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
                     <button
@@ -240,10 +255,11 @@ export function UserTable() {
                     >
                       <Edit2 size={16} />
                     </button>
+
                     <button className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all">
                       <Phone size={16} />
                     </button>
-                    {/* RESET SENHA */}
+
                     <button
                       onClick={() => {
                         setResetUser(user);

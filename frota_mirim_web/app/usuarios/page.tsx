@@ -1,48 +1,83 @@
+"use client";
 import { Users, UserCheck, UserPlus } from "lucide-react";
 import { UserTable } from "@/components/users/userTable";
+import { getAdminUsers, User, UserFilters } from "@/services/users.service";
 import { FadeIn } from "@/components/motion/fadeIn";
 import { StatsCard } from "@/components/statsCard";
+import { useEffect, useState } from "react";
 
 export default function UsuariosPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [filter, setFilter] = useState<UserFilters>({
+    search: "",
+    role: undefined,
+    isActive: undefined,
+  });
+
+  const [usersMeta, setUsersMeta] = useState({
+    total: 0,
+    active: 0,
+    newThisMonth: 0,
+  });
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getAdminUsers(filter);
+        setUsers(data.users);
+        setUsersMeta(data.meta);
+      } catch {
+        setUsers([]);
+        setUsersMeta({
+          total: 0,
+          active: 0,
+          newThisMonth: 0,
+        });
+      }
+    };
+
+    fetchUsers();
+  }, [filter]);
+
   return (
     <FadeIn>
-      <div className="max-w-7xl mx-auto space-y-2">
-        {/* Header da Página */}
-        <header className="mb-3">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+      <div className="max-w-7xl mx-auto space-y-4">
+        <header>
+          <h1 className="text-3xl font-bold">
             Gerenciamento de <span className="text-accent">Usuários</span>
           </h1>
-          <p className="text-muted mt-1 text-xs">
-            Visualize, edite e controle as permissões de acesso da sua equipe.
+          <p className="text-muted text-sm">
+            Visualize, edite e controle as permissões da equipe.
           </p>
         </header>
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-3 gap-6 my-3">
+        <div className="grid grid-cols-3 gap-6">
           <StatsCard
-            label="Total de Usuários"
-            value="3"
+            label="Total"
+            value={usersMeta.total.toString()}
             icon={<Users />}
             iconColor="text-accent"
           />
-
           <StatsCard
-            label="Usuários Ativos"
-            value="3"
+            label="Ativos"
+            value={usersMeta.active.toString()}
             icon={<UserCheck />}
             iconColor="text-success"
           />
-
           <StatsCard
             label="Novos no mês"
-            value="3"
+            value={usersMeta.newThisMonth.toString()}
             icon={<UserPlus />}
             iconColor="text-info"
           />
         </div>
 
-        {/* Tabela Principal */}
-        <UserTable />
+        <UserTable
+          users={users}
+          setUsers={setUsers}
+          filter={filter}
+          setFilter={setFilter}
+        />
       </div>
     </FadeIn>
   );
