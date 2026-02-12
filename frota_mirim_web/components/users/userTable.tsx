@@ -1,63 +1,107 @@
 "use client";
-import { useState } from "react";
-import { Edit2, Phone, Search, Filter, UserPlus } from "lucide-react";
+import {
+  User,
+  getAdminUsers,
+  createUser,
+  updateUser,
+  CreateUserPayload,
+  UpdateUserPayload,
+  resetUserPassword,
+} from "@/services/users.service";
+import { Edit2, Phone, Search, Filter, UserPlus, Key } from "lucide-react";
+import ResetPasswordModal from "./resetPasswordModal";
+import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
-import { UserFormModal } from "./userFormModal";
-
-type User = {
-  name: string;
-  email: string;
-  role: string;
-  isActive: boolean;
-  date: string;
-};
-
-const users = [
-  {
-    name: "Eduardo Freitas",
-    email: "eduardo.freitas@email.com",
-    role: "Administrador",
-    isActive: true,
-    date: "19/11/2025",
-  },
-  {
-    name: "Cristian Nascimento",
-    email: "cristian.nascimento@email.com",
-    role: "Administrador",
-    isActive: true,
-    date: "19/11/2025",
-  },
-  {
-    name: "João Silva",
-    email: "joao.silva2@email.com",
-    role: "Motorista",
-    isActive: true,
-    date: "18/11/2025",
-  },
-];
+import { useState, useEffect } from "react";
+import UserFormModal from "./userFormModal";
 
 export function UserTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [resetUser, setResetUser] = useState<User | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
 
   const handleEdit = (user: User) => {
-    setSelectedUser(user);
+    setEditingUser(user);
     setIsModalOpen(true);
   };
 
   const handleCreate = () => {
-    setSelectedUser(null);
+    setEditingUser(null);
     setIsModalOpen(true);
+  };
+
+  useEffect(() => {
+    getAdminUsers()
+      .then(setUsers)
+      .catch(() => toast.error("Erro ao carregar usuários"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleFormSubmit = async (data: Partial<User>) => {
+    setLoading(true);
+    try {
+      if (editingUser) {
+        const updated = await updateUser(
+          editingUser.id,
+          data as UpdateUserPayload,
+        );
+        setUsers((prev) =>
+          prev.map((u) => (u.id === updated.id ? updated : u)),
+        );
+        toast.success("Usuário atualizado");
+      } else {
+        const created = await createUser(data as CreateUserPayload);
+        setUsers((prev) => [created, ...prev]);
+        toast.success("Usuário criado");
+      }
+
+      setIsModalOpen(false);
+      setEditingUser(null);
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (newPassword: string) => {
+    if (!resetUser) return;
+    setLoading(true);
+    try {
+      await resetUserPassword(resetUser.id, { newPassword });
+      toast.success("Senha redefinida");
+      setResetOpen(false);
+      setResetUser(null);
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
-      {/* Modal Renderizado aqui */}
+      <Toaster />
+      {/* Modal de cadastro/edição */}
       <UserFormModal
-        isOpen={isModalOpen}
+        key={editingUser ? `edit-${editingUser.id}` : "new-user"}
+        open={isModalOpen}
+        onSubmit={handleFormSubmit}
+        loading={loading}
+        initialData={editingUser || undefined}
         onClose={() => setIsModalOpen(false)}
-        key={selectedUser ? `edit-${selectedUser.email}` : "create"}
-        userToEdit={selectedUser}
+      />
+
+      {/* Modal de reset de senha */}
+      <ResetPasswordModal
+        open={resetOpen}
+        loading={loading}
+        user={resetUser}
+        onClose={() => setResetOpen(false)}
+        onSubmit={handleResetPassword}
       />
 
       <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
@@ -101,14 +145,15 @@ export function UserTable() {
                 className="group hover:bg-background/50 transition-colors"
               >
                 <td className="px-6 py-4 text-center">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mx-auto">
-                    {user.name.charAt(0)}
+                  <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mx-auto uppercase">
+                    {user.firstName[0]}
+                    {user.lastName[0]}
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-foreground">
-                      {user.name}
+                      {user.firstName} {user.lastName}
                     </span>
                     <span className="text-xs text-muted">{user.email}</span>
                   </div>
@@ -119,8 +164,12 @@ export function UserTable() {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-xs font-bold text-success">
-                    <StatusDot color="var(--success)" />
+                  <div
+                    className={`flex items-center gap-2 text-xs font-bold ${user.isActive ? "text-success" : "text-error"}`}
+                  >
+                    <StatusDot
+                      color={user.isActive ? "var(--success)" : "var(--error)"}
+                    />
                     {user.isActive ? "Ativo" : "Inativo"}
                   </div>
                 </td>
@@ -129,11 +178,23 @@ export function UserTable() {
                     <button
                       onClick={() => handleEdit(user)}
                       className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all"
+                      title="Editar usuário"
                     >
                       <Edit2 size={16} />
                     </button>
-                    <button className="p-2 text-muted hover:text-foreground hover:bg-background rounded-lg transition-all">
+                    <button className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all">
                       <Phone size={16} />
+                    </button>
+                    {/* RESET SENHA */}
+                    <button
+                      onClick={() => {
+                        setResetUser(user);
+                        setResetOpen(true);
+                      }}
+                      className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all"
+                      title="Redefinir senha"
+                    >
+                      <Key size={20} />
                     </button>
                   </div>
                 </td>

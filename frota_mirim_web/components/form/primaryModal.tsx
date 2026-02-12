@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Info } from "lucide-react";
 
 interface PrimaryModalProps {
   isOpen: boolean;
@@ -11,6 +12,8 @@ interface PrimaryModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
+  infoVisible?: boolean;
+  setInfoVisible?: (visible: boolean) => void;
 }
 
 const sizeClasses = {
@@ -28,12 +31,15 @@ export default function PrimaryModal({
   children,
   footer,
   size = "md",
+  infoVisible = false,
+  setInfoVisible = () => {},
 }: PrimaryModalProps) {
-  
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "unset";
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isOpen]);
 
   return (
@@ -58,7 +64,7 @@ export default function PrimaryModal({
             className={`relative w-full ${sizeClasses[size]} bg-background border-2 border-border/50 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] rounded-4xl overflow-hidden flex flex-col`}
           >
             {/* Botão Fechar Flutuante */}
-            <button 
+            <button
               onClick={onClose}
               className="absolute right-4 top-4 z-10 p-2 rounded-full bg-alternative-bg border border-border text-muted hover:text-accent hover:border-accent/50 transition-all cursor-pointer"
             >
@@ -68,9 +74,18 @@ export default function PrimaryModal({
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
               {/* Header Integrado ao Conteúdo */}
               <header className="mb-3">
-                <h2 className="text-3xl font-black tracking-tighter text-foreground uppercase italic leading-none">
-                  {title}
-                </h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-3xl font-black tracking-tighter text-foreground uppercase italic leading-none">
+                    {title}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setInfoVisible(!infoVisible)}
+                    className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${infoVisible ? "text-accent" : "text-muted hover:text-foreground"}`}
+                  >
+                    <Info size={14} />
+                  </button>
+                </div>
                 {description && (
                   <p className="text-sm text-muted font-medium mt-2 max-w-[80%]">
                     {description}
@@ -80,9 +95,7 @@ export default function PrimaryModal({
               </header>
 
               {/* Área de Conteúdo */}
-              <main>
-                {children}
-              </main>
+              <main>{children}</main>
 
               {/* Footer */}
               {footer && (

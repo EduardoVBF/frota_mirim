@@ -1,35 +1,68 @@
 "use client";
+import { translateApiErrors } from "../../utils/translateApiError";
+import { User } from "../../services/users.service";
 import PrimarySelect from "../form/primarySelect";
 import PrimarySwitch from "../form/primarySwitch";
 import PrimaryModal from "../form/primaryModal";
 import PrimaryInput from "../form/primaryInput";
-import { useState } from "react";
+import ColoredTextBox from "../coloredTextBox";
+import { toast } from "react-hot-toast";
+import React, { useState } from "react";
+import LoaderComp from "../loaderComp";
+import { AxiosError } from "axios";
 
-type User = {
-  name: string;
-  email: string;
-  role: string;
-  isActive: boolean;
+type Props = {
+  open: boolean;
+  loading: boolean;
+  initialData?: User | null;
+  onClose: () => void;
+  onSubmit: (data: Partial<User>) => void;
 };
 
-interface UserFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  userToEdit?: User | null;
-}
-
-export function UserFormModal({
-  isOpen,
+export default function UserFormModal({
+  open,
+  loading,
+  initialData,
   onClose,
-  userToEdit,
-}: UserFormModalProps) {
-  
-  const [formData, setFormData] = useState({
-    name: userToEdit?.name || "",
-    email: userToEdit?.email || "",
-    role: userToEdit?.role || "",
-    isActive: userToEdit?.isActive ?? true,
-  });
+  onSubmit,
+}: Props) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [infoVisible, setInfoVisible] = useState(false);
+
+  const [firstName, setFirstName] = useState(initialData?.firstName || "");
+  const [lastName, setLastName] = useState(initialData?.lastName || "");
+  const [email, setEmail] = useState(initialData?.email || "");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "motorista" | "editor">(
+    (initialData?.role as "admin" | "motorista" | "editor") || "admin",
+  );
+  const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErrors({});
+
+    try {
+      await onSubmit({
+        firstName,
+        lastName,
+        email,
+        role,
+        isActive,
+        ...(initialData ? {} : { password }),
+      });
+    } catch (err) {
+      if (err instanceof AxiosError && err.response?.data) {
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar usuário");
+      } else {
+        toast.error("Erro inesperado ao salvar");
+      }
+    }
+  }
 
   const footer = (
     <>
@@ -43,59 +76,105 @@ export function UserFormModal({
       <button
         type="submit"
         form="user-form"
-        className="px-8 py-2.5 bg-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+        disabled={loading}
+        className="px-8 py-2.5 bg-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
       >
-        {userToEdit ? "Salvar Alterações" : "Cadastrar Usuário"}
+        {loading
+          ? "Salvando..."
+          : initialData
+            ? "Salvar Alterações"
+            : "Cadastrar Usuário"}
       </button>
     </>
   );
 
   return (
     <PrimaryModal
-      isOpen={isOpen}
+      isOpen={open}
       onClose={onClose}
-      title={userToEdit ? "Editar Usuário" : "Novo Usuário"}
-      description={userToEdit ? "Atualize os dados do usuário" : "Crie um novo acesso de usuário para a equipe"}
+      title={initialData ? "Editar Usuário" : "Novo Usuário"}
+      description={
+        initialData
+          ? "Atualize os dados e permissões."
+          : "Crie um novo acesso para a equipe."
+      }
       footer={footer}
       size="md"
+      infoVisible={infoVisible}
+      setInfoVisible={setInfoVisible}
     >
-      <form
-        id="user-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          console.log(formData);
-        }}
-        className="space-y-4"
-      >
-        <PrimaryInput
-          label="Nome Completo"
-          placeholder="Digite o nome completo"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        />
-        <PrimaryInput
-          label="E-mail"
-          placeholder="Digite o e-mail"
+      <div className="space-y-4 pt-2">
+        {infoVisible && (
+          <ColoredTextBox type="info" className="mb-4">
+            <ul className="list-disc pl-4 text-xs space-y-1">
+              <li>O e-mail não pode ser alterado após o cadastro.</li>
+              <li>A senha é necessária apenas para novos usuários.</li>
+              <li>Administradores têm acesso total às configurações.</li>
+            </ul>
+          </ColoredTextBox>
+        )}
 
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        />
-        <PrimarySelect
-          label="Função / Cargo"
-          placeholder="Selecione a função ou cargo"
-          value={formData.role}
-          onChange={(val) => setFormData({ ...formData, role: val })}
-          options={[
-            { label: "Administrador", value: "Administrador" },
-            { label: "Motorista", value: "Motorista" },
-          ]}
-        />
-        <PrimarySwitch
-          label="Acesso Ativo"
-          checked={formData.isActive}
-          onChange={(checked) => setFormData({ ...formData, isActive: checked })}
-        />
-      </form>
+        {loading ? (
+          <div className="flex justify-center py-4">
+            <LoaderComp text="Processando..." />
+          </div>
+        ) : (
+          <form
+            id="user-form"
+            onSubmit={handleSubmit}
+            className={`space-y-4 ${loading ? "opacity-50 pointer-events-none" : ""}`}
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <PrimaryInput
+                label="Nome"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                error={errors.firstName}
+              />
+              <PrimaryInput
+                label="Sobrenome"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                error={errors.lastName}
+              />
+            </div>
+            <PrimaryInput
+              label="E-mail"
+              value={email}
+              disabled={!!initialData}
+              onChange={(e) => setEmail(e.target.value)}
+              error={errors.email}
+            />
+            {!initialData && (
+              <PrimaryInput
+                label="Senha"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                error={errors.password}
+              />
+            )}
+
+            <PrimarySelect
+              label="Cargo"
+              value={role}
+              onChange={(val) =>
+                setRole(val as "admin" | "motorista" | "editor")
+              }
+              options={[
+                { label: "Administrador", value: "admin" },
+                { label: "Motorista", value: "motorista" },
+                { label: "Editor", value: "editor" },
+              ]}
+            />
+            <PrimarySwitch
+              label="Ativo"
+              checked={isActive}
+              onChange={setIsActive}
+            />
+          </form>
+        )}
+      </div>
     </PrimaryModal>
   );
 }

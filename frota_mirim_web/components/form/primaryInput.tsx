@@ -22,26 +22,10 @@ export default function PrimaryInput({
 
   return (
     <div className={`flex flex-col gap-1.5 ${className} w-full`}>
-      {/* Label e Erro */}
-      <div className="flex justify-between items-end px-1">
-        <label className="text-[11px] font-bold uppercase tracking-widest text-muted/80">
-          {label}
-          {props.required && <span className="text-accent ml-1">*</span>}
-        </label>
-        
-        <AnimatePresence>
-          {error && (
-            <motion.span 
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              className="text-[10px] font-bold text-error flex items-center gap-1"
-            >
-              <AlertCircle size={12} /> {error}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
+      <label className="text-[11px] font-bold uppercase tracking-widest text-muted/80">
+        {label}
+        {props.required && <span className="text-accent ml-1">*</span>}
+      </label>
 
       <div className="relative group">
         <input
@@ -61,9 +45,10 @@ export default function PrimaryInput({
             bg-alternative-bg border outline-none
             placeholder:text-muted/40 text-foreground
             disabled:opacity-50 disabled:cursor-not-allowed
-            ${isFocused 
-              ? "border-accent ring-4 ring-accent/5 shadow-sm" 
-              : "border-border hover:border-border-hover"
+            ${
+              isFocused
+                ? "border-accent ring-4 ring-accent/5 shadow-sm"
+                : "border-border hover:border-border-hover"
             }
             ${error ? "border-error/50 bg-error/5 focus:ring-error/5" : ""}
             ${isPassword ? "pr-11" : ""}
@@ -86,6 +71,19 @@ export default function PrimaryInput({
           </button>
         )}
       </div>
+
+      <AnimatePresence>
+        {error && (
+          <motion.span
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            className="text-[10px] font-bold text-error flex items-center gap-1"
+          >
+            <AlertCircle size={12} /> {error}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

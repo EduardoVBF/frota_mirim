@@ -12,7 +12,7 @@ type LoaderCompProps = {
 };
 
 export default function LoaderComp({
-  color = "#A0522D",
+  color = "#2563EB",
   classname = "",
   classnameLoader = "m-2",
   size = 20,
@@ -30,7 +30,7 @@ export default function LoaderComp({
 
       {children && children}
 
-      {text && <p className="text-gray-500">{text}</p>}
+      {text && <p className="text-muted">{text}</p>}
     </div>
   );
 }
