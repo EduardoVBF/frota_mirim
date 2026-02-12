@@ -1,10 +1,10 @@
 "use client";
+import { getAdminUsers, User, UserFilters } from "@/services/users.service";
 import { Users, UserCheck, UserPlus } from "lucide-react";
 import { UserTable } from "@/components/users/userTable";
-import { getAdminUsers, User, UserFilters } from "@/services/users.service";
+import { useEffect, useState, useCallback } from "react";
 import { FadeIn } from "@/components/motion/fadeIn";
 import { StatsCard } from "@/components/statsCard";
-import { useEffect, useState } from "react";
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -20,24 +20,28 @@ export default function UsuariosPage() {
     newThisMonth: 0,
   });
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await getAdminUsers(filter);
-        setUsers(data.users);
-        setUsersMeta(data.meta);
-      } catch {
-        setUsers([]);
-        setUsersMeta({
-          total: 0,
-          active: 0,
-          newThisMonth: 0,
-        });
-      }
-    };
 
-    fetchUsers();
-  }, [filter]);
+const fetchUsers = useCallback(async () => {
+  try {
+    const data = await getAdminUsers(filter);
+    setUsers(data.users);
+    setUsersMeta(data.meta);
+  } catch {
+    setUsers([]);
+    setUsersMeta({
+      total: 0,
+      active: 0,
+      newThisMonth: 0,
+    });
+  }
+}, [filter]);
+
+
+useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  fetchUsers();
+}, [fetchUsers]);
+
 
   return (
     <FadeIn>
@@ -74,9 +78,10 @@ export default function UsuariosPage() {
 
         <UserTable
           users={users}
-          setUsers={setUsers}
+          // setUsers={setUsers}
           filter={filter}
           setFilter={setFilter}
+          onUserChange={fetchUsers}
         />
       </div>
     </FadeIn>

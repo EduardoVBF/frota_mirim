@@ -18,14 +18,16 @@ import DynamicFilters, { FilterConfig } from "../dinamicFilters";
 
 export function UserTable({
   users,
-  setUsers,
+  // setUsers,
   filter,
   setFilter,
+  onUserChange,
 }: {
   users: User[];
-  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+  // setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   filter: UserFilters;
   setFilter: React.Dispatch<React.SetStateAction<UserFilters>>;
+  onUserChange: () => void;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -48,22 +50,18 @@ export function UserTable({
     setLoading(true);
     try {
       if (editingUser) {
-        const updated = await updateUser(
-          editingUser.id,
-          data as UpdateUserPayload,
-        );
-        setUsers((prev) =>
-          prev.map((u) => (u.id === updated.id ? updated : u)),
-        );
+        await updateUser(editingUser.id, data as UpdateUserPayload);
         toast.success("Usuário atualizado");
       } else {
-        const created = await createUser(data as CreateUserPayload);
-        setUsers((prev) => [created, ...prev]);
+        await createUser(data as CreateUserPayload);
         toast.success("Usuário criado");
       }
 
       setIsModalOpen(false);
       setEditingUser(null);
+
+      // refresh manual para garantir que dados estejam atualizados
+      await onUserChange();
     } catch {
       toast.error("Erro ao salvar usuário");
     } finally {
@@ -79,6 +77,8 @@ export function UserTable({
       toast.success("Senha redefinida");
       setResetOpen(false);
       setResetUser(null);
+
+      onUserChange();
     } catch {
       toast.error("Erro ao redefinir senha");
     } finally {
@@ -214,9 +214,7 @@ export function UserTable({
                     <span className="text-sm font-bold text-foreground">
                       {user.firstName} {user.lastName}
                     </span>
-                    <span className="text-xs text-muted">
-                      {user.email}
-                    </span>
+                    <span className="text-xs text-muted">{user.email}</span>
                   </div>
                 </td>
 
@@ -235,11 +233,7 @@ export function UserTable({
                     }`}
                   >
                     <StatusDot
-                      color={
-                        user.isActive
-                          ? "var(--success)"
-                          : "var(--error)"
-                      }
+                      color={user.isActive ? "var(--success)" : "var(--error)"}
                     />
                     {user.isActive ? "Ativo" : "Inativo"}
                   </div>
