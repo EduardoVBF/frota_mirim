@@ -7,12 +7,18 @@ type LoginInput = {
   password: string;
 };
 
+enum UserRole {
+  ADMIN = "admin",
+  MOTORISTA = "motorista",
+  EDITOR = "editor",
+}
+
 type RegisterInput = {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  role?: "admin" | "editor";
+  role?: UserRole;
   isActive: boolean;
 };
 
@@ -59,7 +65,7 @@ export class AuthService {
         lastName: data.lastName,
         email: data.email,
         passwordHash,
-        role: data.role ?? "editor",
+        role: data.role ?? UserRole.EDITOR,
         isActive: data.isActive,
       },
     });
