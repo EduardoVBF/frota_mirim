@@ -24,7 +24,7 @@ export type UserParamsDTO = z.infer<typeof userParamsSchema>;
 export const updateUserBodySchema = z.object({
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
-  role: z.enum(["admin", "editor"]).optional(),
+  role: z.enum(["admin", "motorista", "editor"]).optional(),
   isActive: z.boolean().optional(),
 });
 export type UpdateUserBodyDTO = z.infer<typeof updateUserBodySchema>;
@@ -36,6 +36,8 @@ export type ResetPasswordBodyDTO = z.infer<typeof resetPasswordBodySchema>;
 
 export const userQuerySchema = z.object({
   search: z.string().optional(),
+  role: z.enum(["admin", "editor", "motorista"]).optional(),
+  isActive: z.string().transform(val => val === 'true').optional(),
 });
 
 export type UserQueryDTO = z.infer<typeof userQuerySchema>;

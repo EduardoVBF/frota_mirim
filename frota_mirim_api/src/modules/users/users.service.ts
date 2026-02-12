@@ -4,36 +4,55 @@ import {
   UsersListResponseDTO,
   ResetPasswordBodyDTO,
   UpdateUserBodyDTO,
+  UserQueryDTO,
 } from "./users.schema";
+import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
 import bcrypt from "bcrypt";
-import { AppError } from "../../infra/errors/app-error";
 
 export class UsersService {
-  async getAllUsers(search?: string) {
-    const where = search
-      ? {
-          OR: [
-            { firstName: { contains: search, mode: "insensitive" as const } },
-            { lastName: { contains: search, mode: "insensitive" as const } },
-            { email: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
-      : {};
+  
+  async getAllUsers(query: UserQueryDTO) {
+  const { search, role, isActive } = query;
 
-    return prisma.user.findMany({
-      where,
-      orderBy: { firstName: "asc" },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        role: true,
-        isActive: true,
-      },
-    }) as Promise<UsersListResponseDTO>;
+  const where: any = {
+    AND: []
+  };
+
+  // Filtro de Busca Textual
+  if (search) {
+    where.AND.push({
+      OR: [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ]
+    });
   }
+
+  // Filtro de Role
+  if (role) {
+    where.AND.push({ role });
+  }
+
+  // Filtro de Status
+  if (isActive !== undefined) {
+    where.AND.push({ isActive });
+  }
+
+  return prisma.user.findMany({
+    where: where.AND.length > 0 ? where : {},
+    orderBy: { firstName: "asc" },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+      isActive: true,
+    },
+  }) as Promise<UsersListResponseDTO>;
+}
 
   async getUserById(id: UserParamsDTO["id"]) {
     const user = (await prisma.user.findUnique({

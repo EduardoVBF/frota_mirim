@@ -1,15 +1,13 @@
-import { updateUserBodySchema, resetPasswordBodySchema } from "./users.schema";
+import { updateUserBodySchema, resetPasswordBodySchema, UserQueryDTO } from "./users.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { UsersService } from "./users.service";
 
 const usersService = new UsersService();
 
 // GETS
-export async function getAllUsersController(
-  request: FastifyRequest
-) {
-  const { search } = request.query as { search?: string };
-  return await usersService.getAllUsers(search);
+export async function getAllUsersController(request: FastifyRequest) {
+  const query = request.query as UserQueryDTO;
+  return await usersService.getAllUsers(query);
 }
 
 export async function getUserByIdController(
