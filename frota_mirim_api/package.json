@@ -17,6 +17,7 @@
     "@fastify/jwt": "^10.0.0",
     "@prisma/client": "^6.8.0",
     "bcrypt": "^6.0.0",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.4",
     "fastify": "^5.7.4",
     "fastify-plugin": "^5.1.0",

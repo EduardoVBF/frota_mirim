@@ -8,51 +8,73 @@ import {
 } from "./users.schema";
 import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
+import { startOfMonth } from "date-fns";
 import bcrypt from "bcrypt";
 
 export class UsersService {
-  
   async getAllUsers(query: UserQueryDTO) {
-  const { search, role, isActive } = query;
+    const { search, role, isActive } = query;
 
-  const where: any = {
-    AND: []
-  };
+    const where: any = { AND: [] };
 
-  // Filtro de Busca Textual
-  if (search) {
-    where.AND.push({
-      OR: [
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ]
-    });
+    // Filtro de busca por nome ou email
+    if (search) {
+      where.AND.push({
+        OR: [
+          { firstName: { contains: search, mode: "insensitive" } },
+          { lastName: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    // Filtro de role (pode ser um ou vários)
+    if (role) {
+      const roleArray = Array.isArray(role) ? role : [role];
+      where.AND.push({ role: { in: roleArray } });
+    }
+
+    // Filtro de status (pode ser um ou vários)
+    if (isActive !== undefined) {
+      const statusArray = Array.isArray(isActive) ? isActive : [isActive];
+      where.AND.push({ isActive: { in: statusArray } });
+    }
+
+    const finalWhere = where.AND.length > 0 ? where : {};
+
+    const [users, totalCount, activeCount, monthCount] = await Promise.all([
+      prisma.user.findMany({
+        where: finalWhere,
+        orderBy: { firstName: "asc" },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+          isActive: true,
+        },
+      }),
+      prisma.user.count(), // Total usuários
+      prisma.user.count({ where: { isActive: true } }), // Total de ativos
+      prisma.user.count({
+        where: {
+          createdAt: {
+            gte: startOfMonth(new Date()), // Criados desde o dia 1 do mês atual
+          },
+        },
+      }),
+    ]);
+
+    return {
+      users,
+      meta: {
+        total: totalCount,
+        active: activeCount,
+        newThisMonth: monthCount,
+      },
+    };
   }
-
-  // Filtro de Role
-  if (role) {
-    where.AND.push({ role });
-  }
-
-  // Filtro de Status
-  if (isActive !== undefined) {
-    where.AND.push({ isActive });
-  }
-
-  return prisma.user.findMany({
-    where: where.AND.length > 0 ? where : {},
-    orderBy: { firstName: "asc" },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      role: true,
-      isActive: true,
-    },
-  }) as Promise<UsersListResponseDTO>;
-}
 
   async getUserById(id: UserParamsDTO["id"]) {
     const user = (await prisma.user.findUnique({

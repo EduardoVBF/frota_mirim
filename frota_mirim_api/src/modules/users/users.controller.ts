@@ -7,7 +7,9 @@ const usersService = new UsersService();
 // GETS
 export async function getAllUsersController(request: FastifyRequest) {
   const query = request.query as UserQueryDTO;
-  return await usersService.getAllUsers(query);
+  const result = await usersService.getAllUsers(query);
+
+  return result;
 }
 
 export async function getUserByIdController(

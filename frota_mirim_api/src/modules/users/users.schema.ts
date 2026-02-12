@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { is } from "zod/v4/locales";
 
 export const userResponseSchema = z.object({
   id: z.uuid(),
@@ -36,8 +35,17 @@ export type ResetPasswordBodyDTO = z.infer<typeof resetPasswordBodySchema>;
 
 export const userQuerySchema = z.object({
   search: z.string().optional(),
-  role: z.enum(["admin", "editor", "motorista"]).optional(),
-  isActive: z.string().transform(val => val === 'true').optional(),
+  
+  role: z.preprocess((val) => {
+    if (!val) return undefined;
+    return Array.isArray(val) ? val : [val];
+  }, z.array(z.string()).optional()),
+
+  isActive: z.preprocess((val) => {
+    if (val === undefined || val === null) return undefined;
+    const arr = Array.isArray(val) ? val : [val];
+    return arr.map(v => v === 'true' || v === true);
+  }, z.array(z.boolean()).optional()),
 });
 
 export type UserQueryDTO = z.infer<typeof userQuerySchema>;
