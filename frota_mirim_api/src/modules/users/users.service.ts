@@ -10,8 +10,19 @@ import bcrypt from "bcrypt";
 import { AppError } from "../../infra/errors/app-error";
 
 export class UsersService {
-  async getAllUsers() {
+  async getAllUsers(search?: string) {
+    const where = search
+      ? {
+          OR: [
+            { firstName: { contains: search, mode: "insensitive" as const } },
+            { lastName: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {};
+
     return prisma.user.findMany({
+      where,
       orderBy: { firstName: "asc" },
       select: {
         id: true,
@@ -49,7 +60,7 @@ export class UsersService {
     id: UserParamsDTO["id"],
     data: Partial<UpdateUserBodyDTO>,
     requesterRole: "admin" | "editor",
-    requesterId: string
+    requesterId: string,
   ) {
     const user = (await prisma.user.findUnique({
       where: { id },

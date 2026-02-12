@@ -33,3 +33,9 @@ export const resetPasswordBodySchema = z.object({
   newPassword: z.string().min(8),
 });
 export type ResetPasswordBodyDTO = z.infer<typeof resetPasswordBodySchema>;
+
+export const userQuerySchema = z.object({
+  search: z.string().optional(),
+});
+
+export type UserQueryDTO = z.infer<typeof userQuerySchema>;

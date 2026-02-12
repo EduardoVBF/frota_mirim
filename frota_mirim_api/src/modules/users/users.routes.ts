@@ -8,6 +8,7 @@ import {
   resetPasswordBodySchema,
   updateUserBodySchema,
   userParamsSchema,
+  userQuerySchema,
 } from "./users.schema";
 import { authMiddleware } from "../../shared/middlewares/auth";
 import { adminOnly } from "../../shared/middlewares/adminOnly";
@@ -21,9 +22,15 @@ export async function usersRoutes(app: FastifyInstance) {
     {
       preHandler: [authMiddleware, adminOnly],
     },
-    getAllUsersController,
-  );
+    async (request, reply) => {
+      const { query } = await validateRequest(request, {
+        query: userQuerySchema,
+      });
 
+      return getAllUsersController({ ...request, query } as any);
+    },
+  );
+  
   app.get(
     "/users/:id",
     {
