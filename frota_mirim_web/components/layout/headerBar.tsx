@@ -77,7 +77,7 @@ export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
                     Online
                   </span>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
                   {session?.user?.firstName?.[0] && session?.user?.lastName?.[0]
                     ? `${session.user.firstName[0]}${session.user.lastName[0]}`
                     : ""}

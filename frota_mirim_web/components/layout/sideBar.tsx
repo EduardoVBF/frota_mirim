@@ -67,7 +67,7 @@ export default function Sidebar() {
         {/* Footer da Sidebar / User Profile */}
         <div className="mt-auto border-t border-border pt-6">
           <div className="mb-3 flex items-center gap-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+            <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
               {session?.user?.firstName?.[0] && session?.user?.lastName?.[0]
                 ? `${session.user.firstName[0]}${session.user.lastName[0]}`
                 : ""}
