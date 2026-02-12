@@ -30,8 +30,10 @@ export async function createUser(payload: CreateUserPayload): Promise<User> {
   return data;
 }
 
-export async function getAdminUsers(): Promise<User[]> {
-  const { data } = await api.get("/users");
+export async function getAdminUsers(search?: string): Promise<User[]> {
+  const { data } = await api.get("/users", {
+    params: { search }
+  });
   return data;
 }
 

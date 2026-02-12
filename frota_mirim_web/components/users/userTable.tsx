@@ -12,7 +12,7 @@ import { Edit2, Phone, Search, Filter, UserPlus, Key } from "lucide-react";
 import ResetPasswordModal from "./resetPasswordModal";
 import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import UserFormModal from "./userFormModal";
 
 export function UserTable() {
@@ -22,6 +22,7 @@ export function UserTable() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [resetUser, setResetUser] = useState<User | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
@@ -33,12 +34,25 @@ export function UserTable() {
     setIsModalOpen(true);
   };
 
-  useEffect(() => {
-    getAdminUsers()
-      .then(setUsers)
-      .catch(() => toast.error("Erro ao carregar usuários"))
-      .finally(() => setLoading(false));
+  const fetchUsers = useCallback(async (search?: string) => {
+    setLoading(true);
+    try {
+      const data = await getAdminUsers(search);
+      setUsers(data);
+    } catch {
+      toast.error("Erro ao carregar usuários");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      fetchUsers(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [searchTerm, fetchUsers]);
 
   const handleFormSubmit = async (data: Partial<User>) => {
     setLoading(true);
@@ -111,6 +125,8 @@ export function UserTable() {
             type="text"
             placeholder="Buscar por nome ou email..."
             className="bg-transparent outline-none text-sm w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
