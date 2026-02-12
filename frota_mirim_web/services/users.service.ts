@@ -25,14 +25,20 @@ export type UpdateUserPayload = {
   isActive?: boolean;
 };
 
+export type UserFilters = {
+  search?: string;
+  role?: string;
+  isActive?: boolean;
+};
+
 export async function createUser(payload: CreateUserPayload): Promise<User> {
   const { data } = await api.post("/auth/register", payload);
   return data;
 }
 
-export async function getAdminUsers(search?: string): Promise<User[]> {
+export async function getAdminUsers(filters: UserFilters): Promise<User[]> {
   const { data } = await api.get("/users", {
-    params: { search }
+    params: filters,
   });
   return data;
 }

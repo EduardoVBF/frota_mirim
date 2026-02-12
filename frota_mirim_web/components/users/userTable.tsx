@@ -7,6 +7,7 @@ import {
   CreateUserPayload,
   UpdateUserPayload,
   resetUserPassword,
+  UserFilters,
 } from "@/services/users.service";
 import { Edit2, Phone, Search, Filter, UserPlus, Key } from "lucide-react";
 import ResetPasswordModal from "./resetPasswordModal";
@@ -14,6 +15,8 @@ import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
 import { useState, useEffect, useCallback } from "react";
 import UserFormModal from "./userFormModal";
+import DynamicFilters from "../dinamicFilters";
+import { FilterConfig } from "../dinamicFilters";
 
 export function UserTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,8 +24,13 @@ export function UserTable() {
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [resetUser, setResetUser] = useState<User | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<UserFilters>({
+    search: "",
+    role: undefined,
+    isActive: undefined,
+  });
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
@@ -34,10 +42,10 @@ export function UserTable() {
     setIsModalOpen(true);
   };
 
-  const fetchUsers = useCallback(async (search?: string) => {
+  const fetchUsers = useCallback(async (currentFilters: UserFilters) => {
     setLoading(true);
     try {
-      const data = await getAdminUsers(search);
+      const data = await getAdminUsers(currentFilters);
       setUsers(data);
     } catch {
       toast.error("Erro ao carregar usuários");
@@ -48,11 +56,10 @@ export function UserTable() {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchUsers(searchTerm);
+      fetchUsers(filters);
     }, 500);
-
     return () => clearTimeout(handler);
-  }, [searchTerm, fetchUsers]);
+  }, [filters, fetchUsers]);
 
   const handleFormSubmit = async (data: Partial<User>) => {
     setLoading(true);
@@ -96,6 +103,26 @@ export function UserTable() {
     }
   };
 
+  const userFilterConfigs: FilterConfig[] = [
+    {
+      key: "isActive",
+      label: "Status",
+      options: [
+        { label: "Ativos", value: "true" },
+        { label: "Inativos", value: "false" },
+      ],
+    },
+    {
+      key: "role",
+      label: "Função",
+      options: [
+        { label: "Admin", value: "admin" },
+        { label: "Editor", value: "editor" },
+        { label: "Motorista", value: "motorista" },
+      ],
+    },
+  ];
+
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       <Toaster />
@@ -118,29 +145,44 @@ export function UserTable() {
         onSubmit={handleResetPassword}
       />
 
-      <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm focus-within:border-accent/50 transition-all">
-          <Search size={18} className="text-muted" />
-          <input
-            type="text"
-            placeholder="Buscar por nome ou email..."
-            className="bg-transparent outline-none text-sm w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="">
+        <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm focus-within:border-accent/50 transition-all">
+            <Search size={18} className="text-muted" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              className="bg-transparent outline-none text-sm w-full"
+              value={filters.search}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, search: e.target.value }))
+              }
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted hover:text-foreground border border-border rounded-lg transition-colors"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter size={16} /> Filtros
+            </button>
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-accent/20"
+            >
+              <UserPlus size={18} /> Cadastrar Usuário
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted hover:text-foreground border border-border rounded-lg transition-colors">
-            <Filter size={16} /> Filtros
-          </button>
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-accent/20"
-          >
-            <UserPlus size={18} /> Cadastrar Usuário
-          </button>
-        </div>
+        {showFilters && (
+          <DynamicFilters
+            configs={userFilterConfigs}
+            filters={filters}
+            setFilters={setFilters}
+            onClear={() => setFilters({ search: "" })}
+          />
+        )}
       </div>
 
       <div className="overflow-x-auto">
