@@ -1,7 +1,6 @@
 import {
   UserResponseDTO,
   UserParamsDTO,
-  UsersListResponseDTO,
   ResetPasswordBodyDTO,
   UpdateUserBodyDTO,
   UserQueryDTO,
@@ -17,7 +16,7 @@ export class UsersService {
 
     const where: any = { AND: [] };
 
-    // Filtro de busca por nome ou email
+    // 🔎 Search
     if (search) {
       where.AND.push({
         OR: [
@@ -28,16 +27,14 @@ export class UsersService {
       });
     }
 
-    // Filtro de role (pode ser um ou vários)
-    if (role) {
-      const roleArray = Array.isArray(role) ? role : [role];
-      where.AND.push({ role: { in: roleArray } });
+    // 🎭 Role (pode ser múltipla)
+    if (role && role.length > 0) {
+      where.AND.push({ role: { in: role } });
     }
 
-    // Filtro de status (pode ser um ou vários)
-    if (isActive !== undefined) {
-      const statusArray = Array.isArray(isActive) ? isActive : [isActive];
-      where.AND.push({ isActive: { in: statusArray } });
+    // 🔵 Status (boolean simples)
+    if (typeof isActive === "boolean") {
+      where.AND.push({ isActive });
     }
 
     const finalWhere = where.AND.length > 0 ? where : {};
@@ -55,12 +52,13 @@ export class UsersService {
           isActive: true,
         },
       }),
-      prisma.user.count(), // Total usuários
-      prisma.user.count({ where: { isActive: true } }), // Total de ativos
+
+      prisma.user.count(),
+      prisma.user.count({ where: { isActive: true } }),
       prisma.user.count({
         where: {
           createdAt: {
-            gte: startOfMonth(new Date()), // Criados desde o dia 1 do mês atual
+            gte: startOfMonth(new Date()),
           },
         },
       }),
@@ -77,13 +75,14 @@ export class UsersService {
   }
 
   async getUserById(id: UserParamsDTO["id"]) {
-    const user = (await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
-    })) as UserResponseDTO | null;
+    });
 
     if (!user) {
       throw new AppError("Usuário não encontrado.", 404);
     }
+
     return prisma.user.findUnique({
       where: { id },
       select: {
@@ -103,20 +102,18 @@ export class UsersService {
     requesterRole: "admin" | "editor",
     requesterId: string,
   ) {
-    const user = (await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
-    })) as UserResponseDTO | null;
+    });
 
     if (!user) {
       throw new AppError("Usuário não encontrado.", 404);
     }
 
-    // Editor nunca altera role
     if (data.role && requesterRole !== "admin") {
       throw new AppError("Sem permissão para alterar função.", 403);
     }
 
-    // Admin não pode se auto-rebaixar
     if (data.role && requesterId === id && data.role !== user.role) {
       throw new AppError("Você não pode alterar sua própria função.", 403);
     }
@@ -127,7 +124,7 @@ export class UsersService {
         firstName: data.firstName ?? user.firstName,
         lastName: data.lastName ?? user.lastName,
         role: data.role ?? user.role,
-        isActive: data.isActive ?? true,
+        isActive: data.isActive ?? user.isActive,
       },
       select: {
         id: true,
@@ -141,9 +138,9 @@ export class UsersService {
   }
 
   async resetPassword(id: UserParamsDTO["id"], data: ResetPasswordBodyDTO) {
-    const user = (await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
-    })) as UserResponseDTO | null;
+    });
 
     if (!user) {
       throw new AppError("Usuário não encontrado.", 404);
@@ -154,6 +151,6 @@ export class UsersService {
     return prisma.user.update({
       where: { id },
       data: { passwordHash: hashedPassword },
-    }) as Promise<UserResponseDTO>;
+    });
   }
 }

@@ -1,51 +1,62 @@
 import { z } from "zod";
 
+export const USER_ROLES = ["admin", "editor", "motorista"] as const;
+
+export const userRoleSchema = z.enum(USER_ROLES);
+
+export type UserRole = z.infer<typeof userRoleSchema>;
+
 export const userResponseSchema = z.object({
   id: z.uuid(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.email(),
-  role: z.string(),
+  role: userRoleSchema,
   isActive: z.boolean(),
 });
 
 export type UserResponseDTO = z.infer<typeof userResponseSchema>;
 
-// Lista de usuários
+
 export const usersListResponseSchema = z.array(userResponseSchema);
 export type UsersListResponseDTO = z.infer<typeof usersListResponseSchema>;
+
 
 export const userParamsSchema = z.object({
   id: z.uuid(),
 });
 export type UserParamsDTO = z.infer<typeof userParamsSchema>;
 
+
 export const updateUserBodySchema = z.object({
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
-  role: z.enum(["admin", "motorista", "editor"]).optional(),
+  role: userRoleSchema.optional(),
   isActive: z.boolean().optional(),
 });
 export type UpdateUserBodyDTO = z.infer<typeof updateUserBodySchema>;
+
 
 export const resetPasswordBodySchema = z.object({
   newPassword: z.string().min(8),
 });
 export type ResetPasswordBodyDTO = z.infer<typeof resetPasswordBodySchema>;
 
+
 export const userQuerySchema = z.object({
   search: z.string().optional(),
-  
+
   role: z.preprocess((val) => {
     if (!val) return undefined;
     return Array.isArray(val) ? val : [val];
-  }, z.array(z.string()).optional()),
+  }, z.array(userRoleSchema).optional()),
 
   isActive: z.preprocess((val) => {
-    if (val === undefined || val === null) return undefined;
-    const arr = Array.isArray(val) ? val : [val];
-    return arr.map(v => v === 'true' || v === true);
-  }, z.array(z.boolean()).optional()),
+    if (val === undefined) return undefined;
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
 });
 
 export type UserQueryDTO = z.infer<typeof userQuerySchema>;
