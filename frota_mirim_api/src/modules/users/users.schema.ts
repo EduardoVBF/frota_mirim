@@ -17,16 +17,13 @@ export const userResponseSchema = z.object({
 
 export type UserResponseDTO = z.infer<typeof userResponseSchema>;
 
-
 export const usersListResponseSchema = z.array(userResponseSchema);
 export type UsersListResponseDTO = z.infer<typeof usersListResponseSchema>;
-
 
 export const userParamsSchema = z.object({
   id: z.uuid(),
 });
 export type UserParamsDTO = z.infer<typeof userParamsSchema>;
-
 
 export const updateUserBodySchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -36,12 +33,10 @@ export const updateUserBodySchema = z.object({
 });
 export type UpdateUserBodyDTO = z.infer<typeof updateUserBodySchema>;
 
-
 export const resetPasswordBodySchema = z.object({
   newPassword: z.string().min(8),
 });
 export type ResetPasswordBodyDTO = z.infer<typeof resetPasswordBodySchema>;
-
 
 export const userQuerySchema = z.object({
   search: z.string().optional(),
@@ -57,6 +52,16 @@ export const userQuerySchema = z.object({
     if (val === "false") return false;
     return val;
   }, z.boolean().optional()),
+
+  page: z.preprocess((val) => {
+    if (!val) return 1;
+    return Number(val);
+  }, z.number().min(1)),
+
+  limit: z.preprocess((val) => {
+    if (!val) return 10;
+    return Number(val);
+  }, z.number().min(1).max(100)),
 });
 
 export type UserQueryDTO = z.infer<typeof userQuerySchema>;

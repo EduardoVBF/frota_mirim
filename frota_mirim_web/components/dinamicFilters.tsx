@@ -13,40 +13,38 @@ export type FilterConfig = {
   multi?: boolean;
 };
 
-interface DynamicFiltersProps {
+interface DynamicFiltersProps<T extends Record<string, string | boolean | (string | boolean)[]>> {
   configs: FilterConfig[];
-  filters: Record<string, string | boolean | string[] | undefined>;
-  setFilters: React.Dispatch<
-    React.SetStateAction<
-      Record<string, string | boolean | string[] | undefined>
-    >
-  >;
+  filters: T;
+  setFilters: React.Dispatch<React.SetStateAction<T>>;
   onClear?: () => void;
 }
 
-export default function DynamicFilters({
+export default function DynamicFilters<T extends Record<string, string | boolean | (string | boolean)[]>>({
   configs,
   filters,
   setFilters,
   onClear,
-}: DynamicFiltersProps) {
+}: DynamicFiltersProps<T>) {
   const handleToggle = (
     key: string,
     value: string | boolean,
-    multi?: boolean,
+    multi?: boolean
   ) => {
     setFilters((prev) => {
       const currentValue = prev[key];
 
       // 🔥 MULTI SELECT
       if (multi) {
-        const currentArray = Array.isArray(currentValue) ? currentValue : [];
+        const currentArray = Array.isArray(currentValue)
+          ? currentValue
+          : [];
 
-        const exists = currentArray.includes(value as string);
+        const exists = currentArray.includes(value);
 
         const newArray = exists
           ? currentArray.filter((v) => v !== value)
-          : [...currentArray, value as string];
+          : [...currentArray, value];
 
         return {
           ...prev,
@@ -54,6 +52,7 @@ export default function DynamicFilters({
         };
       }
 
+      // 🔥 SINGLE SELECT
       const isSelected = currentValue === value;
 
       return {
@@ -68,23 +67,30 @@ export default function DynamicFilters({
       {configs.map((config) => (
         <div key={config.key}>
           <span className="text-xs font-bold">{config.label}</span>
+
           <div className="flex gap-2 mt-2">
             {config.options.map((opt) => {
               const value = filters[config.key];
 
               const isSelected = Array.isArray(value)
-                ? value.includes(opt.value as string)
+                ? value.includes(opt.value)
                 : value === opt.value;
 
               return (
                 <button
                   key={String(opt.value)}
+                  type="button"
                   onClick={() =>
                     handleToggle(config.key, opt.value, config.multi)
                   }
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs ${
-                    isSelected ? "bg-accent text-white" : "border"
-                  }`}
+                  className={`
+                    flex items-center gap-1 px-3 py-1 rounded-full text-xs transition-all
+                    ${
+                      isSelected
+                        ? "bg-accent text-white"
+                        : "border border-border hover:border-accent/50"
+                    }
+                  `}
                 >
                   {isSelected && <Check size={12} />}
                   {opt.label}
@@ -97,8 +103,9 @@ export default function DynamicFilters({
 
       {onClear && (
         <button
+          type="button"
           onClick={onClear}
-          className="ml-auto text-error text-xs flex items-center gap-1"
+          className="ml-auto text-error text-xs flex items-center gap-1 hover:opacity-80 transition-opacity"
         >
           <X size={14} /> Limpar
         </button>

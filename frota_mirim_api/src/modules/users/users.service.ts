@@ -12,11 +12,10 @@ import bcrypt from "bcrypt";
 
 export class UsersService {
   async getAllUsers(query: UserQueryDTO) {
-    const { search, role, isActive } = query;
+    const { search, role, isActive, page = 1, limit = 10 } = query;
 
     const where: any = { AND: [] };
 
-    // 🔎 Search
     if (search) {
       where.AND.push({
         OR: [
@@ -27,55 +26,57 @@ export class UsersService {
       });
     }
 
-    // 🎭 Role (pode ser múltipla)
     if (role) {
-      const roles = Array.isArray(role) ? role : [role];
-
       where.AND.push({
-        role: {
-          in: roles,
-        },
+        role: { in: Array.isArray(role) ? role : [role] },
       });
     }
 
-    // 🔵 Status (boolean simples)
     if (typeof isActive === "boolean") {
       where.AND.push({ isActive });
     }
 
-    const finalWhere = where.AND.length > 0 ? where : {};
+    const finalWhere = where.AND.length ? where : {};
 
-    const [users, totalCount, activeCount, monthCount] = await Promise.all([
-      prisma.user.findMany({
-        where: finalWhere,
-        orderBy: { firstName: "asc" },
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          role: true,
-          isActive: true,
-        },
-      }),
+    const skip = (page - 1) * limit;
 
-      prisma.user.count(),
-      prisma.user.count({ where: { isActive: true } }),
-      prisma.user.count({
-        where: {
-          createdAt: {
-            gte: startOfMonth(new Date()),
+    const [users, totalFiltered, totalCount, activeCount, monthCount] =
+      await Promise.all([
+        prisma.user.findMany({
+          where: finalWhere,
+          orderBy: { firstName: "asc" },
+          skip,
+          take: limit,
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            isActive: true,
           },
-        },
-      }),
-    ]);
+        }),
+
+        prisma.user.count({ where: finalWhere }),
+        prisma.user.count(),
+        prisma.user.count({ where: { isActive: true } }),
+        prisma.user.count({
+          where: {
+            createdAt: { gte: startOfMonth(new Date()) },
+          },
+        }),
+      ]);
 
     return {
       users,
       meta: {
         total: totalCount,
+        totalFiltered,
         active: activeCount,
         newThisMonth: monthCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalFiltered / limit),
       },
     };
   }

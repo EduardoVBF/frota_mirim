@@ -14,8 +14,12 @@ export type UsersResponse = {
   users: User[];
   meta: {
     total: number;
+    totalFiltered: number;
     active: number;
     newThisMonth: number;
+    page: number;
+    limit: number;
+    totalPages: number;
   };
 };
 
@@ -39,6 +43,8 @@ export type UserFilters = {
   search?: string;
   role?: string[];
   isActive?: boolean;
+  page?: number;
+  limit?: number;
 };
 
 export async function createUser(payload: CreateUserPayload): Promise<User> {

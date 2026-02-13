@@ -14,20 +14,21 @@ import ResetPasswordModal from "./resetPasswordModal";
 import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
 import UserFormModal from "./userFormModal";
+import LoaderComp from "../loaderComp";
 import { useState } from "react";
 
 export function UserTable({
   users,
-  // setUsers,
-  filter,
-  setFilter,
+  isLoading,
+  filters,
+  setFilters,
   onUserChange,
 }: {
   users: User[];
-  // setUsers: React.Dispatch<React.SetStateAction<User[]>>;
-  filter: UserFilters;
-  setFilter: React.Dispatch<React.SetStateAction<UserFilters>>;
+  filters: UserFilters;
+  setFilters: React.Dispatch<React.SetStateAction<UserFilters>>;
   onUserChange: () => void;
+  isLoading: boolean;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -141,12 +142,15 @@ export function UserTable({
             <Search size={18} className="text-muted" />
             <input
               type="text"
-              placeholder="Buscar..."
-              className="bg-transparent outline-none text-sm w-full"
-              value={filter.search}
+              value={filters.search}
               onChange={(e) =>
-                setFilter((prev) => ({ ...prev, search: e.target.value }))
+                setFilters({
+                  ...filters,
+                  search: e.target.value,
+                })
               }
+              className="w-full bg-transparent text-sm focus:outline-none"
+              placeholder="Buscar por nome ou email..."
             />
           </div>
 
@@ -170,10 +174,10 @@ export function UserTable({
         {showFilters && (
           <DynamicFilters
             configs={userFilterConfigs}
-            filters={filter}
-            setFilters={setFilter}
+            filters={filters}
+            setFilters={setFilters}
             onClear={() =>
-              setFilter({
+              setFilters({
                 search: "",
                 role: undefined,
                 isActive: undefined,
@@ -195,7 +199,15 @@ export function UserTable({
             </tr>
           </thead>
 
-          {users.length === 0 ? (
+          {isLoading ? (
+            <tbody>
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center">
+                  <LoaderComp />
+                </td>
+              </tr>
+            </tbody>
+          ) : users.length === 0 ? (
             <tbody>
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-muted">
