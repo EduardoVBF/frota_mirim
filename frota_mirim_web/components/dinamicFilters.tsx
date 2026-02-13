@@ -13,14 +13,23 @@ export type FilterConfig = {
   multi?: boolean;
 };
 
-interface DynamicFiltersProps<T extends Record<string, string | boolean | (string | boolean)[]>> {
+type FilterValue =
+  | string
+  | boolean
+  | number
+  | (string | boolean | number)[]
+  | undefined;
+
+interface DynamicFiltersProps<T extends Record<string, FilterValue>> {
   configs: FilterConfig[];
   filters: T;
   setFilters: React.Dispatch<React.SetStateAction<T>>;
   onClear?: () => void;
 }
 
-export default function DynamicFilters<T extends Record<string, string | boolean | (string | boolean)[]>>({
+export default function DynamicFilters<
+  T extends Record<string, FilterValue>
+>({
   configs,
   filters,
   setFilters,
@@ -37,7 +46,7 @@ export default function DynamicFilters<T extends Record<string, string | boolean
       // 🔥 MULTI SELECT
       if (multi) {
         const currentArray = Array.isArray(currentValue)
-          ? currentValue
+          ? (currentValue as (string | boolean | number)[])
           : [];
 
         const exists = currentArray.includes(value);
