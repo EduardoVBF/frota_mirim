@@ -98,6 +98,7 @@ export function UserTable({
     {
       key: "role",
       label: "Função",
+      multi: true,
       options: [
         { label: "Admin", value: "admin" },
         { label: "Editor", value: "editor" },

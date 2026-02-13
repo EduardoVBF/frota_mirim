@@ -9,6 +9,7 @@ export async function registerPlugins(app: FastifyInstance) {
     origin: ["http://localhost:3000", "https://frota-mirim.vercel.app"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   });
 
   // JWT

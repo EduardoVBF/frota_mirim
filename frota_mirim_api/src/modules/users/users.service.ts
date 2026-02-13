@@ -28,8 +28,14 @@ export class UsersService {
     }
 
     // 🎭 Role (pode ser múltipla)
-    if (role && role.length > 0) {
-      where.AND.push({ role: { in: role } });
+    if (role) {
+      const roles = Array.isArray(role) ? role : [role];
+
+      where.AND.push({
+        role: {
+          in: roles,
+        },
+      });
     }
 
     // 🔵 Status (boolean simples)

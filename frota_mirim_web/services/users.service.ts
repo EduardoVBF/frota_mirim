@@ -1,4 +1,5 @@
 import { api } from "./api";
+import qs from "qs";
 
 export type User = {
   id: string;
@@ -36,7 +37,7 @@ export type UpdateUserPayload = {
 
 export type UserFilters = {
   search?: string;
-  role?: string;
+  role?: string[];
   isActive?: boolean;
 };
 
@@ -45,10 +46,15 @@ export async function createUser(payload: CreateUserPayload): Promise<User> {
   return data;
 }
 
-export async function getAdminUsers(filters: UserFilters): Promise<UsersResponse> {
+export async function getAdminUsers(
+  filters: UserFilters
+): Promise<UsersResponse> {
   const { data } = await api.get("/users", {
     params: filters,
+    paramsSerializer: (params) =>
+      qs.stringify(params, { arrayFormat: "repeat" }),
   });
+
   return data;
 }
 

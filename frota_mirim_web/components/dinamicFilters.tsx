@@ -10,13 +10,16 @@ export type FilterConfig = {
   key: string;
   label: string;
   options: FilterOption[];
+  multi?: boolean;
 };
 
 interface DynamicFiltersProps {
   configs: FilterConfig[];
-  filters: Record<string, string | boolean | undefined>;
+  filters: Record<string, string | boolean | string[] | undefined>;
   setFilters: React.Dispatch<
-    React.SetStateAction<Record<string, string | boolean | undefined>>
+    React.SetStateAction<
+      Record<string, string | boolean | string[] | undefined>
+    >
   >;
   onClear?: () => void;
 }
@@ -27,9 +30,32 @@ export default function DynamicFilters({
   setFilters,
   onClear,
 }: DynamicFiltersProps) {
-  const handleToggle = (key: string, value: string | boolean) => {
+  const handleToggle = (
+    key: string,
+    value: string | boolean,
+    multi?: boolean,
+  ) => {
     setFilters((prev) => {
-      const isSelected = prev[key] === value;
+      const currentValue = prev[key];
+
+      // 🔥 MULTI SELECT
+      if (multi) {
+        const currentArray = Array.isArray(currentValue) ? currentValue : [];
+
+        const exists = currentArray.includes(value as string);
+
+        const newArray = exists
+          ? currentArray.filter((v) => v !== value)
+          : [...currentArray, value as string];
+
+        return {
+          ...prev,
+          [key]: newArray.length ? newArray : undefined,
+        };
+      }
+
+      const isSelected = currentValue === value;
+
       return {
         ...prev,
         [key]: isSelected ? undefined : value,
@@ -44,11 +70,18 @@ export default function DynamicFilters({
           <span className="text-xs font-bold">{config.label}</span>
           <div className="flex gap-2 mt-2">
             {config.options.map((opt) => {
-              const isSelected = filters[config.key] === opt.value;
+              const value = filters[config.key];
+
+              const isSelected = Array.isArray(value)
+                ? value.includes(opt.value as string)
+                : value === opt.value;
+
               return (
                 <button
                   key={String(opt.value)}
-                  onClick={() => handleToggle(config.key, opt.value)}
+                  onClick={() =>
+                    handleToggle(config.key, opt.value, config.multi)
+                  }
                   className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs ${
                     isSelected ? "bg-accent text-white" : "border"
                   }`}
