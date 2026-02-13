@@ -5,8 +5,10 @@ import { UserTable } from "@/components/users/userTable";
 import { useEffect, useState, useCallback } from "react";
 import { FadeIn } from "@/components/motion/fadeIn";
 import { StatsCard } from "@/components/statsCard";
+import LoaderComp from "@/components/loaderComp";
 
 export default function UsuariosPage() {
+  const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<UserFilters>({
     search: "",
@@ -20,28 +22,27 @@ export default function UsuariosPage() {
     newThisMonth: 0,
   });
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      const data = await getAdminUsers(filter);
+      setUsers(data.users);
+      setUsersMeta(data.meta);
+    } catch {
+      setUsers([]);
+      setUsersMeta({
+        total: 0,
+        active: 0,
+        newThisMonth: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
 
-const fetchUsers = useCallback(async () => {
-  try {
-    const data = await getAdminUsers(filter);
-    setUsers(data.users);
-    setUsersMeta(data.meta);
-  } catch {
-    setUsers([]);
-    setUsersMeta({
-      total: 0,
-      active: 0,
-      newThisMonth: 0,
-    });
-  }
-}, [filter]);
-
-
-useEffect(() => {
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  fetchUsers();
-}, [fetchUsers]);
-
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchUsers();
+  }, [fetchUsers]);
 
   return (
     <FadeIn>
@@ -55,34 +56,40 @@ useEffect(() => {
           </p>
         </header>
 
-        <div className="grid grid-cols-3 gap-6">
-          <StatsCard
-            label="Total"
-            value={usersMeta.total.toString()}
-            icon={<Users />}
-            iconColor="text-accent"
-          />
-          <StatsCard
-            label="Ativos"
-            value={usersMeta.active.toString()}
-            icon={<UserCheck />}
-            iconColor="text-success"
-          />
-          <StatsCard
-            label="Novos no mês"
-            value={usersMeta.newThisMonth.toString()}
-            icon={<UserPlus />}
-            iconColor="text-info"
-          />
-        </div>
+        {loading ? (
+          <LoaderComp />
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-6">
+              <StatsCard
+                label="Total"
+                value={usersMeta.total.toString()}
+                icon={<Users />}
+                iconColor="text-accent"
+              />
+              <StatsCard
+                label="Ativos"
+                value={usersMeta.active.toString()}
+                icon={<UserCheck />}
+                iconColor="text-success"
+              />
+              <StatsCard
+                label="Novos no mês"
+                value={usersMeta.newThisMonth.toString()}
+                icon={<UserPlus />}
+                iconColor="text-info"
+              />
+            </div>
 
-        <UserTable
-          users={users}
-          // setUsers={setUsers}
-          filter={filter}
-          setFilter={setFilter}
-          onUserChange={fetchUsers}
-        />
+            <UserTable
+              users={users}
+              // setUsers={setUsers}
+              filter={filter}
+              setFilter={setFilter}
+              onUserChange={fetchUsers}
+            />
+          </>
+        )}
       </div>
     </FadeIn>
   );

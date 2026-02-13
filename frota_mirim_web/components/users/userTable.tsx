@@ -9,12 +9,12 @@ import {
   UserFilters,
 } from "@/services/users.service";
 import { Edit2, Phone, Search, Filter, UserPlus, Key } from "lucide-react";
+import DynamicFilters, { FilterConfig } from "../dinamicFilters";
 import ResetPasswordModal from "./resetPasswordModal";
 import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
-import { useState } from "react";
 import UserFormModal from "./userFormModal";
-import DynamicFilters, { FilterConfig } from "../dinamicFilters";
+import { useState } from "react";
 
 export function UserTable({
   users,
@@ -195,81 +195,93 @@ export function UserTable({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-border">
-            {users.map((user) => (
-              <tr
-                key={user.id}
-                className="group hover:bg-background/50 transition-colors"
-              >
-                {/* Avatar */}
-                <td className="px-6 py-4 text-center">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mx-auto uppercase">
-                    {user.firstName[0]}
-                    {user.lastName[0]}
-                  </div>
-                </td>
-
-                {/* Nome + Email */}
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-foreground">
-                      {user.firstName} {user.lastName}
-                    </span>
-                    <span className="text-xs text-muted">{user.email}</span>
-                  </div>
-                </td>
-
-                {/* Role */}
-                <td className="px-6 py-4">
-                  <span className="text-[10px] font-bold uppercase px-2 py-1 rounded bg-background border border-border text-muted">
-                    {user.role}
-                  </span>
-                </td>
-
-                {/* Status */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`flex items-center gap-2 text-xs font-bold ${
-                      user.isActive ? "text-success" : "text-error"
-                    }`}
-                  >
-                    <StatusDot
-                      color={user.isActive ? "var(--success)" : "var(--error)"}
-                    />
-                    {user.isActive ? "Ativo" : "Inativo"}
-                  </div>
-                </td>
-
-                {/* Actions */}
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => handleEdit(user)}
-                      className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all"
-                      title="Editar usuário"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-
-                    <button className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all">
-                      <Phone size={16} />
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setResetUser(user);
-                        setResetOpen(true);
-                      }}
-                      className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all"
-                      title="Redefinir senha"
-                    >
-                      <Key size={20} />
-                    </button>
-                  </div>
+          {users.length === 0 ? (
+            <tbody>
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-muted">
+                  Nenhum usuário encontrado.
                 </td>
               </tr>
-            ))}
-          </tbody>
+            </tbody>
+          ) : (
+            <tbody className="divide-y divide-border">
+              {users.map((user) => (
+                <tr
+                  key={user.id}
+                  className="group hover:bg-background/50 transition-colors"
+                >
+                  {/* Avatar */}
+                  <td className="px-6 py-4 text-center">
+                    <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mx-auto uppercase">
+                      {user.firstName[0]}
+                      {user.lastName[0]}
+                    </div>
+                  </td>
+
+                  {/* Nome + Email */}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-foreground">
+                        {user.firstName} {user.lastName}
+                      </span>
+                      <span className="text-xs text-muted">{user.email}</span>
+                    </div>
+                  </td>
+
+                  {/* Role */}
+                  <td className="px-6 py-4">
+                    <span className="text-[10px] font-bold uppercase px-2 py-1 rounded bg-background border border-border text-muted">
+                      {user.role}
+                    </span>
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-6 py-4">
+                    <div
+                      className={`flex items-center gap-2 text-xs font-bold ${
+                        user.isActive ? "text-success" : "text-error"
+                      }`}
+                    >
+                      <StatusDot
+                        color={
+                          user.isActive ? "var(--success)" : "var(--error)"
+                        }
+                      />
+                      {user.isActive ? "Ativo" : "Inativo"}
+                    </div>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all"
+                        title="Editar usuário"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+
+                      <button className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all">
+                        <Phone size={16} />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setResetUser(user);
+                          setResetOpen(true);
+                        }}
+                        className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all"
+                        title="Redefinir senha"
+                      >
+                        <Key size={20} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          )}
         </table>
       </div>
     </div>
