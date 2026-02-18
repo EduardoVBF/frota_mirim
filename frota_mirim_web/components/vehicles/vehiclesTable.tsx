@@ -1,123 +1,251 @@
 "use client";
-import { Search, Plus, Edit3 } from "lucide-react";
-import Link from "next/link";
 
-const vehicles = [
-  {
-    placa: "BSR-9B03",
-    modelo: "Opala",
-    marca: "Ferrari",
-    ano: "1900",
-    tipo: "Carro",
-    motorista: "Bruno1 Jklkl",
-  },
-  {
-    placa: "ABC1D21",
-    modelo: "Civic",
-    marca: "Fiat",
-    ano: "2025",
-    tipo: "Carro",
-    motorista: "Brunão João",
-  },
-  {
-    placa: "ABC1D23",
-    modelo: "Strada",
-    marca: "Fiat",
-    ano: "2022",
-    tipo: "Caminhão",
-    motorista: "Bruno Algarte",
-  },
-];
+import {
+  Vehicle,
+  createVehicle,
+  updateVehicle,
+  VehiclePayload,
+  UpdateVehiclePayload,
+  VehicleFilters,
+} from "@/services/vehicles.service";
+import DynamicFilters, { FilterConfig } from "../dinamicFilters";
+import { Edit2, Search, Filter, Plus } from "lucide-react";
+import VehicleFormModal from "../vehicle/vehicleFormModal";
+import toast, { Toaster } from "react-hot-toast";
+import LoaderComp from "../loaderComp";
+import { useState } from "react";
 
-export function VehicleTable() {
+export function VehicleTable({
+  vehicles,
+  isLoading,
+  filters,
+  setFilters,
+  onVehicleChange,
+}: {
+  vehicles: Vehicle[];
+  filters: VehicleFilters;
+  setFilters: React.Dispatch<React.SetStateAction<VehicleFilters>>;
+  onVehicleChange: () => void;
+  isLoading: boolean;
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const handleEdit = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setEditingVehicle(null);
+    setIsModalOpen(true);
+  };
+
+  const handleFormSubmit = async (data: VehiclePayload) => {
+    setLoading(true);
+    try {
+      if (editingVehicle) {
+        await updateVehicle(
+          editingVehicle.id,
+          data as UpdateVehiclePayload
+        );
+        toast.success("Veículo atualizado");
+      } else {
+        await createVehicle(data);
+        toast.success("Veículo criado");
+      }
+
+      setIsModalOpen(false);
+      setEditingVehicle(null);
+      await onVehicleChange();
+    } catch {
+      toast.error("Erro ao salvar veículo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const vehicleFilterConfigs: FilterConfig[] = [
+    {
+      key: "isActive",
+      label: "Status",
+      options: [
+        { label: "Ativos", value: true },
+        { label: "Inativos", value: false },
+      ],
+    },
+    {
+      key: "tipo",
+      label: "Tipo",
+      multi: true,
+      options: [
+        { label: "Carro", value: "CARRO" },
+        { label: "Caminhão", value: "CAMINHAO" },
+        { label: "Moto", value: "MOTO" },
+        { label: "Ônibus", value: "ONIBUS" },
+      ],
+    },
+  ];
+
   return (
-    <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden shadow-sm">
-      {/* Header da Tabela */}
-      <div className="p-5 border-b border-border bg-alternative-bg/50 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-foreground">Frota Ativa</h2>
-          <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase">
-            3 Unidades
-          </span>
+    <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
+      <Toaster />
+
+      <VehicleFormModal
+        key={editingVehicle ? `edit-${editingVehicle.id}` : "new-vehicle"}
+        open={isModalOpen}
+        onSubmit={handleFormSubmit}
+        loading={loading}
+        initialData={editingVehicle || undefined}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingVehicle(null);
+          setLoading(false);
+        }}
+      />
+
+      {/* HEADER */}
+      <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
+        {/* Search */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm">
+          <Search size={18} className="text-muted" />
+          <input
+            type="text"
+            value={filters.search}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                search: e.target.value,
+              })
+            }
+            className="w-full bg-transparent text-sm focus:outline-none"
+            placeholder="Buscar placa, modelo ou marca..."
+          />
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors"
-              size={16}
-            />
-            <input
-              type="text"
-              placeholder="Buscar placa, modelo..."
-              className="pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-sm outline-none focus:border-accent/50 w-64 transition-all"
-            />
-          </div>
-          <button className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-accent/20">
+        <div className="flex items-center gap-2">
+          <button
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted hover:text-foreground border border-border rounded-lg"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={16} /> Filtros
+          </button>
+
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-accent/20"
+          >
             <Plus size={18} /> Cadastrar Veículo
           </button>
         </div>
       </div>
 
+      {showFilters && (
+        <DynamicFilters
+          configs={vehicleFilterConfigs}
+          filters={filters}
+          setFilters={setFilters}
+          onClear={() =>
+            setFilters({
+              search: "",
+              tipo: undefined,
+              isActive: undefined,
+            })
+          }
+        />
+      )}
+
+      {/* TABLE */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="text-[10px] uppercase tracking-[0.15em] text-muted border-b border-border bg-background/30">
+            <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
               <th className="px-6 py-4 font-bold">Placa</th>
-              <th className="px-6 py-4 font-bold">Modelo / Marca</th>
+              <th className="px-6 py-4 font-bold">Modelo</th>
               <th className="px-6 py-4 font-bold">Ano</th>
               <th className="px-6 py-4 font-bold">Tipo</th>
-              <th className="px-6 py-4 font-bold">Motorista Responsável</th>
+              <th className="px-6 py-4 font-bold">KM Atual</th>
+              <th className="px-6 py-4 font-bold">Status</th>
               <th className="px-6 py-4 font-bold text-right">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
-            {vehicles.map((v, i) => (
-              <tr
-                key={i}
-                className="group hover:bg-background/40 transition-colors"
-              >
-                <td className="px-6 py-4">
-                  <Link href={`/veiculos/${v.placa}`}>
-                    <span className="font-mono text-sm font-bold bg-background border border-border px-2 py-1 rounded text-foreground cursor-pointer">
-                      {v.placa}
-                    </span>
-                  </Link>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-foreground">
-                      {v.modelo}
-                    </span>
-                    <span className="text-xs text-muted">{v.marca}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-muted">
-                  {v.ano}
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-[10px] font-bold uppercase px-2 py-1 rounded bg-alternative-bg border border-border text-muted group-hover:border-accent/30 group-hover:text-accent transition-all">
-                    {v.tipo}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent border border-accent/20">
-                      {v.motorista.charAt(0)}
-                    </div>
-                    <span className="text-sm font-medium text-foreground/80">
-                      {v.motorista}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg transition-all">
-                    <Edit3 size={16} />
-                  </button>
+
+          {isLoading ? (
+            <tbody>
+              <tr>
+                <td colSpan={7} className="px-6 py-12 text-center">
+                  <LoaderComp />
                 </td>
               </tr>
-            ))}
-          </tbody>
+            </tbody>
+          ) : vehicles.length === 0 ? (
+            <tbody>
+              <tr>
+                <td colSpan={7} className="px-6 py-12 text-center text-muted">
+                  Nenhum veículo encontrado.
+                </td>
+              </tr>
+            </tbody>
+          ) : (
+            <tbody className="divide-y divide-border">
+              {vehicles.map((vehicle) => (
+                <tr
+                  key={vehicle.id}
+                  className="group hover:bg-background/50 transition-colors"
+                >
+                  <td className="px-6 py-4 font-mono font-bold">
+                    {vehicle.placa}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold">
+                        {vehicle.modelo}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {vehicle.marca}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4">{vehicle.ano}</td>
+
+                  <td className="px-6 py-4">
+                    <span className="text-[10px] font-bold uppercase px-2 py-1 rounded bg-background border border-border">
+                      {vehicle.tipo}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    {vehicle.kmAtual.toLocaleString()} km
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span
+                      className={`text-xs font-bold ${
+                        vehicle.isActive
+                          ? "text-success"
+                          : "text-error"
+                      }`}
+                    >
+                      {vehicle.isActive ? "Ativo" : "Inativo"}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => handleEdit(vehicle)}
+                      className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          )}
         </table>
       </div>
     </div>
