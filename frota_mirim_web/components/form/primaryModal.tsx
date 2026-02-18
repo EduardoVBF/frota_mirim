@@ -61,7 +61,7 @@ export default function PrimaryModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={`relative w-full ${sizeClasses[size]} bg-background border-2 border-border/50 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] rounded-4xl overflow-hidden flex flex-col`}
+            className={`relative w-full ${sizeClasses[size]} bg-background border-2 border-border/50 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] rounded-4xl overflow-hidden flex flex-col max-h-[95dvh]`}
           >
             {/* Botão Fechar Flutuante */}
             <button

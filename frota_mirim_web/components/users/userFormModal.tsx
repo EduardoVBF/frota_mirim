@@ -1,13 +1,14 @@
 "use client";
 import { translateApiErrors } from "../../utils/translateApiError";
-import { User } from "../../services/users.service";
+import { User, UserPayload } from "../../services/users.service";
+import React, { useEffect, useState } from "react";
 import PrimarySelect from "../form/primarySelect";
 import PrimarySwitch from "../form/primarySwitch";
 import PrimaryModal from "../form/primaryModal";
 import PrimaryInput from "../form/primaryInput";
 import ColoredTextBox from "../coloredTextBox";
+import ImageInput from "../form/imageInput";
 import { toast } from "react-hot-toast";
-import React, { useState } from "react";
 import LoaderComp from "../loaderComp";
 import { AxiosError } from "axios";
 
@@ -16,7 +17,7 @@ type Props = {
   loading: boolean;
   initialData?: User | null;
   onClose: () => void;
-  onSubmit: (data: Partial<User>) => void;
+  onSubmit: (data: UserPayload) => void;
 };
 
 export default function UserFormModal({
@@ -29,14 +30,45 @@ export default function UserFormModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [infoVisible, setInfoVisible] = useState(false);
 
-  const [firstName, setFirstName] = useState(initialData?.firstName || "");
-  const [lastName, setLastName] = useState(initialData?.lastName || "");
-  const [email, setEmail] = useState(initialData?.email || "");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "motorista" | "editor">(
-    (initialData?.role as "admin" | "motorista" | "editor") || "admin",
-  );
-  const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
+  const [role, setRole] = useState<"admin" | "motorista" | "editor">("admin");
+  const [isActive, setIsActive] = useState(true);
+
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [cnhExpiresAt, setCnhExpiresAt] = useState<string>("");
+
+  useEffect(() => {
+    if (initialData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFirstName(initialData.firstName);
+      setLastName(initialData.lastName);
+      setEmail(initialData.email);
+      setRole(initialData.role);
+      setIsActive(initialData.isActive);
+      setPassword("");
+      setImageBase64(initialData.imageUrl || null);
+
+      setCnhExpiresAt(
+        initialData.cnhExpiresAt
+          ? new Date(initialData.cnhExpiresAt)
+              .toISOString()
+              .split("T")[0]
+          : ""
+      );
+    } else {
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPassword("");
+      setRole("admin");
+      setIsActive(true);
+      setImageBase64(null);
+      setCnhExpiresAt("");
+    }
+  }, [initialData, open]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +82,8 @@ export default function UserFormModal({
         role,
         isActive,
         ...(initialData ? {} : { password }),
+        ...(imageBase64 && { imageBase64 }),
+        ...(cnhExpiresAt && { cnhExpiresAt }),
       });
     } catch (err) {
       if (err instanceof AxiosError && err.response?.data) {
@@ -82,8 +116,8 @@ export default function UserFormModal({
         {loading
           ? "Salvando..."
           : initialData
-            ? "Salvar Alterações"
-            : "Cadastrar Usuário"}
+          ? "Salvar Alterações"
+          : "Cadastrar Usuário"}
       </button>
     </>
   );
@@ -110,6 +144,7 @@ export default function UserFormModal({
               <li>O e-mail não pode ser alterado após o cadastro.</li>
               <li>A senha é necessária apenas para novos usuários.</li>
               <li>Administradores têm acesso total às configurações.</li>
+              <li>Motoristas devem possuir CNH válida.</li>
             </ul>
           </ColoredTextBox>
         )}
@@ -122,8 +157,18 @@ export default function UserFormModal({
           <form
             id="user-form"
             onSubmit={handleSubmit}
-            className={`space-y-4 ${loading ? "opacity-50 pointer-events-none" : ""}`}
+            className={`space-y-4 ${
+              loading ? "opacity-50 pointer-events-none" : ""
+            }`}
           >
+            <div className="flex justify-center">
+              <ImageInput
+                value={initialData?.imageUrl || null}
+                onChange={setImageBase64}
+                error={errors.imageBase64}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <PrimaryInput
                 label="Nome"
@@ -138,6 +183,7 @@ export default function UserFormModal({
                 error={errors.lastName}
               />
             </div>
+
             <PrimaryInput
               label="E-mail"
               value={email}
@@ -145,6 +191,7 @@ export default function UserFormModal({
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
             />
+
             {!initialData && (
               <PrimaryInput
                 label="Senha"
@@ -154,6 +201,14 @@ export default function UserFormModal({
                 error={errors.password}
               />
             )}
+
+            <PrimaryInput
+              label="Vencimento da CNH"
+              type="date"
+              value={cnhExpiresAt}
+              onChange={(e) => setCnhExpiresAt(e.target.value)}
+              error={errors.cnhExpiresAt}
+            />
 
             <PrimarySelect
               label="Cargo"
@@ -167,6 +222,7 @@ export default function UserFormModal({
                 { label: "Editor", value: "editor" },
               ]}
             />
+
             <PrimarySwitch
               label="Ativo"
               checked={isActive}

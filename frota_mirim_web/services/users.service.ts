@@ -12,6 +12,17 @@ export type User = {
   cnhExpiresAt?: string | null;
 };
 
+export type UserPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string;
+  role: "admin" | "motorista" | "editor";
+  isActive: boolean;
+  imageBase64?: string | null;
+  cnhExpiresAt?: string | null;
+};
+
 export type UsersResponse = {
   users: User[];
   meta: {
