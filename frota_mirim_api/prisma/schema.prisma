@@ -25,3 +25,34 @@ model User {
   @@index([role])
 }
 
+enum VehicleType {
+  CARRO
+  CAMINHAO
+  MOTO
+  ONIBUS
+}
+
+model Vehicle {
+  id        String   @id @default(uuid())
+  placa     String   @unique
+  modelo    String
+  marca     String
+  ano       Int
+  tipo      VehicleType
+
+  kmAtual               Int
+  kmUltimoAbastecimento Int?
+
+  vencimentoDocumento   DateTime
+  vencimentoIPVA        DateTime
+
+  isActive  Boolean     @default(true)
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([tipo])
+  @@index([isActive])
+  @@index([vencimentoDocumento])
+  @@index([vencimentoIPVA])
+}
