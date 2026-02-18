@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { FadeIn } from "../motion/fadeIn";
 import { signOut } from "next-auth/react";
+import ImageZoom from "./ImageZoom";
 import Link from "next/link";
 
 const menuItems = [
@@ -67,11 +68,22 @@ export default function Sidebar() {
         {/* Footer da Sidebar / User Profile */}
         <div className="mt-auto border-t border-border pt-6">
           <div className="mb-3 flex items-center gap-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
-              {session?.user?.firstName?.[0] && session?.user?.lastName?.[0]
-                ? `${session.user.firstName[0]}${session.user.lastName[0]}`
-                : ""}
-            </div>
+            {session?.user?.imageUrl ? (
+              <ImageZoom
+                src={session.user.imageUrl}
+                alt={`${session.user.firstName} ${session.user.lastName}`}
+                width={32}
+                height={32}
+                primaryImageClassName="w-8 h-8 rounded-full object-cover"
+                zoom
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
+                {session?.user?.firstName?.[0] && session?.user?.lastName?.[0]
+                  ? `${session.user.firstName[0]}${session.user.lastName[0]}`
+                  : ""}
+              </div>
+            )}
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-foreground leading-none">
                 {session?.user?.firstName || "Usuário"}

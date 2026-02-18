@@ -16,6 +16,7 @@ import { StatusDot } from "../motion/statusDot";
 import UserFormModal from "./userFormModal";
 import LoaderComp from "../loaderComp";
 import { useState } from "react";
+import ImageZoom from "../layout/ImageZoom";
 
 export function UserTable({
   users,
@@ -224,10 +225,21 @@ export function UserTable({
                 >
                   {/* Avatar */}
                   <td className="px-6 py-4 text-center">
-                    <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mx-auto uppercase">
-                      {user.firstName[0]}
-                      {user.lastName[0]}
-                    </div>
+                    {user?.imageUrl ? (
+                      <ImageZoom
+                        src={user.imageUrl}
+                        alt={`${user.firstName} ${user.lastName}`}
+                        width={32}
+                        height={32}
+                        primaryImageClassName="w-8 h-8 rounded-full object-cover"
+                        zoom
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mx-auto uppercase">
+                        {user.firstName[0]}
+                        {user.lastName[0]}
+                      </div>
+                    )}
                   </td>
 
                   {/* Nome + Email */}

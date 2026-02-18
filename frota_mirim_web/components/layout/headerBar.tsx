@@ -3,6 +3,7 @@ import { Search, Bell, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ThemeToggle } from "./themeToggle";
+import ImageZoom from "./ImageZoom";
 import Link from "next/link";
 
 export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
@@ -77,11 +78,23 @@ export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
                     Online
                   </span>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
-                  {session?.user?.firstName?.[0] && session?.user?.lastName?.[0]
-                    ? `${session.user.firstName[0]}${session.user.lastName[0]}`
-                    : ""}
-                </div>
+                {session?.user?.imageUrl ? (
+                  <ImageZoom
+                    src={session.user.imageUrl}
+                    alt={`${session.user.firstName} ${session.user.lastName}`}
+                    width={32}
+                    height={32}
+                    primaryImageClassName="w-8 h-8 rounded-full object-cover"
+                    zoom
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
+                    {session?.user?.firstName?.[0] &&
+                    session?.user?.lastName?.[0]
+                      ? `${session.user.firstName[0]}${session.user.lastName[0]}`
+                      : ""}
+                  </div>
+                )}
                 <ChevronDown size={14} className="text-muted" />
               </button>
             </div>

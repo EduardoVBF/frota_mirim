@@ -8,6 +8,8 @@ export type User = {
   email: string;
   role: "admin" | "motorista" | "editor";
   isActive: boolean;
+  imageUrl?: string;
+  cnhExpiresAt?: string | null;
 };
 
 export type UsersResponse = {
