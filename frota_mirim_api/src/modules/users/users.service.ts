@@ -5,6 +5,7 @@ import {
   UpdateUserBodyDTO,
   UserQueryDTO,
 } from "./users.schema";
+import { uploadBase64ToFirebase } from "../../services/uploadImageBase64";
 import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
 import { startOfMonth } from "date-fns";
@@ -37,7 +38,6 @@ export class UsersService {
     }
 
     const finalWhere = where.AND.length ? where : {};
-
     const skip = (page - 1) * limit;
 
     const [users, totalFiltered, totalCount, activeCount, monthCount] =
@@ -54,6 +54,8 @@ export class UsersService {
             email: true,
             role: true,
             isActive: true,
+            imageUrl: true,
+            cnhExpiresAt: true,
           },
         }),
 
@@ -99,13 +101,15 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        imageUrl: true,
+        cnhExpiresAt: true,
       },
     }) as Promise<UserResponseDTO>;
   }
 
   async updateUser(
     id: UserParamsDTO["id"],
-    data: Partial<UpdateUserBodyDTO>,
+    data: Partial<UpdateUserBodyDTO> & { imageBase64?: string },
     requesterRole: "admin" | "editor",
     requesterId: string,
   ) {
@@ -125,6 +129,15 @@ export class UsersService {
       throw new AppError("Você não pode alterar sua própria função.", 403);
     }
 
+    let imageUrl: string | undefined;
+
+    if (data.imageBase64) {
+      imageUrl = await uploadBase64ToFirebase(
+        data.imageBase64,
+        "users"
+      );
+    }
+
     return prisma.user.update({
       where: { id },
       data: {
@@ -132,6 +145,8 @@ export class UsersService {
         lastName: data.lastName ?? user.lastName,
         role: data.role ?? user.role,
         isActive: data.isActive ?? user.isActive,
+        ...(imageUrl && { imageUrl }),
+        ...(data.cnhExpiresAt && { cnhExpiresAt: data.cnhExpiresAt }),
       },
       select: {
         id: true,
@@ -140,8 +155,10 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        imageUrl: true,
+        cnhExpiresAt: true,
       },
-    }) as Promise<UserResponseDTO>;
+    });
   }
 
   async resetPassword(id: UserParamsDTO["id"], data: ResetPasswordBodyDTO) {

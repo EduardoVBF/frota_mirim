@@ -13,6 +13,8 @@ export const userResponseSchema = z.object({
   email: z.email(),
   role: userRoleSchema,
   isActive: z.boolean(),
+  imageUrl: z.string().url().nullable().optional(),
+  cnhExpiresAt: z.coerce.date().nullable().optional(),
 });
 
 export type UserResponseDTO = z.infer<typeof userResponseSchema>;
@@ -30,6 +32,8 @@ export const updateUserBodySchema = z.object({
   lastName: z.string().min(1).optional(),
   role: userRoleSchema.optional(),
   isActive: z.boolean().optional(),
+  imageBase64: z.string().optional(),
+  cnhExpiresAt: z.coerce.date().optional(),
 });
 export type UpdateUserBodyDTO = z.infer<typeof updateUserBodySchema>;
 

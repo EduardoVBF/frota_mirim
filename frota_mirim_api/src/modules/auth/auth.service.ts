@@ -1,6 +1,7 @@
 import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
 import bcrypt from "bcrypt";
+import { uploadBase64ToFirebase } from "../../services/uploadImageBase64";
 
 type LoginInput = {
   email: string;
@@ -20,6 +21,9 @@ type RegisterInput = {
   password: string;
   role?: UserRole;
   isActive: boolean;
+
+  imageBase64?: string;
+  cnhExpiresAt?: Date;
 };
 
 export class AuthService {
@@ -45,6 +49,8 @@ export class AuthService {
       lastName: user.lastName,
       role: user.role,
       isActive: user.isActive,
+      imageUrl: user.imageUrl,
+      cnhExpiresAt: user.cnhExpiresAt,
     };
   }
 
@@ -59,6 +65,16 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
+    let imageUrl: string | undefined;
+
+    // ✅ Upload da imagem se enviada
+    if (data.imageBase64) {
+      imageUrl = await uploadBase64ToFirebase(
+        data.imageBase64,
+        "users"
+      );
+    }
+
     const user = await prisma.user.create({
       data: {
         firstName: data.firstName,
@@ -67,6 +83,8 @@ export class AuthService {
         passwordHash,
         role: data.role ?? UserRole.EDITOR,
         isActive: data.isActive,
+        imageUrl,
+        cnhExpiresAt: data.cnhExpiresAt,
       },
     });
 
@@ -77,6 +95,8 @@ export class AuthService {
       lastName: user.lastName,
       role: user.role,
       isActive: user.isActive,
+      imageUrl: user.imageUrl,
+      cnhExpiresAt: user.cnhExpiresAt,
     };
   }
 }

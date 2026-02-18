@@ -8,7 +8,6 @@ export async function loginController(
   reply: FastifyReply
 ) {
   const user = await service.login(request.body as any);
-  
 
   const accessToken = await reply.jwtSign(
     {
@@ -29,6 +28,8 @@ export async function loginController(
       firstName: user.firstName,
       lastName: user.lastName,
       isActive: user.isActive,
+      imageUrl: user.imageUrl,
+      cnhExpiresAt: user.cnhExpiresAt,
     },
   });
 }

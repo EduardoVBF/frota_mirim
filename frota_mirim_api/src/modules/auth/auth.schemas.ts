@@ -12,4 +12,6 @@ export const registerSchema = z.object({
   password: z.string().min(6),
   role: z.enum(["admin", "motorista", "editor"]).optional(),
   isActive: z.boolean(),
+  imageBase64: z.string().optional(),
+  cnhExpiresAt: z.coerce.date().optional(),
 });

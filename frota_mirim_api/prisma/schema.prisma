@@ -15,7 +15,13 @@ model User {
   passwordHash String
   role         String  @default("admin")
   isActive     Boolean @default(true)
+  imageUrl     String?
+  cnhExpiresAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([role])
 }
+
