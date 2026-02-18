@@ -2,6 +2,10 @@ import { prisma } from "../../shared/database/prisma";
 import { AppError } from "../../infra/errors/app-error";
 import { VehicleQueryDTO } from "./vehicles.schema";
 
+function normalizePlaca(placa: string) {
+  return placa.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+}
+
 export class VehiclesService {
   async getAllVehicles(query: VehicleQueryDTO) {
     const { search, tipo, isActive, page = 1, limit = 10 } = query;
@@ -11,7 +15,7 @@ export class VehiclesService {
     if (search) {
       where.AND.push({
         OR: [
-          { placa: { contains: search, mode: "insensitive" } },
+          { placa: { contains: normalizePlaca(search), mode: "insensitive" } },
           { modelo: { contains: search, mode: "insensitive" } },
           { marca: { contains: search, mode: "insensitive" } },
         ],
@@ -66,9 +70,25 @@ export class VehiclesService {
     return vehicle;
   }
 
+  async getVehicleByPlaca(placa: string) {
+    const normalized = normalizePlaca(placa);
+
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { placa: normalized },
+    });
+
+    if (!vehicle) {
+      throw new AppError("Veículo não encontrado.", 404);
+    }
+
+    return vehicle;
+  }
+
   async createVehicle(data: any) {
+    const normalizedPlaca = normalizePlaca(data.placa);
+
     const existing = await prisma.vehicle.findUnique({
-      where: { placa: data.placa.toUpperCase() },
+      where: { placa: normalizedPlaca },
     });
 
     if (existing) {
@@ -78,7 +98,7 @@ export class VehiclesService {
     return prisma.vehicle.create({
       data: {
         ...data,
-        placa: data.placa.toUpperCase(),
+        placa: normalizedPlaca,
       },
     });
   }
@@ -93,7 +113,7 @@ export class VehiclesService {
     }
 
     if (data.placa) {
-      data.placa = data.placa.toUpperCase();
+      data.placa = normalizePlaca(data.placa);
     }
 
     return prisma.vehicle.update({

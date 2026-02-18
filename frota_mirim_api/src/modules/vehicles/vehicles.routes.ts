@@ -3,6 +3,7 @@ import {
   getVehicleByIdController,
   createVehicleController,
   updateVehicleController,
+  getVehicleByPlacaController,
 } from "./vehicles.controller";
 
 import {
@@ -10,6 +11,7 @@ import {
   vehicleQuerySchema,
   createVehicleSchema,
   updateVehicleSchema,
+  vehiclePlacaParamSchema,
 } from "./vehicles.schema";
 
 import { authMiddleware } from "../../shared/middlewares/auth";
@@ -18,16 +20,24 @@ import { validateRequest } from "../../infra/http/validate";
 import { FastifyInstance } from "fastify";
 
 export async function vehiclesRoutes(app: FastifyInstance) {
+  app.get("/vehicles", { preHandler: [authMiddleware] }, async (request) => {
+    const { query } = await validateRequest(request, {
+      query: vehicleQuerySchema,
+    });
+
+    return getAllVehiclesController({ ...request, query } as any);
+  });
+
   app.get(
-    "/vehicles",
+    "/vehicles/by-placa/:placa",
     { preHandler: [authMiddleware] },
-    async (request) => {
-      const { query } = await validateRequest(request, {
-        query: vehicleQuerySchema,
+    async (request, reply) => {
+      const { params } = await validateRequest(request, {
+        params: vehiclePlacaParamSchema,
       });
 
-      return getAllVehiclesController({ ...request, query } as any);
-    }
+      return getVehicleByPlacaController({ ...request, params } as any, reply);
+    },
   );
 
   app.get(
@@ -39,7 +49,7 @@ export async function vehiclesRoutes(app: FastifyInstance) {
       });
 
       return getVehicleByIdController({ ...request, params } as any, reply);
-    }
+    },
   );
 
   app.post(
@@ -51,7 +61,7 @@ export async function vehiclesRoutes(app: FastifyInstance) {
       });
 
       return createVehicleController({ ...request, body } as any, reply);
-    }
+    },
   );
 
   app.put(
@@ -65,8 +75,8 @@ export async function vehiclesRoutes(app: FastifyInstance) {
 
       return updateVehicleController(
         { ...request, body, params } as any,
-        reply
+        reply,
       );
-    }
+    },
   );
 }

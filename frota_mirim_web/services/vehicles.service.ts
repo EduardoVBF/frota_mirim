@@ -86,6 +86,11 @@ export async function getVehicleById(id: string): Promise<Vehicle> {
   return data.vehicle;
 }
 
+export async function getVehicleByPlaca(placa: string): Promise<Vehicle> {
+  const { data } = await api.get(`/vehicles/by-placa/${placa}`);
+  return data.vehicle;
+}
+
 export async function updateVehicle(
   id: string,
   payload: UpdateVehiclePayload

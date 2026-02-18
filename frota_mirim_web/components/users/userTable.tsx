@@ -165,7 +165,7 @@ export function UserTable({
 
             <button
               onClick={handleCreate}
-              className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-accent/20"
+              className="cursor-pointer flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-accent/20"
             >
               <UserPlus size={18} /> Cadastrar Usuário
             </button>

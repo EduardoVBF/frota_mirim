@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+function normalizePlaca(placa: string) {
+  return placa.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+}
+
 export const VEHICLE_TYPES = ["CARRO", "CAMINHAO", "MOTO", "ONIBUS"] as const;
 
 export const vehicleTypeSchema = z.enum(VEHICLE_TYPES);
@@ -26,8 +30,18 @@ export const vehicleParamsSchema = z.object({
   id: z.uuid(),
 });
 
+export const vehiclePlacaParamSchema = z.object({
+  placa: z
+    .string()
+    .min(7)
+    .transform((val) => normalizePlaca(val)),
+});
+
 export const createVehicleSchema = z.object({
-  placa: z.string().min(7),
+  placa: z
+    .string()
+    .min(7)
+    .transform((val) => normalizePlaca(val)),
   modelo: z.string().min(1),
   marca: z.string().min(1),
   ano: z.number().min(1950),

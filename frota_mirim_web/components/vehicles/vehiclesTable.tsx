@@ -12,8 +12,10 @@ import DynamicFilters, { FilterConfig } from "../dinamicFilters";
 import { Edit2, Search, Filter, Plus } from "lucide-react";
 import VehicleFormModal from "../vehicle/vehicleFormModal";
 import toast, { Toaster } from "react-hot-toast";
+import { StatusDot } from "../motion/statusDot";
 import LoaderComp from "../loaderComp";
 import { useState } from "react";
+import Link from "next/link";
 
 export function VehicleTable({
   vehicles,
@@ -47,10 +49,7 @@ export function VehicleTable({
     setLoading(true);
     try {
       if (editingVehicle) {
-        await updateVehicle(
-          editingVehicle.id,
-          data as UpdateVehiclePayload
-        );
+        await updateVehicle(editingVehicle.id, data as UpdateVehiclePayload);
         toast.success("Veículo atualizado");
       } else {
         await createVehicle(data);
@@ -135,7 +134,7 @@ export function VehicleTable({
 
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-accent/20"
+            className="cursor-pointer flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-accent/20"
           >
             <Plus size={18} /> Cadastrar Veículo
           </button>
@@ -193,10 +192,14 @@ export function VehicleTable({
               {vehicles.map((vehicle) => (
                 <tr
                   key={vehicle.id}
-                  className="group hover:bg-background/50 transition-colors"
+                  className="group hover:bg-background/50 transition-colors text-sm"
                 >
                   <td className="px-6 py-4 font-mono font-bold">
-                    {vehicle.placa}
+                    <Link href={`/veiculos/${vehicle.placa}`} className="inline-block">
+                      <span className="text-sm font-bold uppercase px-2 py-1 rounded bg-background border border-border">
+                        {vehicle.placa}
+                      </span>
+                    </Link>
                   </td>
 
                   <td className="px-6 py-4">
@@ -210,28 +213,27 @@ export function VehicleTable({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4">{vehicle.ano}</td>
+                  <td className="px-6 py-4 text-xs">{vehicle.ano}</td>
 
-                  <td className="px-6 py-4">
-                    <span className="text-[10px] font-bold uppercase px-2 py-1 rounded bg-background border border-border">
-                      {vehicle.tipo}
-                    </span>
-                  </td>
+                  <td className="px-6 py-4 text-xs">{vehicle.tipo}</td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-xs">
                     {vehicle.kmAtual.toLocaleString()} km
                   </td>
 
                   <td className="px-6 py-4">
-                    <span
-                      className={`text-xs font-bold ${
-                        vehicle.isActive
-                          ? "text-success"
-                          : "text-error"
+                    <div
+                      className={`flex items-center gap-2 text-xs font-bold ${
+                        vehicle.isActive ? "text-success" : "text-error"
                       }`}
                     >
+                      <StatusDot
+                        color={
+                          vehicle.isActive ? "var(--success)" : "var(--error)"
+                        }
+                      />
                       {vehicle.isActive ? "Ativo" : "Inativo"}
-                    </span>
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 text-right">

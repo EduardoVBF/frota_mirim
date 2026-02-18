@@ -24,7 +24,7 @@ export default function VeiculosPage() {
   });
 
   const [page, setPage] = useState(1);
-  const limit = 5;
+  const limit = 10;
 
   const [meta, setMeta] = useState({
     total: 0,

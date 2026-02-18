@@ -20,6 +20,15 @@ export async function getVehicleByIdController(
   return reply.send({ vehicle });
 }
 
+export async function getVehicleByPlacaController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { placa } = request.params as { placa: string };
+  const vehicle = await service.getVehicleByPlaca(placa);
+  return reply.send({ vehicle });
+}
+
 export async function createVehicleController(
   request: FastifyRequest,
   reply: FastifyReply
