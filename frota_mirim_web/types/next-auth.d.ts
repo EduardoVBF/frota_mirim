@@ -1,6 +1,6 @@
-import NextAuth, { DefaultSession } from 'next-auth';
+import NextAuth, { DefaultSession } from "next-auth";
 
-declare module 'next-auth' {
+declare module "next-auth" {
   interface Session {
     accessToken: string;
 
@@ -8,7 +8,9 @@ declare module 'next-auth' {
       role: string;
       firstName?: string;
       lastName?: string;
-    } & DefaultSession['user'];
+      imageUrl?: string;
+      cnhExpiresAt?: Date;
+    } & DefaultSession["user"];
   }
 
   interface User {
@@ -17,14 +19,18 @@ declare module 'next-auth' {
     firstName: string;
     lastName: string;
     accessToken: string;
+    imageUrl?: string;
+    cnhExpiresAt?: Date;
   }
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   interface JWT {
     accessToken: string;
     role: string;
     firstName?: string;
     lastName?: string;
+    imageUrl?: string;
+    cnhExpiresAt?: Date;
   }
 }

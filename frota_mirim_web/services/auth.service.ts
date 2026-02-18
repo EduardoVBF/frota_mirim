@@ -8,6 +8,8 @@ export type LoginResponse = {
     role: string;
     firstName: string;
     lastName: string;
+    imageUrl?: string;
+    cnhExpiresAt?: Date;
   };
 };
 
@@ -18,6 +20,8 @@ export type AuthUser = {
   firstName: string;
   lastName: string;
   accessToken: string;
+  imageUrl?: string;
+  cnhExpiresAt?: Date;
 };
 
 

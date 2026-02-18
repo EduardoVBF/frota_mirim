@@ -45,6 +45,8 @@ const handler = NextAuth({
         token.role = user.role;
         token.firstName = user.firstName;
         token.lastName = user.lastName;
+        token.imageUrl = user.imageUrl;
+        token.cnhExpiresAt = user.cnhExpiresAt;
       }
       return token;
     },
@@ -56,6 +58,8 @@ const handler = NextAuth({
         session.user.role = token.role as string;
         session.user.firstName = token.firstName as string;
         session.user.lastName = token.lastName as string;
+        session.user.imageUrl = token.imageUrl as string;
+        session.user.cnhExpiresAt = token.cnhExpiresAt as Date;
       }
 
       return session;
