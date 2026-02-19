@@ -7,23 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           String  @id @default(uuid())
-  firstName    String
-  lastName     String
-  email        String  @unique
-  passwordHash String
-  role         String  @default("admin")
-  isActive     Boolean @default(true)
-  imageUrl     String?
-  cnhExpiresAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([isActive])
-  @@index([role])
-}
+// ENUMS
 
 enum VehicleType {
   CARRO
@@ -32,27 +16,103 @@ enum VehicleType {
   ONIBUS
 }
 
+enum FuelType {
+  GASOLINA
+  ETANOL
+  DIESEL
+}
+
+enum FuelStationType {
+  INTERNO
+  EXTERNO
+}
+
+// USER
+
+model User {
+  id           String  @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String  @unique
+  passwordHash String
+  role         String  @default("admin")
+  isActive     Boolean @default(true)
+
+  imageUrl     String?
+  cnhExpiresAt DateTime?
+
+  abastecimentos FuelSupply[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([role])
+}
+
+// VEHICLE
+
 model Vehicle {
-  id        String   @id @default(uuid())
-  placa     String   @unique
-  modelo    String
-  marca     String
-  ano       Int
-  tipo      VehicleType
+  id     String      @id @default(uuid())
+  placa  String      @unique
+  modelo String
+  marca  String
+  ano    Int
+  tipo   VehicleType
 
   kmAtual               Int
   kmUltimoAbastecimento Int?
 
-  vencimentoDocumento   DateTime
-  vencimentoIPVA        DateTime
+  vencimentoDocumento DateTime
+  vencimentoIPVA      DateTime
 
-  isActive  Boolean     @default(true)
+  isActive Boolean @default(true)
 
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  abastecimentos FuelSupply[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tipo])
   @@index([isActive])
   @@index([vencimentoDocumento])
   @@index([vencimentoIPVA])
+}
+
+// FUEL SUPPLY (ABASTECIMENTO)
+
+model FuelSupply {
+  id String @id @default(uuid())
+
+  // RELAÇÕES
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // DADOS DO ABASTECIMENTO
+  data DateTime
+  kmAtual Int
+  litros     Decimal @db.Decimal(10, 3)
+  valorLitro Decimal @db.Decimal(10, 3)
+  valorTotal Decimal @db.Decimal(12, 2)
+  tipoCombustivel FuelType
+  postoTipo       FuelStationType
+  postoNome       String?
+  tanqueCheio Boolean @default(false)
+
+  // Média calculada somente quando tanqueCheio = true
+  media Decimal? @db.Decimal(10, 3)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // INDEXAÇÃO PARA PERFORMANCE
+  @@index([vehicleId])
+  @@index([userId])
+  @@index([data])
+  @@index([tipoCombustivel])
+  @@index([tanqueCheio])
 }

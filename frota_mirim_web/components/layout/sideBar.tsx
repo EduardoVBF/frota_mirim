@@ -38,7 +38,7 @@ export default function Sidebar() {
         {/* Menu Principal */}
         <nav className="flex-1 space-y-2">
           {menuItems.map((item) => {
-            const active = pathname === item.path;
+            const active = pathname.includes(item.path);
             return (
               <FadeIn key={item.path} delay={0.1}>
                 <Link
