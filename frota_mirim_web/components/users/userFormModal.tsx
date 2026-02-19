@@ -160,6 +160,7 @@ export default function UserFormModal({
             className={`space-y-4 ${
               loading ? "opacity-50 pointer-events-none" : ""
             }`}
+            autoComplete="off"
           >
             <div className="flex justify-center">
               <ImageInput
