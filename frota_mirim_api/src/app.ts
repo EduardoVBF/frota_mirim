@@ -1,3 +1,4 @@
+import { fuelSupplyRoutes } from "./modules/fuelSupply/fuel-supply.routes";
 import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes";
 import { usersRoutes } from "./modules/users/users.routes";
 import { errorHandler } from "./infra/http/error-handler";
@@ -18,6 +19,7 @@ app.register(async (app) => {
   await app.register(authRoutes);
   await app.register(usersRoutes);
   await app.register(vehiclesRoutes);
+  await app.register(fuelSupplyRoutes);
 });
 
 export { app };
