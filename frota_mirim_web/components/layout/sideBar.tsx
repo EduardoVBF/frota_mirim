@@ -1,5 +1,5 @@
 "use client";
-import { LayoutDashboard, Truck, Users, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Truck, Users, Settings, LogOut, Fuel } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { FadeIn } from "../motion/fadeIn";
@@ -15,6 +15,7 @@ const menuItems = [
   },
   { name: "Veículos", path: "/veiculos", icon: <Truck size={20} /> },
   { name: "Usuários", path: "/usuarios", icon: <Users size={20} /> },
+  { name: "Abastecimentos", path: "/abastecimentos", icon: <Fuel size={20} /> },
   { name: "Configurações", path: "/settings", icon: <Settings size={20} /> },
 ];
 
