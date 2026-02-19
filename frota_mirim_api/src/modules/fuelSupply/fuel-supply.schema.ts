@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 // ENUMS
-
 export const FUEL_TYPES = ["GASOLINA", "ETANOL", "DIESEL"] as const;
 export const fuelTypeSchema = z.enum(FUEL_TYPES);
 
@@ -72,6 +71,10 @@ export const fuelSupplyQuerySchema = z.object({
 
   dataInicio: z.coerce.date().optional(),
   dataFim: z.coerce.date().optional(),
+
+  tipoCombustivel: fuelTypeSchema.optional(),
+  postoTipo: fuelStationTypeSchema.optional(),
+  tanqueCheio: z.boolean().optional(),
 
   page: z.preprocess((val) => {
     if (!val) return 1;
