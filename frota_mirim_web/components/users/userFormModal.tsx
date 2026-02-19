@@ -53,10 +53,8 @@ export default function UserFormModal({
 
       setCnhExpiresAt(
         initialData.cnhExpiresAt
-          ? new Date(initialData.cnhExpiresAt)
-              .toISOString()
-              .split("T")[0]
-          : ""
+          ? new Date(initialData.cnhExpiresAt).toISOString().split("T")[0]
+          : "",
       );
     } else {
       setFirstName("");
@@ -116,8 +114,8 @@ export default function UserFormModal({
         {loading
           ? "Salvando..."
           : initialData
-          ? "Salvar Alterações"
-          : "Cadastrar Usuário"}
+            ? "Salvar Alterações"
+            : "Cadastrar Usuário"}
       </button>
     </>
   );
@@ -186,6 +184,9 @@ export default function UserFormModal({
             </div>
 
             <PrimaryInput
+              type="text"
+              name="new-email"
+              autoComplete="new-email"
               label="E-mail"
               value={email}
               disabled={!!initialData}
@@ -200,6 +201,8 @@ export default function UserFormModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 error={errors.password}
+                name="new-password"
+                autoComplete="new-password"
               />
             )}
 
