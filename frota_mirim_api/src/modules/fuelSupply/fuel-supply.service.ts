@@ -19,13 +19,10 @@ export class FuelSupplyService {
     const where: any = {};
 
     if (vehicleId) where.vehicleId = vehicleId;
-
     if (tipoCombustivel) where.tipoCombustivel = tipoCombustivel;
-
     if (postoTipo) where.postoTipo = postoTipo;
-
     if (tanqueCheio !== undefined) where.tanqueCheio = tanqueCheio;
-    
+
     if (dataInicio || dataFim) {
       where.data = {};
       if (dataInicio) where.data.gte = dataInicio;
@@ -72,10 +69,7 @@ export class FuelSupplyService {
       if (!vehicle) throw new AppError("Veículo não encontrado.", 404);
 
       if (data.kmAtual < vehicle.kmAtual) {
-        throw new AppError(
-          "KM não pode ser menor que o atual do veículo.",
-          400,
-        );
+        throw new AppError("KM não pode ser menor que o atual do veículo.", 400);
       }
 
       const valorTotal = Number(data.litros) * Number(data.valorLitro);
@@ -106,12 +100,12 @@ export class FuelSupplyService {
 
       if (!vehicle) throw new AppError("Veículo não encontrado.", 404);
 
-      if (data.kmAtual && data.kmAtual < 0) {
+      if (data.kmAtual !== undefined && data.kmAtual < 0) {
         throw new AppError("KM inválido.", 400);
       }
 
       const valorTotal =
-        data.litros && data.valorLitro
+        data.litros !== undefined && data.valorLitro !== undefined
           ? Number(data.litros) * Number(data.valorLitro)
           : fuel.valorTotal;
 
@@ -141,38 +135,39 @@ export class FuelSupplyService {
     });
   }
 
-  // MÉTODO PRIVADO — RECÁLCULO GLOBAL
+  // RECÁLCULO GLOBAL
   private async recalcularMedias(tx: any, vehicleId: string) {
     const abastecimentos = await tx.fuelSupply.findMany({
       where: { vehicleId },
-      orderBy: { data: "asc" },
+      orderBy: [
+        { data: "asc" },
+        { createdAt: "asc" }, // evita erro se mesma data
+      ],
     });
 
     let ultimoTanqueCheio: any = null;
+    let litrosAcumulados = 0;
 
     for (const abastecimento of abastecimentos) {
-      // limpa média
+      // Sempre limpa a média antes
       await tx.fuelSupply.update({
         where: { id: abastecimento.id },
         data: { media: null },
       });
 
+      // Se já temos um tanque cheio anterior,
+      // acumulamos litros até o próximo tanque cheio
+      if (ultimoTanqueCheio) {
+        litrosAcumulados += Number(abastecimento.litros);
+      }
+
       if (abastecimento.tanqueCheio) {
         if (ultimoTanqueCheio) {
-          const periodo = abastecimentos.filter(
-            (a: { data: number }) =>
-              a.data > ultimoTanqueCheio.data && a.data <= abastecimento.data,
-          );
+          const kmRodado =
+            abastecimento.kmAtual - ultimoTanqueCheio.kmAtual;
 
-          const somaLitros = periodo.reduce(
-            (acc: number, item: { litros: any }) => acc + Number(item.litros),
-            0,
-          );
-
-          const kmRodado = abastecimento.kmAtual - ultimoTanqueCheio.kmAtual;
-
-          if (somaLitros > 0 && kmRodado > 0) {
-            const media = kmRodado / somaLitros;
+          if (kmRodado > 0 && litrosAcumulados > 0) {
+            const media = kmRodado / litrosAcumulados;
 
             await tx.fuelSupply.update({
               where: { id: abastecimento.id },
@@ -181,12 +176,15 @@ export class FuelSupplyService {
           }
         }
 
+        // reinicia ciclo
         ultimoTanqueCheio = abastecimento;
+        litrosAcumulados = 0;
       }
     }
 
-    // Atualiza kmAtual do veículo
-    const ultimoAbastecimento = abastecimentos[abastecimentos.length - 1];
+    // Atualiza KM do veículo com base no último abastecimento
+    const ultimoAbastecimento =
+      abastecimentos[abastecimentos.length - 1];
 
     if (ultimoAbastecimento) {
       await tx.vehicle.update({
