@@ -1,5 +1,4 @@
 "use client";
-
 import {
   FuelSupply,
   createFuelSupply,
@@ -8,11 +7,12 @@ import {
   CreateFuelSupplyPayload,
   FuelSupplyFilters,
 } from "@/services/fuel-supply.service";
+import { getVehicles, Vehicle } from "@/services/vehicles.service";
 import FuelSupplyFormModal from "./FuelSupplyFormModal";
-import { Edit2, Trash2, Plus } from "lucide-react";
+import { Edit2, Trash2, Plus, Fuel } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import { useState, useEffect } from "react";
 import LoaderComp from "../loaderComp";
-import { useState } from "react";
 
 type Props = {
   vehicleId?: string;
@@ -32,6 +32,7 @@ export function FuelSupplyTable({
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FuelSupply | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   // CREATE / UPDATE
   const handleSubmit = async (data: CreateFuelSupplyPayload) => {
@@ -84,6 +85,19 @@ export function FuelSupplyTable({
     setModalOpen(true);
   };
 
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const data = await getVehicles({ page: 1, limit: 100 });
+        setVehicles(data.vehicles);
+      } catch {
+        toast.error("Erro ao carregar veículos");
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+  console.log("vehicles", vehicles);
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       <Toaster />
@@ -105,10 +119,10 @@ export function FuelSupplyTable({
       {/* HEADER */}
       <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold">Histórico de Abastecimentos</h2>
-          <span className="text-xs text-muted">
-            {abastecimentos.length} registros nesta página
-          </span>
+          <div className="p-2 bg-accent/10 rounded-lg text-accent">
+            <Fuel size={30} />
+          </div>
+          <h2 className="text-lg font-bold">Histórico de Abastecimentos Geral</h2>
         </div>
 
         <div className="flex items-center gap-2">
@@ -126,12 +140,11 @@ export function FuelSupplyTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
-              <th className="px-6 py-4">Data</th>
-              <th className="px-6 py-4">KM</th>
-              <th className="px-6 py-4">Litros</th>
-              <th className="px-6 py-4">Valor</th>
-              <th className="px-6 py-4">Combustível</th>
-              <th className="px-6 py-4">Tanque</th>
+              <th className="px-6 py-4">Veículo</th>
+              <th className="px-6 py-4">Data e KM</th>
+              <th className="px-6 py-4">Abastecimento</th>
+              <th className="px-6 py-4">Combustível e Tanque</th>
+              <th className="px-6 py-4">Posto</th>
               <th className="px-6 py-4">Média</th>
               <th className="px-6 py-4 text-right">Ações</th>
             </tr>
@@ -160,36 +173,57 @@ export function FuelSupplyTable({
                   key={item.id}
                   className="group hover:bg-background/40 transition-colors"
                 >
-                  <td className="px-6 py-4 text-sm">
-                    {new Date(item.data).toLocaleDateString()}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm font-mono">
-                    {item.kmAtual.toLocaleString()} km
-                  </td>
-
-                  <td className="px-6 py-4 text-sm">
-                    {Number(item.litros).toFixed(2)} L
-                  </td>
-
-                  <td className="px-6 py-4 text-sm font-semibold text-success">
-                    R$ {Number(item.valorTotal).toFixed(2)}
-                  </td>
-
-                  <td className="px-6 py-4 text-xs uppercase">
-                    {item.tipoCombustivel}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold">
+                        {vehicles.find((v) => v.id === item.vehicleId)
+                          ?.modelo || "Veículo Desconecido"}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {vehicles.find((v) => v.id === item.vehicleId)?.placa ||
+                          "Placa Desconecida"}
+                      </span>
+                    </div>
                   </td>
 
                   <td className="px-6 py-4">
-                    {item.tanqueCheio ? (
-                      <span className="px-2 py-1 rounded bg-accent/10 text-accent text-xs font-bold">
-                        Cheio
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold">
+                        {new Date(item.data).toLocaleDateString()}
                       </span>
-                    ) : (
-                      <span className="px-2 py-1 rounded bg-background border text-muted text-xs">
-                        Parcial
+                      <span className="text-xs text-muted">
+                        {item.kmAtual.toLocaleString()} km
                       </span>
-                    )}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-success">
+                        R$ {Number(item.valorTotal).toFixed(2)}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {Number(item.litros).toFixed(2)} L × R${" "}
+                        {Number(item.valorLitro).toFixed(2)}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-muted">
+                        {item.tipoCombustivel || "—"}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {item.tanqueCheio ? <p className="text-success">Tanque Cheio ✔</p> : <p className="text-info">Tanque parcial ➖</p>}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex items-center text-sm font-bold text-muted">
+                      {item.postoNome || item.postoTipo}
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 text-sm font-bold text-info">

@@ -1,21 +1,18 @@
 "use client";
 import FuelSupplyFormModal from "@/components/fuel-supply/FuelSupplyFormModal";
 import { FuelSupply, deleteFuelSupply } from "@/services/fuel-supply.service";
-import { CheckCircle2, MapPin, Fuel, Trash2, Edit2 } from "lucide-react";
+import { Fuel, Trash2, Edit2, Car } from "lucide-react";
+import { Vehicle } from "@/services/vehicles.service";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
 type Props = {
-  vehicleId: string;
+  vehicle: Vehicle;
   abastecimentos: FuelSupply[];
   onChange: () => void;
 };
 
-export function FuelHistoryTable({
-  vehicleId,
-  abastecimentos,
-  onChange,
-}: Props) {
+export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FuelSupply | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
@@ -42,7 +39,7 @@ export function FuelHistoryTable({
       <FuelSupplyFormModal
         key={editingItem ? editingItem.id : "new-fuel"}
         open={modalOpen}
-        vehicleId={vehicleId}
+        vehicleId={vehicle.id}
         initialData={editingItem}
         loading={loadingAction}
         onClose={() => {
@@ -59,9 +56,17 @@ export function FuelHistoryTable({
       <div className="p-6 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-accent/10 rounded-lg text-accent">
-            <Fuel size={20} />
+            <Fuel size={30} />
           </div>
-          <h2 className="text-lg font-bold">Histórico de Abastecimentos</h2>
+          <div>
+            <h2 className="text-lg font-bold">Histórico de Abastecimentos</h2>
+            <div className="flex items-center gap-1">
+              <Car size={20} className="inline-block text-foreground font-bold" />
+              <span className="text-sm text-foreground font-bold">
+                {vehicle.placa} - {vehicle.modelo}
+              </span>
+            </div>
+          </div>
         </div>
 
         <button
@@ -77,13 +82,13 @@ export function FuelHistoryTable({
 
       <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="bg-background/50 text-[10px] uppercase tracking-widest text-muted">
+          <thead className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
             <tr>
               <th className="px-6 py-4">Data e KM</th>
               <th className="px-6 py-4">Abastecimento</th>
-              <th className="px-6 py-4">Local</th>
+              <th className="px-6 py-4">Combustível e Tanque</th>
+              <th className="px-6 py-4">Posto</th>
               <th className="px-6 py-4">Média</th>
-              <th className="px-6 py-4 text-center">Tanque</th>
               <th className="px-6 py-4 text-right">Ações</th>
             </tr>
           </thead>
@@ -125,31 +130,24 @@ export function FuelHistoryTable({
                   </td>
 
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-muted">
-                      <MapPin size={14} />
-                      {item.postoNome || item.postoTipo}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-muted">
+                        {item.tipoCombustivel || "—"}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {item.tanqueCheio ? <p className="text-success">Tanque Cheio ✔</p> : <p className="text-info">Tanque parcial ➖</p>}
+                      </span>
                     </div>
                   </td>
 
                   <td className="px-6 py-4">
-                    {item.media ? (
-                      <span className="px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold">
-                        {Number(item.media).toFixed(2)} Km/L
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted">—</span>
-                    )}
+                    <div className="flex items-center text-sm font-bold text-muted">
+                      {item.postoNome || item.postoTipo}
+                    </div>
                   </td>
 
-                  <td className="px-6 py-4 text-center">
-                    {item.tanqueCheio ? (
-                      <CheckCircle2
-                        size={18}
-                        className="text-success mx-auto"
-                      />
-                    ) : (
-                      <span className="text-xs text-muted">Parcial</span>
-                    )}
+                  <td className="px-6 py-4 text-sm font-bold text-info">
+                    {item.media ? `${Number(item.media).toFixed(2)} Km/L` : "-"}
                   </td>
 
                   <td className="px-6 py-4 text-right">

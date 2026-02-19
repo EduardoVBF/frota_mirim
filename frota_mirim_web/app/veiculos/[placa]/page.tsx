@@ -96,7 +96,7 @@ export default function VeiculoUnicoPage() {
         </div>
 
         <FuelHistoryTable
-          vehicleId={vehicle.id}
+          vehicle={vehicle}
           abastecimentos={abastecimentos}
           onChange={refreshAll}
         />
