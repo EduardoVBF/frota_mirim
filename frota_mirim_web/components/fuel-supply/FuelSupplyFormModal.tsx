@@ -193,7 +193,7 @@ export default function FuelSupplyFormModal({
 
           <PrimaryInput
             label="Data"
-            type="date"
+            type="datetime-local"
             value={data}
             onChange={(e) => setData(e.target.value)}
           />

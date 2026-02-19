@@ -1,12 +1,18 @@
 "use client";
+import {
+  FuelSupply,
+  deleteFuelSupply,
+  updateFuelSupply,
+  createFuelSupply,
+  CreateFuelSupplyPayload,
+} from "@/services/fuel-supply.service";
 import FuelSupplyFormModal from "@/components/fuel-supply/FuelSupplyFormModal";
-import { FuelSupply, deleteFuelSupply } from "@/services/fuel-supply.service";
 import { Fuel, Trash2, Edit2, Car } from "lucide-react";
 import { Vehicle } from "@/services/vehicles.service";
 import toast from "react-hot-toast";
-import utc from "dayjs/plugin/utc"
+import utc from "dayjs/plugin/utc";
 import { useState } from "react";
-import dayjs from "dayjs"
+import dayjs from "dayjs";
 
 type Props = {
   vehicle: Vehicle;
@@ -14,12 +20,35 @@ type Props = {
   onChange: () => void;
 };
 
-dayjs.extend(utc)
+dayjs.extend(utc);
 
 export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FuelSupply | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
+
+  // CREATE / UPDATE
+  const handleSubmit = async (data: CreateFuelSupplyPayload) => {
+    setLoadingAction(true);
+
+    try {
+      if (editingItem) {
+        await updateFuelSupply(editingItem.id, data);
+        toast.success("Abastecimento atualizado");
+      } else {
+        await createFuelSupply(data);
+        toast.success("Abastecimento registrado");
+      }
+
+      setModalOpen(false);
+      setEditingItem(null);
+      await onChange();
+    } catch {
+      toast.error("Erro ao salvar abastecimento");
+    } finally {
+      setLoadingAction(false);
+    }
+  };
 
   // DELETE
   const handleDelete = async (id: string) => {
@@ -43,18 +72,14 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
       <FuelSupplyFormModal
         key={editingItem ? editingItem.id : "new-fuel"}
         open={modalOpen}
+        loading={loadingAction}
         vehicleId={vehicle.id}
         initialData={editingItem}
-        loading={loadingAction}
         onClose={() => {
           setModalOpen(false);
           setEditingItem(null);
         }}
-        onSubmit={async () => {
-          setModalOpen(false);
-          setEditingItem(null);
-          await onChange();
-        }}
+        onSubmit={handleSubmit}
       />
 
       <div className="p-6 border-b border-border flex items-center justify-between">
@@ -65,7 +90,10 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
           <div>
             <h2 className="text-lg font-bold">Histórico de Abastecimentos</h2>
             <div className="flex items-center gap-1">
-              <Car size={20} className="inline-block text-foreground font-bold" />
+              <Car
+                size={20}
+                className="inline-block text-foreground font-bold"
+              />
               <span className="text-sm text-foreground font-bold">
                 {vehicle.placa} - {vehicle.modelo}
               </span>
@@ -139,7 +167,11 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
                         {item.tipoCombustivel || "—"}
                       </span>
                       <span className="text-xs text-muted">
-                        {item.tanqueCheio ? <p className="text-success">Tanque Cheio ✔</p> : <p className="text-info">Tanque parcial ➖</p>}
+                        {item.tanqueCheio ? (
+                          <p className="text-success">Tanque Cheio ✔</p>
+                        ) : (
+                          <p className="text-info">Tanque parcial ➖</p>
+                        )}
                       </span>
                     </div>
                   </td>
