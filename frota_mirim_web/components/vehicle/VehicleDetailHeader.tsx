@@ -18,10 +18,14 @@ import VehicleFormModal from "./vehicleFormModal";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dayjs from "dayjs"
+import utc from "dayjs/plugin/utc"
 
 type Props = {
   vehicle: Vehicle;
 };
+
+dayjs.extend(utc)
 
 export function VehicleDetailHeader({
   vehicle,
@@ -124,16 +128,14 @@ export function VehicleDetailHeader({
           <TelemetriaCard
             icon={<Calendar />}
             label="Documento"
-            value={new Date(vehicle.vencimentoDocumento).toLocaleDateString(
-              "pt-BR",
-            )}
+            value={dayjs.utc(vehicle.vencimentoDocumento).format("DD/MM/YYYY")}
             highlight={docExpired}
           />
 
           <TelemetriaCard
             icon={<Calendar />}
             label="IPVA"
-            value={new Date(vehicle.vencimentoIPVA).toLocaleDateString("pt-BR")}
+            value={dayjs.utc(vehicle.vencimentoIPVA).format("DD/MM/YYYY")}
             highlight={ipvaExpired}
           />
 

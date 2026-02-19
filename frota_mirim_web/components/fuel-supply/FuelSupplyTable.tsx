@@ -13,6 +13,8 @@ import { Edit2, Trash2, Plus, Fuel } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useState, useEffect } from "react";
 import LoaderComp from "../loaderComp";
+import utc from "dayjs/plugin/utc"
+import dayjs from "dayjs"
 
 type Props = {
   vehicleId?: string;
@@ -22,6 +24,8 @@ type Props = {
   setFilters: React.Dispatch<React.SetStateAction<FuelSupplyFilters>>;
   onChange: () => void;
 };
+
+dayjs.extend(utc)
 
 export function FuelSupplyTable({
   vehicleId,
@@ -97,7 +101,6 @@ export function FuelSupplyTable({
 
     fetchVehicles();
   }, []);
-  console.log("vehicles", vehicles);
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       <Toaster />
@@ -189,7 +192,7 @@ export function FuelSupplyTable({
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
                       <span className="text-sm font-bold">
-                        {new Date(item.data).toLocaleDateString()}
+                        {dayjs.utc(item.data).format("DD/MM/YYYY")}
                       </span>
                       <span className="text-xs text-muted">
                         {item.kmAtual.toLocaleString()} km

@@ -4,13 +4,17 @@ import { FuelSupply, deleteFuelSupply } from "@/services/fuel-supply.service";
 import { Fuel, Trash2, Edit2, Car } from "lucide-react";
 import { Vehicle } from "@/services/vehicles.service";
 import toast from "react-hot-toast";
+import utc from "dayjs/plugin/utc"
 import { useState } from "react";
+import dayjs from "dayjs"
 
 type Props = {
   vehicle: Vehicle;
   abastecimentos: FuelSupply[];
   onChange: () => void;
 };
+
+dayjs.extend(utc)
 
 export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -109,7 +113,7 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
                       <span className="text-sm font-bold">
-                        {new Date(item.data).toLocaleDateString()}
+                        {dayjs.utc(item.data).format("DD/MM/YYYY")}
                       </span>
                       <span className="text-xs text-muted">
                         {item.kmAtual.toLocaleString()} km
