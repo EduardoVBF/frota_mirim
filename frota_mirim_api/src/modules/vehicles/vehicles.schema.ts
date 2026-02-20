@@ -78,7 +78,7 @@ export const vehicleQuerySchema = z.object({
   limit: z.preprocess((val) => {
     if (!val) return 10;
     return Number(val);
-  }, z.number().min(1).max(100)),
+  }, z.number().min(1).max(1000)),
 });
 
 export type VehicleQueryDTO = z.infer<typeof vehicleQuerySchema>;
