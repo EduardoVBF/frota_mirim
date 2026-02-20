@@ -8,9 +8,9 @@ import {
   UpdateVehiclePayload,
   VehicleFilters,
 } from "@/services/vehicles.service";
-import DynamicFilters, { FilterConfig } from "../dinamicFilters";
-import { Edit2, Search, Filter, Plus } from "lucide-react";
+import { Edit2, Search, Filter, FilterX, Plus } from "lucide-react";
 import VehicleFormModal from "../vehicle/vehicleFormModal";
+import FilterChips from "../fuel-supply/FilterChips";
 import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
 import LoaderComp from "../loaderComp";
@@ -35,15 +35,10 @@ export function VehicleTable({
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const handleEdit = (vehicle: Vehicle) => {
-    setEditingVehicle(vehicle);
-    setIsModalOpen(true);
-  };
-
-  const handleCreate = () => {
-    setEditingVehicle(null);
-    setIsModalOpen(true);
-  };
+  const activeFiltersCount =
+    (filters.search ? 1 : 0) +
+    (filters.tipo?.length ? 1 : 0) +
+    (filters.isActive !== undefined ? 1 : 0);
 
   const handleFormSubmit = async (data: VehiclePayload) => {
     setLoading(true);
@@ -66,27 +61,13 @@ export function VehicleTable({
     }
   };
 
-  const vehicleFilterConfigs: FilterConfig[] = [
-    {
-      key: "isActive",
-      label: "Status",
-      options: [
-        { label: "Ativos", value: true },
-        { label: "Inativos", value: false },
-      ],
-    },
-    {
-      key: "tipo",
-      label: "Tipo",
-      multi: true,
-      options: [
-        { label: "Carro", value: "CARRO" },
-        { label: "Caminhão", value: "CAMINHAO" },
-        { label: "Moto", value: "MOTO" },
-        { label: "Ônibus", value: "ONIBUS" },
-      ],
-    },
-  ];
+  const handleClearFilters = () => {
+    setFilters({
+      search: "",
+      tipo: undefined,
+      isActive: undefined,
+    });
+  };
 
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
@@ -107,7 +88,6 @@ export function VehicleTable({
 
       {/* HEADER */}
       <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
-        {/* Search */}
         <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm">
           <Search size={18} className="text-muted" />
           <input
@@ -124,16 +104,33 @@ export function VehicleTable({
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <button
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted hover:text-foreground border border-border rounded-lg"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted hover:text-foreground border border-border rounded-lg transition-colors"
             onClick={() => setShowFilters(!showFilters)}
           >
-            <Filter size={16} /> Filtros
+            {showFilters ? (
+              <>
+                <FilterX size={16} /> Filtros
+              </>
+            ) : (
+              <>
+                <Filter size={16} /> Filtros
+              </>
+            )}
           </button>
 
+          {activeFiltersCount > 0 && (
+            <span className="text-xs bg-accent text-white px-2 py-1 rounded-full">
+              {activeFiltersCount} filtro(s)
+            </span>
+          )}
+
           <button
-            onClick={handleCreate}
+            onClick={() => {
+              setEditingVehicle(null);
+              setIsModalOpen(true);
+            }}
             className="cursor-pointer flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-accent/20"
           >
             <Plus size={18} /> Cadastrar Veículo
@@ -141,19 +138,58 @@ export function VehicleTable({
         </div>
       </div>
 
+      {/* FILTROS */}
       {showFilters && (
-        <DynamicFilters
-          configs={vehicleFilterConfigs}
-          filters={filters}
-          setFilters={setFilters}
-          onClear={() =>
-            setFilters({
-              search: "",
-              tipo: undefined,
-              isActive: undefined,
-            })
-          }
-        />
+        <div className="px-6 py-4 border-b border-border bg-background/40 flex flex-wrap gap-4 items-end">
+          <FilterChips
+            label="Tipo"
+            value={filters.tipo || []}
+            onChange={(value) =>
+              setFilters({
+                ...filters,
+                tipo: value.length ? value : undefined,
+              })
+            }
+            options={[
+              { label: "Carro", value: "CARRO" },
+              { label: "Caminhão", value: "CAMINHAO" },
+              { label: "Moto", value: "MOTO" },
+              { label: "Ônibus", value: "ONIBUS" },
+            ]}
+            multi
+          />
+
+          <FilterChips
+            label="Status"
+            value={
+              filters.isActive === undefined
+                ? ""
+                : filters.isActive
+                  ? "true"
+                  : "false"
+            }
+            onChange={(value) =>
+              setFilters({
+                ...filters,
+                isActive:
+                  value === "" ? undefined : value === "true" ? true : false,
+              })
+            }
+            options={[
+              { label: "Ativo", value: "true" },
+              { label: "Inativo", value: "false" },
+            ]}
+          />
+
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={handleClearFilters}
+              className="ml-auto px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/40"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
       )}
 
       {/* TABLE */}
@@ -195,7 +231,7 @@ export function VehicleTable({
                   className="group hover:bg-background/50 transition-colors text-sm"
                 >
                   <td className="px-6 py-4 font-mono font-bold">
-                    <Link href={`/veiculos/${vehicle.placa}`} className="inline-block">
+                    <Link href={`/veiculos/${vehicle.placa}`}>
                       <span className="text-sm font-bold uppercase px-2 py-1 rounded bg-background border border-border">
                         {vehicle.placa}
                       </span>
@@ -214,9 +250,7 @@ export function VehicleTable({
                   </td>
 
                   <td className="px-6 py-4 text-xs">{vehicle.ano}</td>
-
                   <td className="px-6 py-4 text-xs">{vehicle.tipo}</td>
-
                   <td className="px-6 py-4 text-xs">
                     {vehicle.kmAtual.toLocaleString()} km
                   </td>
@@ -238,7 +272,10 @@ export function VehicleTable({
 
                   <td className="px-6 py-4 text-right">
                     <button
-                      onClick={() => handleEdit(vehicle)}
+                      onClick={() => {
+                        setEditingVehicle(vehicle);
+                        setIsModalOpen(true);
+                      }}
                       className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg"
                     >
                       <Edit2 size={16} />

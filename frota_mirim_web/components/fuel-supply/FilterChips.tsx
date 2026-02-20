@@ -46,12 +46,12 @@ export default function FilterChips({
   return (
     <div className="space-y-2">
       {label && (
-        <span className="text-xs uppercase tracking-widest text-muted font-bold">
+        <label className="text-[11px] font-bold uppercase tracking-widest text-muted/80">
           {label}
-        </span>
+        </label>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mt-1">
         {options.map((opt) => (
           <button
             key={String(opt.value)}

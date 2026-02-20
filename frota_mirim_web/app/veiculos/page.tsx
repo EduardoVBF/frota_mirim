@@ -6,8 +6,8 @@ import {
   VehicleFilters,
 } from "@/services/vehicles.service";
 import { VehicleTable } from "@/components/vehicles/vehiclesTable";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Truck, CarFront, FileWarning } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
 import Pagination from "@/components/paginationComp";
 import { FadeIn } from "@/components/motion/fadeIn";
 import { StatsCard } from "@/components/statsCard";
@@ -26,34 +26,65 @@ export default function VeiculosPage() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const [meta, setMeta] = useState({
-    total: 0,
-    totalFiltered: 0,
-    totalPages: 1,
-  });
-
   const fetchVehicles = useCallback(async () => {
     setLoading(true);
-
     try {
       const data = await getVehicles({
-        ...filters,
-        page,
-        limit,
+        limit: 1000,
+        page: 1,
       });
 
       setVehicles(data.vehicles);
-      setMeta(data.meta);
     } catch {
       setVehicles([]);
     } finally {
       setLoading(false);
     }
-  }, [filters, page]);
+  }, []);
 
   useEffect(() => {
     fetchVehicles();
   }, [fetchVehicles]);
+
+  const processedData = useMemo(() => {
+    const filtered = vehicles.filter((vehicle) => {
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        if (
+          !vehicle.placa.toLowerCase().includes(search) &&
+          !vehicle.modelo.toLowerCase().includes(search) &&
+          !vehicle.marca.toLowerCase().includes(search)
+        ) {
+          return false;
+        }
+      }
+
+      if (filters.tipo) {
+        if (!filters.tipo.includes(vehicle.tipo)) return false;
+      }
+
+      if (filters.isActive !== undefined) {
+        if (vehicle.isActive !== filters.isActive) return false;
+      }
+
+      return true;
+    });
+
+    const start = (page - 1) * limit;
+    const end = start + limit;
+
+    return {
+      data: filtered.slice(start, end),
+      totalFiltered: filtered.length,
+      total: vehicles.length,
+    };
+  }, [vehicles, filters, page]);
+
+  const totalPages = Math.ceil(processedData.totalFiltered / limit);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
 
   return (
     <FadeIn>
@@ -70,19 +101,19 @@ export default function VeiculosPage() {
           <div className="grid grid-cols-3 gap-6">
             <StatsCard
               label="Total"
-              value={meta.total.toString()}
+              value={processedData.total.toString()}
               icon={<Truck />}
               iconColor="text-accent"
             />
             <StatsCard
               label="Filtrados"
-              value={meta.totalFiltered.toString()}
+              value={processedData.totalFiltered.toString()}
               icon={<CarFront />}
               iconColor="text-info"
             />
             <StatsCard
               label="Páginas"
-              value={meta.totalPages.toString()}
+              value={totalPages.toString()}
               icon={<FileWarning />}
               iconColor="text-success"
             />
@@ -90,19 +121,16 @@ export default function VeiculosPage() {
         )}
 
         <VehicleTable
-          vehicles={vehicles}
+          vehicles={processedData.data}
           isLoading={loading}
           filters={filters}
-          setFilters={(newFilters) => {
-            setPage(1);
-            setFilters(newFilters);
-          }}
+          setFilters={setFilters}
           onVehicleChange={fetchVehicles}
         />
 
         <Pagination
           page={page}
-          totalPages={meta.totalPages}
+          totalPages={totalPages}
           onPageChange={setPage}
         />
       </div>

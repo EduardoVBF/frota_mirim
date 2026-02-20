@@ -226,7 +226,7 @@ export function FuelHistoryTable({
                 setEditingItem(null);
                 setModalOpen(true);
               }}
-              className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold"
+              className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold cursor-pointer"
             >
               + Novo Abastecimento
             </button>
