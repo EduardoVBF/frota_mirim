@@ -18,6 +18,7 @@ interface PrimarySelectProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  width?: "full" | "auto" | "fit";
 }
 
 export default function PrimarySelect({
@@ -30,6 +31,7 @@ export default function PrimarySelect({
   className = "",
   disabled = false,
   required = false,
+  width = "full",
 }: PrimarySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +39,10 @@ export default function PrimarySelect({
   // Fecha o dropdown se clicar fora dele
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -48,17 +53,20 @@ export default function PrimarySelect({
   const selectedOption = options.find((opt) => opt.value === value);
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className} w-full`} ref={containerRef}>
+    <div
+      className={`flex flex-col gap-1.5 ${className} ${width === "full" ? "w-full" : width === "auto" ? "w-auto" : width == "fit" ? "w-fit" : ""}`}
+      ref={containerRef}
+    >
       {/* Label e Erro */}
       <div className="flex justify-between items-end px-1">
         <label className="text-[11px] font-bold uppercase tracking-widest text-muted/80">
           {label}
           {required && <span className="text-accent ml-1">*</span>}
         </label>
-        
+
         <AnimatePresence>
           {error && (
-            <motion.span 
+            <motion.span
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
@@ -80,19 +88,22 @@ export default function PrimarySelect({
             w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 flex items-center justify-between
             bg-alternative-bg border outline-none text-left
             disabled:opacity-50 disabled:cursor-not-allowed
-            ${isOpen 
-              ? "border-accent ring-4 ring-accent/5 shadow-sm" 
-              : "border-border hover:border-border-hover"
+            ${
+              isOpen
+                ? "border-accent ring-4 ring-accent/5 shadow-sm"
+                : "border-border hover:border-border-hover"
             }
             ${error ? "border-error/50 bg-error/5" : ""}
           `}
         >
-          <span className={selectedOption ? "text-foreground" : "text-muted/60"}>
+          <span
+            className={selectedOption ? "text-foreground" : "text-muted/60"}
+          >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
-          <ChevronDown 
-            size={18} 
-            className={`transition-transform duration-300 ${isOpen ? "rotate-180 text-accent" : "text-muted"}`} 
+          <ChevronDown
+            size={18}
+            className={`transition-transform duration-300 ${isOpen ? "rotate-180 text-accent" : "text-muted"}`}
           />
         </button>
 
@@ -117,9 +128,10 @@ export default function PrimarySelect({
                       }}
                       className={`
                         w-full px-4 py-2 text-sm rounded-xl flex items-center justify-between transition-colors
-                        ${value === option.value 
-                          ? "bg-accent/10 text-accent font-bold" 
-                          : "text-foreground hover:bg-foreground/10 hover:text-accent"
+                        ${
+                          value === option.value
+                            ? "bg-accent/10 text-accent font-bold"
+                            : "text-foreground hover:bg-foreground/10 hover:text-accent"
                         }
                       `}
                     >

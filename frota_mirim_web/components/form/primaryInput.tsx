@@ -13,6 +13,7 @@ export default function PrimaryInput({
   type = "text",
   error,
   className = "",
+  width = "full",
   disabled = false,
   ...props
 }: PrimaryInputProps) {
@@ -21,7 +22,9 @@ export default function PrimaryInput({
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className} w-full`}>
+    <div
+      className={`flex flex-col gap-1.5 ${className} ${width === "full" ? "w-full" : width === "auto" ? "w-auto" : width == "fit" ? "w-fit" : ""}`}
+    >
       <label className="text-[11px] font-bold uppercase tracking-widest text-muted/80">
         {label}
         {props.required && <span className="text-accent ml-1">*</span>}

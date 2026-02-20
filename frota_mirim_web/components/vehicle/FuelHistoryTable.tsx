@@ -18,11 +18,13 @@ import {
 } from "lucide-react";
 import FuelSupplyFormModal from "@/components/fuel-supply/FuelSupplyFormModal";
 import { Vehicle } from "@/services/vehicles.service";
+import Pagination from "@/components/paginationComp";
+import { useState, useMemo, useEffect } from "react";
+import PrimarySelect from "../form/primarySelect";
+import PrimaryInput from "../form/primaryInput";
 import toast from "react-hot-toast";
 import utc from "dayjs/plugin/utc";
-import { useState, useMemo, useEffect } from "react";
 import dayjs from "dayjs";
-import Pagination from "@/components/paginationComp";
 
 type Props = {
   vehicle: Vehicle;
@@ -62,7 +64,7 @@ export function FuelHistoryTable({
 
   useEffect(() => {
     onPageChange(1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const processedData = useMemo(() => {
@@ -90,11 +92,13 @@ export function FuelHistoryTable({
       }
 
       if (filters.dataInicio) {
-        if (dataItem.isBefore(dayjs.utc(filters.dataInicio).startOf("day"))) return false;
+        if (dataItem.isBefore(dayjs.utc(filters.dataInicio).startOf("day")))
+          return false;
       }
 
       if (filters.dataFim) {
-        if (dataItem.isAfter(dayjs.utc(filters.dataFim).endOf("day"))) return false;
+        if (dataItem.isAfter(dayjs.utc(filters.dataFim).endOf("day")))
+          return false;
       }
 
       return true;
@@ -232,59 +236,66 @@ export function FuelHistoryTable({
         {/* FILTROS */}
         {showFilters && (
           <div className="px-6 py-4 border-b border-border bg-background/40 flex flex-wrap gap-4 items-end">
-            <select
+            <PrimarySelect
+              label="Combustível"
+              width="auto"
               value={filters.tipoCombustivel}
-              onChange={(e) =>
-                setFilters({ ...filters, tipoCombustivel: e.target.value })
+              onChange={(value) =>
+                setFilters({ ...filters, tipoCombustivel: value })
               }
-              className="px-3 py-2 rounded-lg bg-alternative-bg border border-border text-sm"
-            >
-              <option value="">Combustível</option>
-              <option value="GASOLINA">Gasolina</option>
-              <option value="ETANOL">Etanol</option>
-              <option value="DIESEL">Diesel</option>
-            </select>
+              options={[
+                { label: "Todos", value: "" },
+                { label: "Gasolina", value: "GASOLINA" },
+                { label: "Etanol", value: "ETANOL" },
+                { label: "Diesel", value: "DIESEL" },
+              ]}
+            />
 
-            <select
+            <PrimarySelect
+              label="Posto"
+              width="auto"
               value={filters.postoTipo}
-              onChange={(e) =>
-                setFilters({ ...filters, postoTipo: e.target.value })
-              }
-              className="px-3 py-2 rounded-lg bg-alternative-bg border border-border text-sm"
-            >
-              <option value="">Posto</option>
-              <option value="INTERNO">Interno</option>
-              <option value="EXTERNO">Externo</option>
-            </select>
+              onChange={(value) => setFilters({ ...filters, postoTipo: value })}
+              options={[
+                { label: "Todos", value: "" },
+                { label: "Interno", value: "INTERNO" },
+                { label: "Externo", value: "EXTERNO" },
+              ]}
+            />
 
-            <select
+            <PrimarySelect
+              label="Tanque"
+              width="auto"
+              className="min-w-35"
               value={filters.tanqueCheio}
-              onChange={(e) =>
-                setFilters({ ...filters, tanqueCheio: (e.target.value) })
+              onChange={(value) =>
+                setFilters({ ...filters, tanqueCheio: value })
               }
-              className="px-3 py-2 rounded-lg bg-alternative-bg border border-border text-sm"
-            >
-              <option value="">Tipo</option>
-              <option value="true">Tanque Cheio</option>
-              <option value="false">Parcial</option>
-            </select>
+              options={[
+                { label: "Todos", value: "" },
+                { label: "Tanque Cheio", value: "true" },
+                { label: "Parcial", value: "false" },
+              ]}
+            />
 
-            <input
+            <PrimaryInput
+              label="Data Início"
+              width="auto"
               type="date"
               value={filters.dataInicio}
               onChange={(e) =>
                 setFilters({ ...filters, dataInicio: e.target.value })
               }
-              className="px-3 py-2 rounded-lg bg-alternative-bg border border-border text-sm"
             />
 
-            <input
+            <PrimaryInput
+              label="Data Fim"
+              width="auto"
               type="date"
               value={filters.dataFim}
               onChange={(e) =>
                 setFilters({ ...filters, dataFim: e.target.value })
               }
-              className="px-3 py-2 rounded-lg bg-alternative-bg border border-border text-sm"
             />
 
             {activeFiltersCount > 0 && (
