@@ -9,11 +9,13 @@ import {
   getVehicleById,
 } from "@/services/vehicles.service";
 import { translateApiErrors } from "@/utils/translateApiError";
+import { getAdminUsers } from "@/services/users.service";
 import React, { useEffect, useState } from "react";
 import PrimarySelect from "../form/primarySelect";
 import PrimarySwitch from "../form/primarySwitch";
 import PrimaryModal from "../form/primaryModal";
 import PrimaryInput from "../form/primaryInput";
+import { User } from "@/services/users.service";
 import { Gauge, Car } from "lucide-react";
 import { toast } from "react-hot-toast";
 import LoaderComp from "../loaderComp";
@@ -51,7 +53,10 @@ export default function FuelSupplyFormModal({
   const [postoTipo, setPostoTipo] = useState<"INTERNO" | "EXTERNO">("INTERNO");
   const [postoNome, setPostoNome] = useState("");
   const [tanqueCheio, setTanqueCheio] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [userId, setUserId] = useState<string>("");
 
+  //fetch veículos
   useEffect(() => {
     if (!open) return;
 
@@ -71,6 +76,24 @@ export default function FuelSupplyFormModal({
 
     loadVehicles();
   }, [open, vehicleId]);
+
+  //fetch usuários
+  useEffect(() => {
+    if (!open) return;
+
+    async function loadUsers() {
+      try {
+        const res = await getAdminUsers({
+          limit: 100,
+        });
+        setUsers(res.users);
+      } catch {
+        toast.error("Erro ao carregar usuários");
+      }
+    }
+
+    loadUsers();
+  }, [open]);
 
   // INITIAL DATA
   useEffect(() => {
@@ -111,6 +134,7 @@ export default function FuelSupplyFormModal({
     try {
       await onSubmit({
         vehicleId: finalVehicleId,
+        userId,
         data,
         kmAtual: Number(kmAtual),
         litros: Number(litros),
@@ -132,7 +156,7 @@ export default function FuelSupplyFormModal({
       }
     }
   }
-
+  
   return (
     <PrimaryModal
       isOpen={open}
@@ -198,6 +222,16 @@ export default function FuelSupplyFormModal({
             onChange={(e) => setData(e.target.value)}
           />
 
+          <PrimarySelect
+            label="Usuário responsável"
+            value={userId}
+            onChange={(val) => setUserId(val as string)}
+            options={users.map((u) => ({
+              label: u.firstName + " " + u.lastName + " - " + u.role,
+              value: u.id,
+            }))}
+          />
+
           <PrimaryInput
             label="KM Atual"
             value={kmAtual}
@@ -239,11 +273,13 @@ export default function FuelSupplyFormModal({
             ]}
           />
 
-          <PrimaryInput
-            label="Nome do Posto"
-            value={postoNome}
-            onChange={(e) => setPostoNome(e.target.value)}
-          />
+          {postoTipo === "EXTERNO" && (
+            <PrimaryInput
+              label="Nome do Posto"
+              value={postoNome}
+              onChange={(e) => setPostoNome(e.target.value)}
+            />
+          )}
 
           <PrimarySwitch
             label="Tanque cheio"

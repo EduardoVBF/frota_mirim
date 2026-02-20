@@ -14,6 +14,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useState, useEffect } from "react";
 import LoaderComp from "../loaderComp";
 import utc from "dayjs/plugin/utc"
+import Link from "next/link";
 import dayjs from "dayjs"
 
 type Props = {
@@ -177,16 +178,16 @@ export function FuelSupplyTable({
                   className="group hover:bg-background/40 transition-colors"
                 >
                   <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold">
+                    <Link className="flex flex-col" href={`/veiculos/${vehicles.find((v) => v.id === item.vehicleId)?.placa}`}>
+                      <span className="text-sm font-bold text-muted">
                         {vehicles.find((v) => v.id === item.vehicleId)
                           ?.modelo || "Veículo Desconecido"}
                       </span>
-                      <span className="text-xs text-muted">
+                      <span className="text-xs font-bold uppercase px-2 py-1 rounded bg-background border border-border w-fit">
                         {vehicles.find((v) => v.id === item.vehicleId)?.placa ||
-                          "Placa Desconecida"}
+                          "-"}
                       </span>
-                    </div>
+                    </Link>
                   </td>
 
                   <td className="px-6 py-4">
