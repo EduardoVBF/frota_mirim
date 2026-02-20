@@ -90,7 +90,7 @@ export default function ImageZoom({
                 "
                 aria-label="Fechar imagem"
               >
-                <X size={20} />
+                <X size={20} className="text-accent" />
               </button>
 
               {/* loader */}
