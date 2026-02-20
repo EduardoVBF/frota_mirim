@@ -10,6 +10,8 @@ export type User = {
   isActive: boolean;
   imageUrl?: string;
   cnhExpiresAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type UserPayload = {

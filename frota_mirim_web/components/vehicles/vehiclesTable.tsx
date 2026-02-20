@@ -172,7 +172,13 @@ export function VehicleTable({
               setFilters({
                 ...filters,
                 isActive:
-                  value === "" ? undefined : value === "true" ? true : false,
+                  filters.isActive?.toString() === value
+                    ? undefined
+                    : value === "true"
+                      ? true
+                      : value === "false"
+                        ? false
+                        : undefined,
               })
             }
             options={[
