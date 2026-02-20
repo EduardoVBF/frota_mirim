@@ -60,7 +60,7 @@ export class FuelSupplyService {
   }
 
   // CREATE
-  async create(data: CreateFuelSupplyDTO, userId?: string) {
+  async create(data: CreateFuelSupplyDTO) {
     return prisma.$transaction(async (tx) => {
       const vehicle = await tx.vehicle.findUnique({
         where: { id: data.vehicleId },
@@ -77,7 +77,6 @@ export class FuelSupplyService {
       const fuel = await tx.fuelSupply.create({
         data: {
           ...data,
-          userId,
           valorTotal,
         },
       });

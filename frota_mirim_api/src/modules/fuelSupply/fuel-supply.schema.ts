@@ -38,6 +38,7 @@ export type FuelSupplyResponseDTO = z.infer<
 // CREATE
 export const createFuelSupplySchema = z.object({
   vehicleId: z.string().uuid(),
+  userId: z.string().uuid().optional(),
 
   data: z.coerce.date(),
   kmAtual: z.number().min(0),
