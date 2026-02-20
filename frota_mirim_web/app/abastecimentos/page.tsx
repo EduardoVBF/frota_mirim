@@ -79,6 +79,18 @@ export default function AbastecimentosPage() {
     fetchAbastecimentos();
   }, [fetchAbastecimentos]);
 
+  const handleClearFilters = () => {
+    setPage(1);
+    setFilters({
+      vehicleId: undefined,
+      dataInicio: undefined,
+      dataFim: undefined,
+      tipoCombustivel: undefined,
+      postoTipo: undefined,
+      tanqueCheio: undefined,
+    });
+  };
+
   // STATS
   const totalLitros = abastecimentos.reduce(
     (acc, item) => acc + Number(item.litros),
@@ -132,12 +144,23 @@ export default function AbastecimentosPage() {
         )}
 
         {/* FILTROS */}
-        <div className="bg-alternative-bg/60 backdrop-blur-sm border border-border/60 rounded-2xl p-5 md:p-6 shadow-sm space-y-5">
+        <div className="bg-alternative-bg/70 backdrop-blur-md border border-border/60 rounded-3xl py-3 shadow-md space-y-2 transition-all">
+          {/* HEADER FILTROS */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <h2 className="text-lg font-semibold ml-4">Filtros</h2>
+
+            <button
+              onClick={handleClearFilters}
+              className="mr-4 text-sm px-4 py-2 rounded-xl border border-border hover:bg-muted/40 transition-all"
+            >
+              Limpar filtros
+            </button>
+          </div>
+
           {/* FILTROS RÁPIDOS */}
-          <div className="flex divide-x divide-border/60">
+          <div className="flex flex-wrap gap-4 px-4">
             <FilterChips
               label="Combustível"
-              multi
               options={[
                 { label: "Gasolina", value: "GASOLINA" },
                 { label: "Etanol", value: "ETANOL" },
@@ -148,10 +171,12 @@ export default function AbastecimentosPage() {
                 setPage(1);
                 setFilters({
                   ...filters,
-                  tipoCombustivel: val.length ? val : undefined,
+                  tipoCombustivel: val || undefined,
                 });
               }}
             />
+
+            <div className="w-px h-14 bg-border/50" />
 
             <FilterChips
               label="Posto"
@@ -168,29 +193,13 @@ export default function AbastecimentosPage() {
                 });
               }}
             />
-
-            {/* <FilterChips
-              label="Tipo de Abastecimento"
-              options={[
-                { label: "Tanque Cheio", value: true },
-                { label: "Parcial", value: false },
-              ]}
-              value={filters.tanqueCheio}
-              onChange={(val) => {
-                setPage(1);
-                setFilters({
-                  ...filters,
-                  tanqueCheio: typeof val === "boolean" ? val : undefined,
-                });
-              }}
-            /> */}
           </div>
 
-          {/* DIVIDER SUAVE */}
-          <div className="h-px bg-border/40" />
+          {/* DIVIDER */}
+          <div className="h-px bg-border/50" />
 
-          {/* FILTROS PRINCIPAIS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* FILTROS AVANÇADOS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
             <PrimarySelect
               label="Veículo"
               value={filters.vehicleId || ""}

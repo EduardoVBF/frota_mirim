@@ -44,7 +44,7 @@ export default function FilterChips({
   };
 
   return (
-    <div className="space-y-2 px-4">
+    <div className="space-y-2">
       {label && (
         <span className="text-xs uppercase tracking-widest text-muted font-bold">
           {label}
