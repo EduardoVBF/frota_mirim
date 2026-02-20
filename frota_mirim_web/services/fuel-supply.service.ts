@@ -42,6 +42,7 @@ export type FuelSuppliesResponse = {
 
 // PAYLOADS
 export type CreateFuelSupplyPayload = {
+  userId?: string | null;
   vehicleId: string;
   data: string;
   kmAtual: number;
