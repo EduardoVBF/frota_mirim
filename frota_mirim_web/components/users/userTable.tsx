@@ -277,7 +277,7 @@ export function UserTable({
                           alt={`${user.firstName} ${user.lastName}`}
                           width={32}
                           height={32}
-                          primaryImageClassName="w-8 h-8 rounded-full object-cover"
+                          primaryImageClassName="w-8 h-8 rounded-full object-cover border border-accent"
                           zoom
                         />
                       ) : (
