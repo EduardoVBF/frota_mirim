@@ -25,6 +25,7 @@ import UserFormModal from "./userFormModal";
 import ImageZoom from "../layout/ImageZoom";
 import LoaderComp from "../loaderComp";
 import { useState } from "react";
+import UserPhonesModal from "./userPhonesModal";
 
 export function UserTable({
   users,
@@ -45,6 +46,8 @@ export function UserTable({
   const [resetUser, setResetUser] = useState<User | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const [phonesUser, setPhonesUser] = useState<User | null>(null);
+  const [phonesOpen, setPhonesOpen] = useState(false);
 
   const activeFiltersCount =
     (filters.search ? 1 : 0) +
@@ -119,6 +122,15 @@ export function UserTable({
         user={resetUser}
         onClose={() => setResetOpen(false)}
         onSubmit={handleResetPassword}
+      />
+
+      <UserPhonesModal
+        open={phonesOpen}
+        user={phonesUser}
+        onClose={() => {
+          setPhonesOpen(false);
+          setPhonesUser(null);
+        }}
       />
 
       {/* HEADER */}
@@ -334,7 +346,13 @@ export function UserTable({
                         <Edit2 size={16} />
                       </button>
 
-                      <button className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg">
+                      <button
+                        onClick={() => {
+                          setPhonesUser(user);
+                          setPhonesOpen(true);
+                        }}
+                        className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg"
+                      >
                         <Phone size={16} />
                       </button>
 
