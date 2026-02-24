@@ -1,3 +1,4 @@
+import { userPhonesRoutes } from "./modules/usersTelephones/usersTelephones.routes";
 import { fuelSupplyRoutes } from "./modules/fuelSupply/fuel-supply.routes";
 import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes";
 import { usersRoutes } from "./modules/users/users.routes";
@@ -20,6 +21,7 @@ app.register(async (app) => {
   await app.register(usersRoutes);
   await app.register(vehiclesRoutes);
   await app.register(fuelSupplyRoutes);
+  await app.register(userPhonesRoutes);
 });
 
 export { app };

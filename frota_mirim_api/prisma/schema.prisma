@@ -44,6 +44,7 @@ model User {
   cnhExpiresAt DateTime?
 
   abastecimentos FuelSupply[]
+  phones UserPhone[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -51,6 +52,28 @@ model User {
   @@index([isActive])
   @@index([role])
 }
+
+// TELEFONES
+model UserPhone {
+  id String @id @default(uuid())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  phone String @unique @db.VarChar(20)
+
+  isPrimary Boolean @default(false)
+  isActive  Boolean @default(true)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+  @@index([isPrimary])
+}
+
 
 // VEHICLE
 
