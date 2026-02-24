@@ -14,4 +14,5 @@ export const registerSchema = z.object({
   isActive: z.boolean(),
   imageBase64: z.string().optional(),
   cnhExpiresAt: z.coerce.date().optional(),
+  cpf: z.string().length(11),
 });

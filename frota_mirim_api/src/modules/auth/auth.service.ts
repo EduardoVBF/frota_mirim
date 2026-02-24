@@ -21,6 +21,7 @@ type RegisterInput = {
   password: string;
   role?: UserRole;
   isActive: boolean;
+  cpf: string;
 
   imageBase64?: string;
   cnhExpiresAt?: Date;
@@ -51,6 +52,7 @@ export class AuthService {
       isActive: user.isActive,
       imageUrl: user.imageUrl,
       cnhExpiresAt: user.cnhExpiresAt,
+      cpf: user.cpf,
     };
   }
 
@@ -59,8 +61,16 @@ export class AuthService {
       where: { email: data.email },
     });
 
+    const existingCpf = await prisma.user.findUnique({
+      where: { cpf: data.cpf },
+    });
+
     if (existingUser) {
       throw new AppError("Usuário com este email já existe", 409);
+    }
+
+    if (existingCpf) {
+      throw new AppError("Usuário com este CPF já existe", 409);
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -85,6 +95,7 @@ export class AuthService {
         isActive: data.isActive,
         imageUrl,
         cnhExpiresAt: data.cnhExpiresAt,
+        cpf: data.cpf,
       },
     });
 
@@ -97,6 +108,7 @@ export class AuthService {
       isActive: user.isActive,
       imageUrl: user.imageUrl,
       cnhExpiresAt: user.cnhExpiresAt,
+      cpf: user.cpf,
     };
   }
 }

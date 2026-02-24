@@ -11,6 +11,7 @@ export const userResponseSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   email: z.email(),
+  cpf: z.string().length(11),
   role: userRoleSchema,
   isActive: z.boolean(),
   imageUrl: z.string().url().nullable().optional(),
@@ -31,7 +32,9 @@ export const updateUserBodySchema = z.object({
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
   role: userRoleSchema.optional(),
+  cpf: z.string().length(11).optional(),
   isActive: z.boolean().optional(),
+  imageUrl: z.string().url().nullable().optional(),
   imageBase64: z.string().optional(),
   cnhExpiresAt: z.coerce.date().optional(),
 });

@@ -30,6 +30,7 @@ export async function loginController(
       isActive: user.isActive,
       imageUrl: user.imageUrl,
       cnhExpiresAt: user.cnhExpiresAt,
+      cpf: user.cpf,
     },
   });
 }

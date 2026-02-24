@@ -38,6 +38,8 @@ model User {
   role         String  @default("admin")
   isActive     Boolean @default(true)
 
+  cpf          String  @unique @db.VarChar(11)
+
   imageUrl     String?
   cnhExpiresAt DateTime?
 

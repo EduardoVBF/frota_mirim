@@ -23,6 +23,7 @@ export class UsersService {
           { firstName: { contains: search, mode: "insensitive" } },
           { lastName: { contains: search, mode: "insensitive" } },
           { email: { contains: search, mode: "insensitive" } },
+          { cpf: { contains: search, mode: "insensitive" } },
         ],
       });
     }
@@ -52,6 +53,7 @@ export class UsersService {
             firstName: true,
             lastName: true,
             email: true,
+            cpf: true,
             role: true,
             isActive: true,
             imageUrl: true,
@@ -99,6 +101,7 @@ export class UsersService {
         firstName: true,
         lastName: true,
         email: true,
+        cpf: true,
         role: true,
         isActive: true,
         imageUrl: true,
@@ -132,10 +135,11 @@ export class UsersService {
     let imageUrl: string | undefined;
 
     if (data.imageBase64) {
-      imageUrl = await uploadBase64ToFirebase(
-        data.imageBase64,
-        "users"
-      );
+      if (data.imageBase64.startsWith("data:")) {
+        imageUrl = await uploadBase64ToFirebase(data.imageBase64, "users");
+      } else {
+        imageUrl = data.imageBase64;
+      }
     }
 
     return prisma.user.update({
@@ -145,6 +149,7 @@ export class UsersService {
         lastName: data.lastName ?? user.lastName,
         role: data.role ?? user.role,
         isActive: data.isActive ?? user.isActive,
+        cpf: data.cpf ?? user.cpf,
         ...(imageUrl && { imageUrl }),
         ...(data.cnhExpiresAt && { cnhExpiresAt: data.cnhExpiresAt }),
       },
@@ -154,6 +159,7 @@ export class UsersService {
         lastName: true,
         email: true,
         role: true,
+        cpf: true,
         isActive: true,
         imageUrl: true,
         cnhExpiresAt: true,
