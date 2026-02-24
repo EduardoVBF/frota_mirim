@@ -1,4 +1,5 @@
 import { userPhonesRoutes } from "./modules/usersTelephones/usersTelephones.routes";
+import { vehicleUsageRoutes } from "./modules/vehicleUsage/vehicleUsage.routes";
 import { fuelSupplyRoutes } from "./modules/fuelSupply/fuel-supply.routes";
 import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes";
 import { usersRoutes } from "./modules/users/users.routes";
@@ -17,11 +18,12 @@ app.register(async (app) => {
 
   await registerPlugins(app);
 
-  await app.register(authRoutes);
-  await app.register(usersRoutes);
-  await app.register(vehiclesRoutes);
-  await app.register(fuelSupplyRoutes);
+  await app.register(vehicleUsageRoutes);
   await app.register(userPhonesRoutes);
+  await app.register(fuelSupplyRoutes);
+  await app.register(vehiclesRoutes);
+  await app.register(usersRoutes);
+  await app.register(authRoutes);
 });
 
 export { app };
