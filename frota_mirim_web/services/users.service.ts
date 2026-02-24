@@ -6,6 +6,7 @@ export type User = {
   firstName: string;
   lastName: string;
   email: string;
+  cpf: string;
   role: "admin" | "motorista" | "editor";
   isActive: boolean;
   imageUrl?: string;
@@ -19,6 +20,7 @@ export type UserPayload = {
   lastName: string;
   email: string;
   password?: string;
+  cpf: string;
   role: "admin" | "motorista" | "editor";
   isActive: boolean;
   imageBase64?: string | null;
@@ -45,6 +47,9 @@ export type CreateUserPayload = {
   password: string;
   role: "admin" | "motorista" | "editor";
   isActive: boolean;
+  cpf: string;
+  imageBase64?: string | null;
+  cnhExpiresAt?: string | null;
 };
 
 export type UpdateUserPayload = {
@@ -52,6 +57,10 @@ export type UpdateUserPayload = {
   lastName?: string;
   role?: "admin" | "motorista" | "editor";
   isActive?: boolean;
+  cpf?: string;
+  imageBase64?: string | null;
+  imageUrl?: string | null;
+  cnhExpiresAt?: string | null;
 };
 
 export type UserFilters = {

@@ -53,7 +53,7 @@ export default function ImageInput({
       <div
         onClick={openFilePicker}
         className={`
-          ${error ? "border-red-500" : "border-gray-300 hover:border-[#a35c42]"}
+          ${error ? "border-red-500" : "border-gray-300 hover:border-accent"}
           w-48 h-48
           border-2 rounded-lg
           overflow-hidden

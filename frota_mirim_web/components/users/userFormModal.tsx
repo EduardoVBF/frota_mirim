@@ -36,6 +36,7 @@ export default function UserFormModal({
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "motorista" | "editor">("admin");
   const [isActive, setIsActive] = useState(true);
+  const [cpf, setCpf] = useState("");
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [cnhExpiresAt, setCnhExpiresAt] = useState<string>("");
@@ -49,7 +50,7 @@ export default function UserFormModal({
       setRole(initialData.role);
       setIsActive(initialData.isActive);
       setPassword("");
-      setImageBase64(initialData.imageUrl || null);
+      setCpf(initialData.cpf || "");
 
       setCnhExpiresAt(
         initialData.cnhExpiresAt
@@ -65,6 +66,7 @@ export default function UserFormModal({
       setIsActive(true);
       setImageBase64(null);
       setCnhExpiresAt("");
+      setCpf("");
     }
   }, [initialData, open]);
 
@@ -79,6 +81,7 @@ export default function UserFormModal({
         email,
         role,
         isActive,
+        cpf,
         ...(initialData ? {} : { password }),
         ...(imageBase64 && { imageBase64 }),
         ...(cnhExpiresAt && { cnhExpiresAt }),
@@ -182,6 +185,13 @@ export default function UserFormModal({
                 error={errors.lastName}
               />
             </div>
+
+            <PrimaryInput
+              label="CPF"
+              value={cpf}
+              onChange={(e) => setCpf(e.target.value)}
+              error={errors.cpf}
+            />
 
             <PrimaryInput
               type="text"

@@ -239,6 +239,7 @@ export function UserTable({
             <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
               <th className="px-6 py-4 font-bold text-center w-16">#</th>
               <th className="px-6 py-4 font-bold">Usuário</th>
+              <th className="px-6 py-4 font-bold">CPF</th>
               <th className="px-6 py-4 font-bold">Função</th>
               <th className="px-6 py-4 font-bold">Status</th>
               <th className="px-6 py-4 font-bold text-right">Ações</th>
@@ -293,6 +294,12 @@ export function UserTable({
                       </span>
                       <span className="text-xs text-muted">{user.email}</span>
                     </div>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-muted tracking-wide">
+                      {user.cpf.replace(/(\d{3})\d{6}(\d{2})/, "$1******$2")}
+                    </span>
                   </td>
 
                   <td className="px-6 py-4">
