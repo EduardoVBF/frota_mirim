@@ -21,7 +21,7 @@ export default function PrimarySwitch({
 }: PrimarySwitchProps) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1">
         <label className="text-[11px] font-bold uppercase tracking-widest text-muted/80 cursor-pointer select-none"
                onClick={() => !disabled && onChange(!checked)}>
           {label}
