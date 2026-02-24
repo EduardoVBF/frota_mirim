@@ -237,7 +237,7 @@ export function UserTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
-              <th className="px-6 py-4 font-bold text-center w-16">#</th>
+              {/* <th className="px-6 py-4 font-bold text-center w-16">#</th> */}
               <th className="px-6 py-4 font-bold">Usuário</th>
               <th className="px-6 py-4 font-bold">CPF</th>
               <th className="px-6 py-4 font-bold">Função</th>
@@ -269,30 +269,29 @@ export function UserTable({
                   key={user.id}
                   className="group hover:bg-background/50 transition-colors"
                 >
-                  <td className="px-6 py-4 text-center">
-                    {user?.imageUrl ? (
-                      <ImageZoom
-                        src={user.imageUrl}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        width={32}
-                        height={32}
-                        primaryImageClassName="w-8 h-8 rounded-full object-cover"
-                        zoom
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mx-auto uppercase">
-                        {user.firstName[0]}
-                        {user.lastName[0]}
-                      </div>
-                    )}
-                  </td>
-
                   <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold">
-                        {user.firstName} {user.lastName}
-                      </span>
-                      <span className="text-xs text-muted">{user.email}</span>
+                    <div className="flex items-center gap-3">
+                      {user?.imageUrl ? (
+                        <ImageZoom
+                          src={user.imageUrl}
+                          alt={`${user.firstName} ${user.lastName}`}
+                          width={32}
+                          height={32}
+                          primaryImageClassName="w-8 h-8 rounded-full object-cover"
+                          zoom
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center uppercase border border-accent">
+                          {user.firstName[0]}
+                          {user.lastName[0]}
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold">
+                          {user.firstName} {user.lastName}
+                        </span>
+                        <span className="text-xs text-muted">{user.email}</span>
+                      </div>
                     </div>
                   </td>
 
