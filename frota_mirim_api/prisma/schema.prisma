@@ -38,13 +38,14 @@ model User {
   role         String  @default("admin")
   isActive     Boolean @default(true)
 
-  cpf          String  @unique @db.VarChar(11)
+  cpf String @unique @db.VarChar(11)
 
   imageUrl     String?
   cnhExpiresAt DateTime?
 
   abastecimentos FuelSupply[]
-  phones UserPhone[]
+  phones         UserPhone[]
+  usages         VehicleUsage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -58,12 +59,12 @@ model UserPhone {
   id String @id @default(uuid())
 
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   phone String @unique @db.VarChar(20)
 
-  isPrimary Boolean @default(false)
-  isActive  Boolean @default(true)
+  isPrimary Boolean   @default(false)
+  isActive  Boolean   @default(true)
   deletedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -73,7 +74,6 @@ model UserPhone {
   @@index([isActive])
   @@index([isPrimary])
 }
-
 
 // VEHICLE
 
@@ -94,6 +94,7 @@ model Vehicle {
   isActive Boolean @default(true)
 
   abastecimentos FuelSupply[]
+  usages         VehicleUsage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,15 +119,15 @@ model FuelSupply {
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // DADOS DO ABASTECIMENTO
-  data DateTime
-  kmAtual Int
-  litros     Decimal @db.Decimal(10, 3)
-  valorLitro Decimal @db.Decimal(10, 3)
-  valorTotal Decimal @db.Decimal(12, 2)
+  data            DateTime
+  kmAtual         Int
+  litros          Decimal         @db.Decimal(10, 3)
+  valorLitro      Decimal         @db.Decimal(10, 3)
+  valorTotal      Decimal         @db.Decimal(12, 2)
   tipoCombustivel FuelType
   postoTipo       FuelStationType
   postoNome       String?
-  tanqueCheio Boolean @default(false)
+  tanqueCheio     Boolean         @default(false)
 
   // Média calculada somente quando tanqueCheio = true
   media Decimal? @db.Decimal(10, 3)
@@ -140,4 +141,36 @@ model FuelSupply {
   @@index([data])
   @@index([tipoCombustivel])
   @@index([tanqueCheio])
+}
+
+// VEHICLE USASE (CHECK-IN/CHECK-OUT)
+enum VehicleUsageType {
+  ENTRY
+  EXIT
+}
+
+model VehicleUsage {
+  id String @id @default(uuid())
+
+  // RELAÇÕES
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // EVENTO
+  type VehicleUsageType
+
+  eventAt DateTime
+  km      Int
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  // INDEXES
+  @@index([vehicleId, eventAt])
+  @@index([userId, eventAt])
+  @@index([type])
 }
