@@ -7,16 +7,18 @@ import {
   CreateFuelSupplyPayload,
   FuelSupplyFilters,
 } from "@/services/fuel-supply.service";
-import { Vehicle } from "@/services/vehicles.service";
-import FuelSupplyFormModal from "./FuelSupplyFormModal";
-import FilterChips from "./FilterChips";
-import PrimarySelect from "../form/primarySelect";
-import PrimaryInput from "../form/primaryInput";
 import { Edit2, Trash2, Plus, Fuel, Filter, FilterX } from "lucide-react";
+import { translateApiErrors } from "@/utils/translateApiError";
+import FuelSupplyFormModal from "./FuelSupplyFormModal";
+import { Vehicle } from "@/services/vehicles.service";
+import PrimarySelect from "../form/primarySelect";
 import toast, { Toaster } from "react-hot-toast";
-import { useState } from "react";
+import PrimaryInput from "../form/primaryInput";
+import FilterChips from "./FilterChips";
 import LoaderComp from "../loaderComp";
 import utc from "dayjs/plugin/utc";
+import { AxiosError } from "axios";
+import { useState } from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 
@@ -45,6 +47,7 @@ export function FuelSupplyTable({
   const [editingItem, setEditingItem] = useState<FuelSupply | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const activeFiltersCount =
     (filters.vehicleId ? 1 : 0) +
@@ -79,8 +82,22 @@ export function FuelSupplyTable({
       setModalOpen(false);
       setEditingItem(null);
       await onChange();
-    } catch {
-      toast.error("Erro ao salvar abastecimento");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar o abastecimento");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar o abastecimento");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar o abastecimento");
+      }
     } finally {
       setLoadingAction(false);
     }
@@ -94,8 +111,22 @@ export function FuelSupplyTable({
       await deleteFuelSupply(id);
       toast.success("Abastecimento excluído");
       await onChange();
-    } catch {
-      toast.error("Erro ao excluir");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao excluir o abastecimento");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao excluir o abastecimento");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao excluir o abastecimento");
+      }
     } finally {
       setLoadingAction(false);
     }
@@ -115,8 +146,10 @@ export function FuelSupplyTable({
         onClose={() => {
           setModalOpen(false);
           setEditingItem(null);
+          setErrors({});
         }}
         onSubmit={handleSubmit}
+        errors={errors}
       />
 
       {/* HEADER PADRÃO */}
@@ -202,7 +235,13 @@ export function FuelSupplyTable({
 
             <FilterChips
               label="Tanque"
-              value={filters.tanqueCheio === undefined ? "" : filters.tanqueCheio ? "true" : "false"}
+              value={
+                filters.tanqueCheio === undefined
+                  ? ""
+                  : filters.tanqueCheio
+                    ? "true"
+                    : "false"
+              }
               options={[
                 { label: "Cheio", value: "true" },
                 { label: "Parcial", value: "false" },

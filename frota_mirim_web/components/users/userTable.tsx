@@ -17,15 +17,17 @@ import {
   UserPlus,
   Key,
 } from "lucide-react";
+import { translateApiErrors } from "@/utils/translateApiError";
 import ResetPasswordModal from "./resetPasswordModal";
 import FilterChips from "../fuel-supply/FilterChips";
 import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
+import UserPhonesModal from "./userPhonesModal";
 import UserFormModal from "./userFormModal";
 import ImageZoom from "../layout/ImageZoom";
 import LoaderComp from "../loaderComp";
+import { AxiosError } from "axios";
 import { useState } from "react";
-import UserPhonesModal from "./userPhonesModal";
 
 export function UserTable({
   users,
@@ -48,6 +50,7 @@ export function UserTable({
   const [resetOpen, setResetOpen] = useState(false);
   const [phonesUser, setPhonesUser] = useState<User | null>(null);
   const [phonesOpen, setPhonesOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const activeFiltersCount =
     (filters.search ? 1 : 0) +
@@ -68,8 +71,22 @@ export function UserTable({
       setIsModalOpen(false);
       setEditingUser(null);
       await onUserChange();
-    } catch {
-      toast.error("Erro ao salvar usuário");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar o usuário");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar o usuário");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar o usuário");
+      }
     } finally {
       setLoading(false);
     }
@@ -84,8 +101,22 @@ export function UserTable({
       setResetOpen(false);
       setResetUser(null);
       onUserChange();
-    } catch {
-      toast.error("Erro ao redefinir senha");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao redefinir senha");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao redefinir senha");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao redefinir senha");
+      }
     } finally {
       setLoading(false);
     }
@@ -113,15 +144,22 @@ export function UserTable({
           setIsModalOpen(false);
           setEditingUser(null);
           setLoading(false);
+          setErrors({});
         }}
+        errors={errors}
       />
 
       <ResetPasswordModal
         open={resetOpen}
         loading={loading}
         user={resetUser}
-        onClose={() => setResetOpen(false)}
+        onClose={() => {
+          setResetOpen(false);
+          setResetUser(null);
+          setErrors({});
+        }}
         onSubmit={handleResetPassword}
+        errors={errors}
       />
 
       <UserPhonesModal
@@ -249,7 +287,6 @@ export function UserTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
-              {/* <th className="px-6 py-4 font-bold text-center w-16">#</th> */}
               <th className="px-6 py-4 font-bold">Usuário</th>
               <th className="px-6 py-4 font-bold">CPF</th>
               <th className="px-6 py-4 font-bold">Função</th>

@@ -1,10 +1,10 @@
 "use client";
-import { translateApiErrors } from "../../utils/translateApiError";
 import {
   Vehicle,
   VehiclePayload,
   VehicleType,
 } from "../../services/vehicles.service";
+import { translateApiErrors } from "../../utils/translateApiError";
 import React, { useEffect, useState } from "react";
 import PrimarySelect from "../form/primarySelect";
 import PrimarySwitch from "../form/primarySwitch";
@@ -21,6 +21,7 @@ type Props = {
   initialData?: Vehicle | null;
   onClose: () => void;
   onSubmit: (data: VehiclePayload) => void;
+  errors: Record<string, string>;
 };
 
 export default function VehicleFormModal({
@@ -29,8 +30,8 @@ export default function VehicleFormModal({
   initialData,
   onClose,
   onSubmit,
+  errors,
 }: Props) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [infoVisible, setInfoVisible] = useState(false);
 
   const [placa, setPlaca] = useState("");
@@ -55,18 +56,12 @@ export default function VehicleFormModal({
       setAno(initialData.ano);
       setTipo(initialData.tipo);
       setKmAtual(initialData.kmAtual);
-      setKmUltimoAbastecimento(
-        initialData.kmUltimoAbastecimento ?? ""
-      );
+      setKmUltimoAbastecimento(initialData.kmUltimoAbastecimento ?? "");
       setVencimentoDocumento(
-        new Date(initialData.vencimentoDocumento)
-          .toISOString()
-          .split("T")[0]
+        new Date(initialData.vencimentoDocumento).toISOString().split("T")[0],
       );
       setVencimentoIPVA(
-        new Date(initialData.vencimentoIPVA)
-          .toISOString()
-          .split("T")[0]
+        new Date(initialData.vencimentoIPVA).toISOString().split("T")[0],
       );
       setIsActive(initialData.isActive);
     } else {
@@ -85,7 +80,6 @@ export default function VehicleFormModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErrors({});
 
     try {
       await onSubmit({
@@ -103,14 +97,19 @@ export default function VehicleFormModal({
         isActive,
       });
     } catch (err) {
-      if (err instanceof AxiosError && err.response?.data) {
-        const { fieldErrors, toastMessage } = translateApiErrors(
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar o veículo");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar o veículo");
+          return;
+        }
+        const { toastMessage } = translateApiErrors(
           err.response.data,
         );
-        setErrors(fieldErrors);
-        toast.error(toastMessage || "Erro ao salvar veículo");
-      } else {
-        toast.error("Erro inesperado ao salvar");
+
+        toast.error(toastMessage || "Erro ao salvar o veículo");
       }
     }
   }
@@ -133,8 +132,8 @@ export default function VehicleFormModal({
         {loading
           ? "Salvando..."
           : initialData
-          ? "Salvar Alterações"
-          : "Cadastrar Veículo"}
+            ? "Salvar Alterações"
+            : "Cadastrar Veículo"}
       </button>
     </>
   );
@@ -244,9 +243,7 @@ export default function VehicleFormModal({
                 label="Vencimento Documento"
                 type="date"
                 value={vencimentoDocumento}
-                onChange={(e) =>
-                  setVencimentoDocumento(e.target.value)
-                }
+                onChange={(e) => setVencimentoDocumento(e.target.value)}
                 error={errors.vencimentoDocumento}
               />
               <PrimaryInput

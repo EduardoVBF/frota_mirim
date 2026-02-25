@@ -17,6 +17,7 @@ type Props = {
   initialData?: UserPhone | null;
   onClose: () => void;
   onSubmit: (data: CreateUserPhonePayload) => void;
+  errors: Record<string, string>;
 };
 
 export default function UserPhoneFormModal({
@@ -25,6 +26,7 @@ export default function UserPhoneFormModal({
   initialData,
   onClose,
   onSubmit,
+  errors,
 }: Props) {
   const [phone, setPhone] = useState("");
   const [userId, setUserId] = useState("");
@@ -138,6 +140,7 @@ export default function UserPhoneFormModal({
             value={formatPhone(phone)}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+55(16)99999-9999"
+            error={errors.phone}
           />
 
           <div className="flex items-center gap-6">
@@ -145,11 +148,13 @@ export default function UserPhoneFormModal({
               label="Principal"
               checked={isPrimary}
               onChange={setIsPrimary}
+              error={errors.isPrimary}
             />
             <PrimarySwitch
               label="Ativo"
               checked={isActive}
               onChange={setIsActive}
+              error={errors.isActive}
             />
           </div>
         </form>

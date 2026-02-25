@@ -18,6 +18,7 @@ type Props = {
   initialData?: User | null;
   onClose: () => void;
   onSubmit: (data: UserPayload) => void;
+  errors: Record<string, string>;
 };
 
 export default function UserFormModal({
@@ -26,8 +27,8 @@ export default function UserFormModal({
   initialData,
   onClose,
   onSubmit,
+  errors,
 }: Props) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [infoVisible, setInfoVisible] = useState(false);
 
   const [firstName, setFirstName] = useState("");
@@ -72,7 +73,6 @@ export default function UserFormModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErrors({});
 
     try {
       await onSubmit({
@@ -88,10 +88,9 @@ export default function UserFormModal({
       });
     } catch (err) {
       if (err instanceof AxiosError && err.response?.data) {
-        const { fieldErrors, toastMessage } = translateApiErrors(
+        const { toastMessage } = translateApiErrors(
           err.response.data,
         );
-        setErrors(fieldErrors);
         toast.error(toastMessage || "Erro ao salvar usuário");
       } else {
         toast.error("Erro inesperado ao salvar");

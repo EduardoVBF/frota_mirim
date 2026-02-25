@@ -17,6 +17,7 @@ import {
   ArrowUp,
 } from "lucide-react";
 import FuelSupplyFormModal from "@/components/fuel-supply/FuelSupplyFormModal";
+import { translateApiErrors } from "@/utils/translateApiError";
 import { Vehicle } from "@/services/vehicles.service";
 import Pagination from "@/components/paginationComp";
 import { useState, useMemo, useEffect } from "react";
@@ -24,6 +25,7 @@ import PrimarySelect from "../form/primarySelect";
 import PrimaryInput from "../form/primaryInput";
 import toast from "react-hot-toast";
 import utc from "dayjs/plugin/utc";
+import { AxiosError } from "axios";
 import dayjs from "dayjs";
 
 type Props = {
@@ -49,6 +51,7 @@ export function FuelHistoryTable({
   const [editingItem, setEditingItem] = useState<FuelSupply | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [filters, setFilters] = useState({
     tipoCombustivel: "",
@@ -144,8 +147,22 @@ export function FuelHistoryTable({
       setModalOpen(false);
       setEditingItem(null);
       await onChange();
-    } catch {
-      toast.error("Erro ao salvar abastecimento");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar o abastecimento");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar o abastecimento");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar o abastecimento");
+      }
     } finally {
       setLoadingAction(false);
     }
@@ -159,8 +176,22 @@ export function FuelHistoryTable({
       await deleteFuelSupply(id);
       toast.success("Abastecimento excluído");
       await onChange();
-    } catch {
-      toast.error("Erro ao excluir");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao excluir o abastecimento");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao excluir o abastecimento");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao excluir o abastecimento");
+      }
     } finally {
       setLoadingAction(false);
     }
@@ -178,8 +209,10 @@ export function FuelHistoryTable({
           onClose={() => {
             setModalOpen(false);
             setEditingItem(null);
+            setErrors({});
           }}
           onSubmit={handleSubmit}
+          errors={errors}
         />
 
         {/* HEADER */}

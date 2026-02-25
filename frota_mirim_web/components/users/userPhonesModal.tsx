@@ -5,14 +5,16 @@ import {
   createUserPhone,
   updateUserPhone,
 } from "@/services/usersTelephones.service";
-import { Phone, Plus, Star } from "lucide-react";
+import { translateApiErrors } from "@/utils/translateApiError";
 import PrimarySwitch from "../form/primarySwitch";
+import { Phone, Plus, Star } from "lucide-react";
 import { User } from "@/services/users.service";
 import PrimaryModal from "../form/primaryModal";
 import PrimaryInput from "../form/primaryInput";
 import { useEffect, useState } from "react";
 import LoaderComp from "../loaderComp";
 import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 
 type Props = {
   open: boolean;
@@ -28,14 +30,22 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
 
   const [newPhone, setNewPhone] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleClose = () => {
+    setPhones([]);
+    setNewPhone("");
+    setIsPrimary(false);
+    setErrors({});
+    onClose();
+  };
 
   // FORMAT PHONE
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 13);
 
     if (digits.length <= 2) return digits;
-    if (digits.length <= 4)
-      return `+${digits.slice(0, 2)}(${digits.slice(2)}`;
+    if (digits.length <= 4) return `+${digits.slice(0, 2)}(${digits.slice(2)}`;
     if (digits.length <= 9)
       return `+${digits.slice(0, 2)}(${digits.slice(2, 4)})${digits.slice(4)}`;
     return `+${digits.slice(0, 2)}(${digits.slice(
@@ -71,7 +81,7 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
     if (open && user) {
       fetchPhones();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, user]);
 
   // ADD
@@ -94,8 +104,22 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
       setNewPhone("");
       setIsPrimary(false);
       await fetchPhones();
-    } catch {
-      toast.error("Erro ao adicionar telefone");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar telefone");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar telefone");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar telefone");
+      }
     } finally {
       setAdding(false);
     }
@@ -110,8 +134,22 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
       });
 
       await fetchPhones();
-    } catch {
-      toast.error("Erro ao atualizar status");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao atualizar status");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao atualizar status");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao atualizar status");
+      }
     } finally {
       setUpdatingId(null);
     }
@@ -126,8 +164,22 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
       });
 
       await fetchPhones();
-    } catch {
-      toast.error("Erro ao definir como principal");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao definir como principal");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao definir como principal");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao definir como principal");
+      }
     } finally {
       setUpdatingId(null);
     }
@@ -147,7 +199,7 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
   return (
     <PrimaryModal
       isOpen={open}
-      onClose={onClose}
+      onClose={handleClose}
       title="Gerenciar Telefones"
       description={user ? `${user.firstName} ${user.lastName}` : ""}
       footer={footer}
@@ -190,9 +242,7 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
 
                       <span
                         className={`text-xs font-bold ${
-                          phone.isActive
-                            ? "text-success"
-                            : "text-error"
+                          phone.isActive ? "text-success" : "text-error"
                         }`}
                       >
                         {phone.isActive ? "Ativo" : "Inativo"}
@@ -214,16 +264,14 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
                         disabled={updatingId === phone.id}
                         onClick={() => handleToggleStatus(phone)}
                         className={`hover:underline disabled:opacity-50 ${
-                          phone.isActive
-                            ? "text-error"
-                            : "text-success"
+                          phone.isActive ? "text-error" : "text-success"
                         }`}
                       >
                         {updatingId === phone.id
                           ? "..."
                           : phone.isActive
-                          ? "Desativar"
-                          : "Ativar"}
+                            ? "Desativar"
+                            : "Ativar"}
                       </button>
                     </div>
                   </div>
@@ -236,16 +284,16 @@ export default function UserPhonesModal({ open, user, onClose }: Props) {
               <PrimaryInput
                 label="Novo Telefone"
                 value={formatPhone(newPhone)}
-                onChange={(e) =>
-                  setNewPhone(e.target.value)
-                }
+                onChange={(e) => setNewPhone(e.target.value)}
                 placeholder="+55(16)99999-9999"
+                error={errors.phone}
               />
 
               <PrimarySwitch
                 label="Definir como principal"
                 checked={isPrimary}
                 onChange={setIsPrimary}
+                error={errors.isPrimary}
               />
             </div>
           </>

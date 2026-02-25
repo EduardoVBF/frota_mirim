@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Edit3,
   AlertTriangle,
@@ -14,18 +13,20 @@ import {
   Vehicle,
   VehiclePayload,
 } from "@/services/vehicles.service";
+import { translateApiErrors } from "@/utils/translateApiError";
 import VehicleFormModal from "./vehicleFormModal";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import utc from "dayjs/plugin/utc";
+import { AxiosError } from "axios";
 import { useState } from "react";
-import dayjs from "dayjs"
-import utc from "dayjs/plugin/utc"
+import dayjs from "dayjs";
 
 type Props = {
   vehicle: Vehicle;
 };
 
-dayjs.extend(utc)
+dayjs.extend(utc);
 
 export function VehicleDetailHeader({
   vehicle,
@@ -33,6 +34,7 @@ export function VehicleDetailHeader({
 }: Props & { onVehicleChange: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const router = useRouter();
 
@@ -54,8 +56,22 @@ export function VehicleDetailHeader({
 
       setIsModalOpen(false);
       await onVehicleChange();
-    } catch {
-      toast.error("Erro ao salvar veículo");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar o veículo");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar o veículo");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar o veículo");
+      }
     } finally {
       setLoading(false);
     }
@@ -75,6 +91,7 @@ export function VehicleDetailHeader({
           setIsModalOpen(false);
           setLoading(false);
         }}
+        errors={errors}
       />
 
       <div className="space-y-6">

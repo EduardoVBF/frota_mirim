@@ -28,6 +28,7 @@ type Props = {
   initialData?: FuelSupply | null;
   onClose: () => void;
   onSubmit: (data: CreateFuelSupplyPayload) => void;
+  errors: Record<string, string>;
 };
 
 export default function FuelSupplyFormModal({
@@ -37,9 +38,8 @@ export default function FuelSupplyFormModal({
   initialData,
   onClose,
   onSubmit,
+  errors,
 }: Props) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
 
@@ -122,7 +122,6 @@ export default function FuelSupplyFormModal({
   // SUBMIT
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErrors({});
 
     const finalVehicleId = vehicleId || selectedVehicleId;
 
@@ -145,18 +144,21 @@ export default function FuelSupplyFormModal({
         tanqueCheio,
       });
     } catch (err) {
-      if (err instanceof AxiosError && err.response?.data) {
-        const { fieldErrors, toastMessage } = translateApiErrors(
-          err.response.data,
-        );
-        setErrors(fieldErrors);
-        toast.error(toastMessage || "Erro ao salvar");
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar o abastecimento1");
+        return;
       } else {
-        toast.error("Erro inesperado");
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar o abastecimento2");
+          return;
+        }
+        const { toastMessage } = translateApiErrors(err.response.data);
+
+        toast.error(toastMessage || "Erro ao salvar o abastecimento");
       }
     }
   }
-  
+
   return (
     <PrimaryModal
       isOpen={open}
@@ -220,6 +222,7 @@ export default function FuelSupplyFormModal({
             type="datetime-local"
             value={data}
             onChange={(e) => setData(e.target.value)}
+            error={errors.data}
           />
 
           <PrimarySelect
@@ -230,24 +233,28 @@ export default function FuelSupplyFormModal({
               label: u.firstName + " " + u.lastName + " - " + u.role,
               value: u.id,
             }))}
+            error={errors.userId}
           />
 
           <PrimaryInput
             label="KM Atual"
             value={kmAtual}
             onChange={(e) => setKmAtual(e.target.value)}
+            error={errors.kmAtual}
           />
 
           <PrimaryInput
             label="Litros"
             value={litros}
             onChange={(e) => setLitros(e.target.value)}
+            error={errors.litros}
           />
 
           <PrimaryInput
             label="Valor por Litro"
             value={valorLitro}
             onChange={(e) => setValorLitro(e.target.value)}
+            error={errors.valorLitro}
           />
 
           <PrimarySelect
@@ -261,6 +268,7 @@ export default function FuelSupplyFormModal({
               { label: "Etanol", value: "ETANOL" },
               { label: "Diesel", value: "DIESEL" },
             ]}
+            error={errors.tipoCombustivel}
           />
 
           <PrimarySelect
@@ -271,6 +279,7 @@ export default function FuelSupplyFormModal({
               { label: "Interno", value: "INTERNO" },
               { label: "Externo", value: "EXTERNO" },
             ]}
+            error={errors.postoTipo}
           />
 
           {postoTipo === "EXTERNO" && (
@@ -278,6 +287,7 @@ export default function FuelSupplyFormModal({
               label="Nome do Posto"
               value={postoNome}
               onChange={(e) => setPostoNome(e.target.value)}
+              error={errors.postoNome}
             />
           )}
 
@@ -285,6 +295,7 @@ export default function FuelSupplyFormModal({
             label="Tanque cheio"
             checked={tanqueCheio}
             onChange={setTanqueCheio}
+            error={errors.tanqueCheio}
           />
         </form>
       )}

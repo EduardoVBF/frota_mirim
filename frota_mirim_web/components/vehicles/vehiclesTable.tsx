@@ -9,11 +9,13 @@ import {
   VehicleFilters,
 } from "@/services/vehicles.service";
 import { Edit2, Search, Filter, FilterX, Plus } from "lucide-react";
+import { translateApiErrors } from "@/utils/translateApiError";
 import VehicleFormModal from "../vehicle/vehicleFormModal";
 import FilterChips from "../fuel-supply/FilterChips";
 import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
 import LoaderComp from "../loaderComp";
+import { AxiosError } from "axios";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -34,6 +36,7 @@ export function VehicleTable({
   const [loading, setLoading] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const activeFiltersCount =
     (filters.search ? 1 : 0) +
@@ -54,8 +57,22 @@ export function VehicleTable({
       setIsModalOpen(false);
       setEditingVehicle(null);
       await onVehicleChange();
-    } catch {
-      toast.error("Erro ao salvar veículo");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar o veículo");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar o veículo");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar o veículo");
+      }
     } finally {
       setLoading(false);
     }
@@ -83,7 +100,9 @@ export function VehicleTable({
           setIsModalOpen(false);
           setEditingVehicle(null);
           setLoading(false);
+          setErrors({});
         }}
+        errors={errors}
       />
 
       {/* HEADER */}

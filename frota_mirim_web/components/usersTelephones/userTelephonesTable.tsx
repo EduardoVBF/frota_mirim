@@ -7,15 +7,9 @@ import {
   UpdateUserPhonePayload,
   UserPhoneFilters,
 } from "@/services/usersTelephones.service";
-import {
-  Edit2,
-  Search,
-  Filter,
-  FilterX,
-  Plus,
-  Star,
-} from "lucide-react";
+import { Edit2, Search, Filter, FilterX, Plus, Star } from "lucide-react";
 import { User, getAdminUsers } from "@/services/users.service";
+import { translateApiErrors } from "@/utils/translateApiError";
 import UserPhoneFormModal from "./usersTelephonesFormModal";
 import FilterChips from "../fuel-supply/FilterChips";
 import { useState, useEffect, useMemo } from "react";
@@ -23,6 +17,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { StatusDot } from "../motion/statusDot";
 import ImageZoom from "../layout/ImageZoom";
 import LoaderComp from "../loaderComp";
+import { AxiosError } from "axios";
 
 export function UserPhoneTable({
   phones,
@@ -49,6 +44,7 @@ export function UserPhoneTable({
   const [editingPhone, setEditingPhone] = useState<UserPhone | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -66,7 +62,6 @@ export function UserPhoneTable({
     fetchUsers();
   }, []);
 
-  // 🔎 SEARCH APLICADO AQUI (CORRETO)
   const displayedPhones = useMemo(() => {
     if (!filters.search) return phones;
 
@@ -116,8 +111,22 @@ export function UserPhoneTable({
       setIsModalOpen(false);
       setEditingPhone(null);
       await onPhoneChange();
-    } catch {
-      toast.error("Erro ao salvar telefone");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao salvar telefone");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar telefone");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar telefone");
+      }
     } finally {
       setLoading(false);
     }
@@ -130,10 +139,26 @@ export function UserPhoneTable({
       await updateUserPhone(phone.id, {
         isActive: !phone.isActive,
       });
-      toast.success(`Telefone ${!phone.isActive ? "ativado" : "desativado"} com sucesso`);
+      toast.success(
+        `Telefone ${!phone.isActive ? "ativado" : "desativado"} com sucesso`,
+      );
       await onPhoneChange();
-    } catch {
-      toast.error("Erro ao atualizar status");
+    } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        toast.error("Erro ao atualizar status");
+        return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao atualizar status");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao atualizar status");
+      }
     } finally {
       setEditingPhone(null);
     }
@@ -152,7 +177,9 @@ export function UserPhoneTable({
         onClose={() => {
           setIsModalOpen(false);
           setEditingPhone(null);
+          setErrors({});
         }}
+        errors={errors}
       />
 
       {/* HEADER */}

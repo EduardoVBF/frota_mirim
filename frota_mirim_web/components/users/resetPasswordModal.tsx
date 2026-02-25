@@ -15,6 +15,7 @@ type Props = {
   user: User | null;
   onClose: () => void;
   onSubmit: (newPassword: string) => void;
+  errors: Record<string, string>;
 };
 
 export default function ResetPasswordModal({
@@ -23,8 +24,8 @@ export default function ResetPasswordModal({
   user,
   onClose,
   onSubmit,
+  errors,
 }: Props) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [infoVisible, setInfoVisible] = useState(false);
   const [password, setPassword] = useState("");
 
@@ -33,12 +34,10 @@ export default function ResetPasswordModal({
   function handleClose() {
     onClose();
     setPassword("");
-    setErrors({});
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErrors({});
 
     try {
       await onSubmit(password);
@@ -51,11 +50,10 @@ export default function ResetPasswordModal({
           toast.error("Erro ao redefinir senha");
           return;
         }
-        const { fieldErrors, toastMessage } = translateApiErrors(
+        const { toastMessage } = translateApiErrors(
           err.response.data,
         );
 
-        setErrors(fieldErrors);
         toast.error(toastMessage || "Erro ao redefinir senha");
       }
     } finally {

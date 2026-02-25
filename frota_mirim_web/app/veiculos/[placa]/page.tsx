@@ -12,12 +12,12 @@ export default function VeiculoUnicoPage() {
   const params = useParams();
   const placa = params.placa as string;
 
-  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [abastecimentos, setAbastecimentos] = useState<FuelSupply[]>([]);
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
-  const limit = 2;
+  const limit = 10;
 
   // FETCH VEÍCULO
   const fetchVehicle = useCallback(async () => {
