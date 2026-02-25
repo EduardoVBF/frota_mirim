@@ -19,8 +19,7 @@ import {
 import FuelSupplyFormModal from "@/components/fuel-supply/FuelSupplyFormModal";
 import { translateApiErrors } from "@/utils/translateApiError";
 import { Vehicle } from "@/services/vehicles.service";
-import Pagination from "@/components/paginationComp";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import PrimarySelect from "../form/primarySelect";
 import PrimaryInput from "../form/primaryInput";
 import toast from "react-hot-toast";
@@ -31,22 +30,12 @@ import dayjs from "dayjs";
 type Props = {
   vehicle: Vehicle;
   abastecimentos: FuelSupply[];
-  page: number;
-  limit: number;
-  onPageChange: (page: number) => void;
   onChange: () => void;
 };
 
 dayjs.extend(utc);
 
-export function FuelHistoryTable({
-  vehicle,
-  abastecimentos,
-  page,
-  limit,
-  onPageChange,
-  onChange,
-}: Props) {
+export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FuelSupply | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
@@ -65,11 +54,6 @@ export function FuelHistoryTable({
 
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
-  useEffect(() => {
-    onPageChange(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
-
   const processedData = useMemo(() => {
     const sorted = [...abastecimentos].sort((a, b) => {
       const valueA = dayjs(a.data).valueOf();
@@ -77,7 +61,7 @@ export function FuelHistoryTable({
       return sortOrder === "asc" ? valueA - valueB : valueB - valueA;
     });
 
-    const filtered = sorted.filter((item) => {
+    return sorted.filter((item) => {
       const dataItem = dayjs.utc(item.data);
 
       if (
@@ -106,17 +90,7 @@ export function FuelHistoryTable({
 
       return true;
     });
-
-    const start = (page - 1) * limit;
-    const end = start + limit;
-
-    return {
-      data: filtered.slice(start, end),
-      total: filtered.length,
-    };
-  }, [abastecimentos, filters, sortOrder, page, limit]);
-
-  const totalPages = Math.ceil(processedData.total / limit);
+  }, [abastecimentos, filters, sortOrder]);
 
   const handleClearFilters = () => {
     setFilters({
@@ -132,7 +106,6 @@ export function FuelHistoryTable({
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
 
-  // CREATE / UPDATE
   const handleSubmit = async (data: CreateFuelSupplyPayload) => {
     setLoadingAction(true);
     try {
@@ -151,18 +124,19 @@ export function FuelHistoryTable({
       if (!(err instanceof AxiosError)) {
         toast.error("Erro ao salvar o abastecimento");
         return;
-      } else {
-        if (!err.response || !err.response.data) {
-          toast.error("Erro ao salvar o abastecimento");
-          return;
-        }
-        const { fieldErrors, toastMessage } = translateApiErrors(
-          err.response.data,
-        );
-
-        setErrors(fieldErrors);
-        toast.error(toastMessage || "Erro ao salvar o abastecimento");
       }
+
+      if (!err.response?.data) {
+        toast.error("Erro ao salvar o abastecimento");
+        return;
+      }
+
+      const { fieldErrors, toastMessage } = translateApiErrors(
+        err.response.data,
+      );
+
+      setErrors(fieldErrors);
+      toast.error(toastMessage || "Erro ao salvar o abastecimento");
     } finally {
       setLoadingAction(false);
     }
@@ -176,22 +150,8 @@ export function FuelHistoryTable({
       await deleteFuelSupply(id);
       toast.success("Abastecimento excluído");
       await onChange();
-    } catch (err) {
-      if (!(err instanceof AxiosError)) {
-        toast.error("Erro ao excluir o abastecimento");
-        return;
-      } else {
-        if (!err.response || !err.response.data) {
-          toast.error("Erro ao excluir o abastecimento");
-          return;
-        }
-        const { fieldErrors, toastMessage } = translateApiErrors(
-          err.response.data,
-        );
-
-        setErrors(fieldErrors);
-        toast.error(toastMessage || "Erro ao excluir o abastecimento");
-      }
+    } catch {
+      toast.error("Erro ao excluir o abastecimento");
     } finally {
       setLoadingAction(false);
     }
@@ -371,14 +331,14 @@ export function FuelHistoryTable({
             </thead>
 
             <tbody className="divide-y divide-border">
-              {processedData.data.length === 0 ? (
+              {processedData.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-muted">
                     Nenhum abastecimento encontrado.
                   </td>
                 </tr>
               ) : (
-                processedData.data.map((item) => (
+                processedData.map((item) => (
                   <tr
                     key={item.id}
                     className="group hover:bg-background/40 transition-colors"
@@ -460,11 +420,6 @@ export function FuelHistoryTable({
           </table>
         </div>
       </div>
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-      />
     </>
   );
 }

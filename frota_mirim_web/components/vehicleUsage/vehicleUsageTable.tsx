@@ -6,23 +6,27 @@ import {
 import { Vehicle, getVehicles } from "@/services/vehicles.service";
 import { User, getAdminUsers } from "@/services/users.service";
 import VehicleUsageFormModal from "./vehicleUsageFormModal";
-import { useState, useEffect, useCallback } from "react";
-import { Filter, FilterX, Plus, ClockCheck } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Filter, FilterX, Plus, ClockCheck, Car } from "lucide-react";
 import FilterChips from "../fuel-supply/FilterChips";
 import LoaderComp from "../loaderComp";
 import PrimarySelect from "../form/primarySelect";
 
 export function VehicleUsageTable({
+  isVehiclePage = false,
+  vehicle,
   usages,
   isLoading,
   filters,
   setFilters,
   onChange,
 }: {
+  isVehiclePage?: boolean;
+  vehicle?: Vehicle;
   usages: VehicleUsage[];
   isLoading: boolean;
   filters: VehicleUsageFilters;
-  setFilters: (filters: VehicleUsageFilters) => void;
+  setFilters: (filters: Partial<VehicleUsageFilters>) => void;
   onChange: () => void;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,56 +35,63 @@ export function VehicleUsageTable({
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
-  const activeFiltersCount = Object.values(filters).filter(
-    (f) => f !== undefined,
-  ).length;
+  const activeFiltersCount = useMemo(() => {
+    const { page, limit, vehicleId, ...rest } = filters;
+
+    return Object.entries(rest).filter(
+      ([_, value]) => value !== undefined && value !== ""
+    ).length;
+  }, [filters]);
+
+  const vehicleMap = useMemo(() => {
+    return Object.fromEntries(vehicles.map((v) => [v.id, v]));
+  }, [vehicles]);
+
+  const userMap = useMemo(() => {
+    return Object.fromEntries(users.map((u) => [u.id, u]));
+  }, [users]);
 
   const handleClearFilters = () => {
     setFilters({
-      //   search: "",
       type: undefined,
+      userId: undefined,
     });
   };
 
-  const fetchVehicles = useCallback(async () => {
+  const fetchVehicles = async () => {
     setLoading(true);
     try {
       const data = await getVehicles({
         limit: 1000,
         page: 1,
       });
-
       setVehicles(data.vehicles);
     } catch {
       setVehicles([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    fetchVehicles();
-  }, [fetchVehicles]);
-
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = async () => {
     setLoading(true);
     try {
       const data = await getAdminUsers({
         limit: 1000,
         page: 1,
       });
-
       setUsers(data.users);
     } catch {
       setUsers([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
+    fetchVehicles();
     fetchUsers();
-  }, [fetchUsers]);
+  }, []);
 
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
@@ -96,8 +107,19 @@ export function VehicleUsageTable({
           <div className="p-2 bg-accent/10 rounded-lg text-accent">
             <ClockCheck size={30} />
           </div>
-          <h2 className="text-lg font-bold">Eventos de Entrada/Saída</h2>
+          <div>
+            <h2 className="text-lg font-bold">Eventos de Entrada/Saída</h2>
+            {isVehiclePage && vehicle && (
+              <div className="flex items-center gap-1">
+                <Car size={20} />
+                <span className="text-sm font-bold">
+                  {vehicle.placa} - {vehicle.modelo}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
+
         <div className="flex items-center gap-4">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -125,7 +147,6 @@ export function VehicleUsageTable({
             value={filters.type || ""}
             onChange={(value) =>
               setFilters({
-                ...filters,
                 type: filters.type === value ? undefined : value,
               })
             }
@@ -135,34 +156,34 @@ export function VehicleUsageTable({
             ]}
           />
 
-          <PrimarySelect
-            label="Veículo"
-            width="fit"
-            className="min-w-50"
-            value={filters.vehicleId || ""}
-            onChange={(value) => {
-              setFilters({
-                ...filters,
-                vehicleId: value || undefined,
-              });
-            }}
-            options={vehicles.map((v) => ({
-              label: `${v.modelo} (${v.placa})`,
-              value: v.id,
-            }))}
-          />
+          {!isVehiclePage && (
+            <PrimarySelect
+              label="Veículo"
+              width="fit"
+              className="min-w-50"
+              value={filters.vehicleId || ""}
+              onChange={(value) =>
+                setFilters({
+                  vehicleId: value || undefined,
+                })
+              }
+              options={vehicles.map((v) => ({
+                label: `${v.modelo} (${v.placa})`,
+                value: v.id,
+              }))}
+            />
+          )}
 
           <PrimarySelect
             label="Usuário"
             width="fit"
             className="min-w-70"
             value={filters.userId || ""}
-            onChange={(value) => {
+            onChange={(value) =>
               setFilters({
-                ...filters,
                 userId: value || undefined,
-              });
-            }}
+              })
+            }
             options={users.map((u) => ({
               label: `${u.firstName} ${u.lastName}`,
               value: u.id,
@@ -212,7 +233,7 @@ export function VehicleUsageTable({
                   </td>
                 </tr>
               ) : (
-                usages.map((usage: VehicleUsage) => (
+                usages.map((usage) => (
                   <tr key={usage.id} className="border-b border-border">
                     <td className="px-6 py-4">
                       <div>
@@ -225,40 +246,42 @@ export function VehicleUsageTable({
                         </p>
                       </div>
                     </td>
+
                     <td className="px-6 py-4">
                       <span
                         className={`text-xs font-bold ${
-                          usage.type === "ENTRY" ? "text-success" : "text-error"
+                          usage.type === "ENTRY"
+                            ? "text-success"
+                            : "text-error"
                         }`}
                       >
                         {usage.type === "ENTRY" ? "Entrada" : "Saída"}
                       </span>
                     </td>
-                    <td className="px-6 py-4">{usage.km}</td>
+
+                    <td className="px-6 py-4">{usage.km} Km</td>
+
                     <td className="px-6 py-4">
-                      {vehicles.find((v) => v.id === usage.vehicleId) ? (
-                        <div className="">
+                      {vehicleMap[usage.vehicleId] ? (
+                        <div>
                           <p className="text-sm font-bold text-muted">
-                            {vehicles.find((v) => v.id === usage.vehicleId)
-                              ?.modelo || "Veículo Desconhecido"}
+                            {vehicleMap[usage.vehicleId]?.modelo}
                           </p>
                           <p className="text-xs font-bold uppercase px-2 py-1 rounded bg-background border border-border w-fit">
-                            {vehicles.find((v) => v.id === usage.vehicleId)
-                              ?.placa || "-"}
+                            {vehicleMap[usage.vehicleId]?.placa}
                           </p>
                         </div>
                       ) : (
                         "Veículo não encontrado"
                       )}
                     </td>
+
                     <td className="px-6 py-4">
-                      {users.find((u) => u.id === usage.userId) ? (
+                      {usage.userId && userMap[usage.userId] ? (
                         <div>
                           <p className="text-sm font-bold text-muted">
-                            {users.find((u) => u.id === usage.userId)
-                              ?.firstName || "Usuário"}{" "}
-                            {users.find((u) => u.id === usage.userId)
-                              ?.lastName || ""}
+                            {userMap[usage.userId]?.firstName}{" "}
+                            {userMap[usage.userId]?.lastName}
                           </p>
                         </div>
                       ) : (

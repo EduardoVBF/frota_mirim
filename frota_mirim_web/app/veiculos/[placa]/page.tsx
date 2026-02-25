@@ -1,9 +1,8 @@
 "use client";
 import { VehicleDetailHeader } from "@/components/vehicle/VehicleDetailHeader";
-import { getFuelSupplies, FuelSupply } from "@/services/fuel-supply.service";
 import { getVehicleByPlaca, Vehicle } from "@/services/vehicles.service";
-import { FuelHistoryTable } from "@/components/vehicle/FuelHistoryTable";
 import { PageTransition } from "@/components/motion/pageTransition";
+import VehicleTabs from "@/components/vehicle/VehicleTabs";
 import { useEffect, useState, useCallback } from "react";
 import LoaderComp from "@/components/loaderComp";
 import { useParams } from "next/navigation";
@@ -12,14 +11,9 @@ export default function VeiculoUnicoPage() {
   const params = useParams();
   const placa = params.placa as string;
 
-  const [abastecimentos, setAbastecimentos] = useState<FuelSupply[]>([]);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
 
-  const limit = 10;
-
-  // FETCH VEÍCULO
   const fetchVehicle = useCallback(async () => {
     try {
       const data = await getVehicleByPlaca(placa);
@@ -30,41 +24,15 @@ export default function VeiculoUnicoPage() {
     }
   }, [placa]);
 
-  // FETCH TODOS ABASTECIMENTOS (SEM PAGINAÇÃO)
-  const fetchFuelHistory = useCallback(async (vehicleId: string) => {
-    try {
-      const data = await getFuelSupplies({
-        vehicleId,
-        limit: 1000,
-        page: 1,
-      });
-
-      setAbastecimentos(data.abastecimentos);
-    } catch {
-      setAbastecimentos([]);
-    }
-  }, []);
-
   useEffect(() => {
     async function load() {
       setLoading(true);
-
-      const v = await fetchVehicle();
-
-      if (v) {
-        await fetchFuelHistory(v.id);
-      }
-
+      await fetchVehicle();
       setLoading(false);
     }
 
     load();
-  }, [fetchVehicle, fetchFuelHistory]);
-
-  const refreshAll = async () => {
-    if (!vehicle) return;
-    await fetchFuelHistory(vehicle.id);
-  };
+  }, [fetchVehicle]);
 
   if (loading) return <LoaderComp />;
 
@@ -78,17 +46,13 @@ export default function VeiculoUnicoPage() {
 
   return (
     <PageTransition>
-      <div className="max-w-7xl mx-auto pb-20">
-        <VehicleDetailHeader vehicle={vehicle} onVehicleChange={fetchVehicle} />
-
-        <FuelHistoryTable
+      <div className="max-w-7xl mx-auto pb-20 space-y-6">
+        <VehicleDetailHeader
           vehicle={vehicle}
-          abastecimentos={abastecimentos}
-          page={page}
-          limit={limit}
-          onPageChange={setPage}
-          onChange={refreshAll}
+          onVehicleChange={fetchVehicle}
         />
+
+        <VehicleTabs vehicle={vehicle} />
       </div>
     </PageTransition>
   );
