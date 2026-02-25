@@ -1,5 +1,13 @@
 "use client";
-import { LayoutDashboard, Truck, Users, LogOut, Fuel, Phone } from "lucide-react";
+import {
+  LayoutDashboard,
+  Truck,
+  Users,
+  LogOut,
+  Fuel,
+  Phone,
+  ClockCheck,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { FadeIn } from "../motion/fadeIn";
@@ -17,6 +25,11 @@ const menuItems = [
   { name: "Telefones", path: "/telefones", icon: <Phone size={20} /> },
   { name: "Veículos", path: "/veiculos", icon: <Truck size={20} /> },
   { name: "Abastecimentos", path: "/abastecimentos", icon: <Fuel size={20} /> },
+  {
+    name: "Check In / Out",
+    path: "/entradas&saidas",
+    icon: <ClockCheck size={20} />,
+  },
 ];
 
 export default function Sidebar() {

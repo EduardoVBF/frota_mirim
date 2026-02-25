@@ -115,7 +115,7 @@ export default function PrimarySelect({
               animate={{ opacity: 1, y: 5, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute z-50 w-full bg-background backdrop-blur-xl border border-accent shadow-xl rounded-xl overflow-hidden py-1.5 px-2"
+              className="absolute z-50 w-full bg-background backdrop-blur-xl border border-accent shadow-xl rounded-xl overflow-auto py-1.5 px-2 max-h-50"
             >
               {options.length > 0 ? (
                 options.map((option) => (

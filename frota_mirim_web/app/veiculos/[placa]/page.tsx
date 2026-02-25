@@ -1,15 +1,12 @@
 "use client";
-
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
-
-import { getVehicleByPlaca, Vehicle } from "@/services/vehicles.service";
-import { getFuelSupplies, FuelSupply } from "@/services/fuel-supply.service";
-
 import { VehicleDetailHeader } from "@/components/vehicle/VehicleDetailHeader";
+import { getFuelSupplies, FuelSupply } from "@/services/fuel-supply.service";
+import { getVehicleByPlaca, Vehicle } from "@/services/vehicles.service";
 import { FuelHistoryTable } from "@/components/vehicle/FuelHistoryTable";
 import { PageTransition } from "@/components/motion/pageTransition";
+import { useEffect, useState, useCallback } from "react";
 import LoaderComp from "@/components/loaderComp";
+import { useParams } from "next/navigation";
 
 export default function VeiculoUnicoPage() {
   const params = useParams();
@@ -20,7 +17,7 @@ export default function VeiculoUnicoPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
-  const limit = 10;
+  const limit = 2;
 
   // FETCH VEÍCULO
   const fetchVehicle = useCallback(async () => {
@@ -83,12 +80,6 @@ export default function VeiculoUnicoPage() {
     <PageTransition>
       <div className="max-w-7xl mx-auto pb-20">
         <VehicleDetailHeader vehicle={vehicle} onVehicleChange={fetchVehicle} />
-
-        <div className="mt-8 p-8 rounded-2xl bg-linear-to-br from-alternative-bg to-background border border-border h-48 flex items-center justify-center border-dashed">
-          <span className="text-muted text-sm font-medium">
-            Gráfico de Performance (placeholder)
-          </span>
-        </div>
 
         <FuelHistoryTable
           vehicle={vehicle}
