@@ -1,5 +1,5 @@
 "use client";
-import { getFuelSupplies, FuelSupply } from "@/services/fuel-supply.service";
+import { getFuelSupplies, FuelSupply, FuelSupplyFilters } from "@/services/fuel-supply.service";
 import { FuelHistoryTable } from "@/components/vehicle/FuelHistoryTable";
 import { useEffect, useState, useCallback } from "react";
 import { Vehicle } from "@/services/vehicles.service";
@@ -14,50 +14,62 @@ export default function VehicleFuelTab({ vehicle }: Props) {
   const [abastecimentos, setAbastecimentos] = useState<FuelSupply[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
 
-  const limit = 5;
+  const [filters, setFilters] = useState<FuelSupplyFilters>({
+    vehicleId: vehicle.id,
+    page: 1,
+    limit: 10,
+    tipoCombustivel: undefined,
+    postoTipo: undefined,
+    tanqueCheio: undefined,
+    dataInicio: undefined,
+    dataFim: undefined,
+  });
 
   const fetchFuelHistory = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getFuelSupplies({
-        vehicleId: vehicle.id,
-        page,
-        limit,
-      });
-
-      setTotalPages(data.meta.totalPages);
+      const data = await getFuelSupplies(filters);
+      setTotalPages(data.meta.totalPages || 1);
       setAbastecimentos(data.abastecimentos);
     } catch {
       setAbastecimentos([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [vehicle.id, page]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [vehicle.id]);
+  }, [filters]);
 
   useEffect(() => {
     fetchFuelHistory();
   }, [fetchFuelHistory]);
 
+  const handleSetFilters = (newFilters: Partial<typeof filters>) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...newFilters,
+      page: 1, // Reset ao filtrar
+    }));
+  };
+
+  if (loading && filters.page === 1) return <LoaderComp />;
+
   return (
     <div className="space-y-6">
-      {loading && <LoaderComp />}
-
       <FuelHistoryTable
         vehicle={vehicle}
         abastecimentos={abastecimentos}
+        isLoading={loading}
+        filters={filters}
+        setFilters={handleSetFilters}
         onChange={fetchFuelHistory}
       />
-
       <Pagination
-        page={page}
+        page={filters.page || 1}
         totalPages={totalPages}
-        onPageChange={setPage}
+        onPageChange={(newPage) =>
+          setFilters((prev) => ({ ...prev, page: newPage }))
+        }
       />
     </div>
   );

@@ -5,6 +5,7 @@ import {
   updateFuelSupply,
   createFuelSupply,
   CreateFuelSupplyPayload,
+  FuelSupplyFilters,
 } from "@/services/fuel-supply.service";
 import {
   Fuel,
@@ -19,92 +20,60 @@ import {
 import FuelSupplyFormModal from "@/components/fuel-supply/FuelSupplyFormModal";
 import { translateApiErrors } from "@/utils/translateApiError";
 import { Vehicle } from "@/services/vehicles.service";
-import { useState, useMemo } from "react";
-import PrimarySelect from "../form/primarySelect";
+import FilterChips from "../fuel-supply/FilterChips";
 import PrimaryInput from "../form/primaryInput";
+import LoaderComp from "../loaderComp";
 import toast from "react-hot-toast";
 import utc from "dayjs/plugin/utc";
 import { AxiosError } from "axios";
+import { useState } from "react";
 import dayjs from "dayjs";
+
+dayjs.extend(utc);
 
 type Props = {
   vehicle: Vehicle;
   abastecimentos: FuelSupply[];
+  isLoading: boolean;
+  filters: FuelSupplyFilters;
+  setFilters: (filters: FuelSupplyFilters) => void;
   onChange: () => void;
 };
 
-dayjs.extend(utc);
-
-export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
+export function FuelHistoryTable({
+  vehicle,
+  abastecimentos,
+  isLoading,
+  filters,
+  setFilters,
+  onChange,
+}: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FuelSupply | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const [filters, setFilters] = useState({
-    tipoCombustivel: "",
-    postoTipo: "",
-    tanqueCheio: "",
-    dataInicio: "",
-    dataFim: "",
-  });
-
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const activeFiltersCount = Object.values(filters).filter(Boolean).length;
-
-  const processedData = useMemo(() => {
-    const sorted = [...abastecimentos].sort((a, b) => {
-      const valueA = dayjs(a.data).valueOf();
-      const valueB = dayjs(b.data).valueOf();
-      return sortOrder === "asc" ? valueA - valueB : valueB - valueA;
-    });
-
-    return sorted.filter((item) => {
-      const dataItem = dayjs.utc(item.data);
-
-      if (
-        filters.tipoCombustivel &&
-        item.tipoCombustivel !== filters.tipoCombustivel
-      )
-        return false;
-
-      if (filters.postoTipo && item.postoTipo !== filters.postoTipo)
-        return false;
-
-      if (filters.tanqueCheio !== "") {
-        const isCheio = filters.tanqueCheio === "true";
-        if (item.tanqueCheio !== isCheio) return false;
-      }
-
-      if (filters.dataInicio) {
-        if (dataItem.isBefore(dayjs.utc(filters.dataInicio).startOf("day")))
-          return false;
-      }
-
-      if (filters.dataFim) {
-        if (dataItem.isAfter(dayjs.utc(filters.dataFim).endOf("day")))
-          return false;
-      }
-
-      return true;
-    });
-  }, [abastecimentos, filters, sortOrder]);
+  const activeFiltersCount = Object.entries(filters).filter(
+    ([key, value]) =>
+      !["page", "limit", "vehicleId"].includes(key) &&
+      value !== "" &&
+      value !== undefined,
+  ).length;
 
   const handleClearFilters = () => {
     setFilters({
-      tipoCombustivel: "",
-      postoTipo: "",
-      tanqueCheio: "",
+      tipoCombustivel: undefined,
+      postoTipo: undefined,
+      tanqueCheio: undefined,
       dataInicio: "",
       dataFim: "",
     });
   };
 
-  const toggleSortOrder = () => {
+  const toggleSortOrder = () =>
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-  };
 
   const handleSubmit = async (data: CreateFuelSupplyPayload) => {
     setLoadingAction(true);
@@ -116,42 +85,39 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
         await createFuelSupply(data);
         toast.success("Abastecimento registrado");
       }
-
       setModalOpen(false);
       setEditingItem(null);
-      await onChange();
+      onChange();
     } catch (err) {
       if (!(err instanceof AxiosError)) {
         toast.error("Erro ao salvar o abastecimento");
         return;
+      } else {
+        if (!err.response || !err.response.data) {
+          toast.error("Erro ao salvar o abastecimento");
+          return;
+        }
+        const { fieldErrors, toastMessage } = translateApiErrors(
+          err.response.data,
+        );
+
+        setErrors(fieldErrors);
+        toast.error(toastMessage || "Erro ao salvar o abastecimento");
       }
-
-      if (!err.response?.data) {
-        toast.error("Erro ao salvar o abastecimento");
-        return;
-      }
-
-      const { fieldErrors, toastMessage } = translateApiErrors(
-        err.response.data,
-      );
-
-      setErrors(fieldErrors);
-      toast.error(toastMessage || "Erro ao salvar o abastecimento");
     } finally {
       setLoadingAction(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir este abastecimento?")) return;
-
+    if (!confirm("Deseja realmente excluir?")) return;
     setLoadingAction(true);
     try {
       await deleteFuelSupply(id);
-      toast.success("Abastecimento excluído");
-      await onChange();
+      toast.success("Excluído");
+      onChange();
     } catch {
-      toast.error("Erro ao excluir o abastecimento");
+      toast.error("Erro ao excluir");
     } finally {
       setLoadingAction(false);
     }
@@ -175,7 +141,7 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
           errors={errors}
         />
 
-        {/* HEADER */}
+        {/* HEADER ORIGINAL */}
         <div className="p-6 border-b border-border flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-accent/10 rounded-lg text-accent">
@@ -191,110 +157,100 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
               </div>
             </div>
           </div>
-
           <div className="flex items-center gap-4">
             <button
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted hover:text-foreground border border-border rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg"
               onClick={() => setShowFilters(!showFilters)}
             >
-              {showFilters ? (
-                <>
-                  <FilterX size={16} /> Filtros
-                </>
-              ) : (
-                <>
-                  <Filter size={16} /> Filtros
-                </>
-              )}
+              {showFilters ? <FilterX size={16} /> : <Filter size={16} />}{" "}
+              Filtros
             </button>
-
-            {activeFiltersCount > 0 && (
-              <span className="text-xs bg-accent text-white px-2 py-1 rounded-full">
-                {activeFiltersCount} filtro(s)
-              </span>
-            )}
-
             <button
               onClick={() => {
                 setEditingItem(null);
                 setModalOpen(true);
               }}
-              className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold cursor-pointer"
+              className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold"
             >
               + Novo Abastecimento
             </button>
           </div>
         </div>
 
-        {/* FILTROS */}
+        {/* FILTROS INTEGRADOS AO PAI */}
         {showFilters && (
           <div className="px-6 py-4 border-b border-border bg-background/40 flex flex-wrap gap-4 items-end">
-            <PrimarySelect
-              label="Combustível"
-              width="auto"
-              value={filters.tipoCombustivel}
-              onChange={(value) =>
-                setFilters({ ...filters, tipoCombustivel: value })
-              }
-              options={[
-                { label: "Todos", value: "" },
-                { label: "Gasolina", value: "GASOLINA" },
-                { label: "Etanol", value: "ETANOL" },
-                { label: "Diesel", value: "DIESEL" },
-              ]}
-            />
+            <div className="flex flex-wrap gap-4">
+              <FilterChips
+                label="Combustível"
+                options={[
+                  { label: "Gasolina", value: "GASOLINA" },
+                  { label: "Etanol", value: "ETANOL" },
+                  { label: "Diesel", value: "DIESEL" },
+                ]}
+                value={filters.tipoCombustivel}
+                onChange={(val) =>
+                  setFilters({
+                    ...filters,
+                    tipoCombustivel: val || undefined,
+                  })
+                }
+              />
 
-            <PrimarySelect
-              label="Posto"
-              width="auto"
-              value={filters.postoTipo}
-              onChange={(value) => setFilters({ ...filters, postoTipo: value })}
-              options={[
-                { label: "Todos", value: "" },
-                { label: "Interno", value: "INTERNO" },
-                { label: "Externo", value: "EXTERNO" },
-              ]}
-            />
+              <FilterChips
+                label="Posto"
+                options={[
+                  { label: "Interno", value: "INTERNO" },
+                  { label: "Externo", value: "EXTERNO" },
+                ]}
+                value={filters.postoTipo}
+                onChange={(val) =>
+                  setFilters({
+                    ...filters,
+                    postoTipo: val || undefined,
+                  })
+                }
+              />
 
-            <PrimarySelect
-              label="Tanque"
-              width="auto"
-              className="min-w-35"
-              value={filters.tanqueCheio}
-              onChange={(value) =>
-                setFilters({ ...filters, tanqueCheio: value })
-              }
-              options={[
-                { label: "Todos", value: "" },
-                { label: "Tanque Cheio", value: "true" },
-                { label: "Parcial", value: "false" },
-              ]}
-            />
+              <FilterChips
+                label="Tanque"
+                value={filters.tanqueCheio}
+                options={[
+                  { label: "Cheio", value: true },
+                  { label: "Parcial", value: false },
+                ]}
+                onChange={(val) => {
+                  let convertedValue: boolean | undefined = undefined;
 
-            <PrimaryInput
-              label="Data Início"
-              width="auto"
-              type="date"
-              value={filters.dataInicio}
-              onChange={(e) =>
-                setFilters({ ...filters, dataInicio: e.target.value })
-              }
-            />
+                  if (val === true || val === "true") convertedValue = true;
+                  if (val === false || val === "false") convertedValue = false;
 
-            <PrimaryInput
-              label="Data Fim"
-              width="auto"
-              type="date"
-              value={filters.dataFim}
-              onChange={(e) =>
-                setFilters({ ...filters, dataFim: e.target.value })
-              }
-            />
+                  setFilters({
+                    ...filters,
+                    tanqueCheio: convertedValue,
+                  });
+                }}
+              />
+            </div>
 
+            <div className="flex items-center gap-2">
+              <PrimaryInput
+                label="Data Início"
+                type="date"
+                value={filters.dataInicio}
+                onChange={(e) => setFilters({ dataInicio: e.target.value })}
+              />
+              <PrimaryInput
+                label="Data Fim"
+                type="date"
+                value={filters.dataFim}
+                onChange={(e) => setFilters({ dataFim: e.target.value })}
+              />
+            </div>
             {activeFiltersCount > 0 && (
               <button
                 onClick={handleClearFilters}
-                className="ml-auto px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/40"
+                className="ml-auto px-4 py-2 text-sm rounded-lg border border-border"
               >
                 Limpar
               </button>
@@ -302,24 +258,21 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
           </div>
         )}
 
-        {/* TABELA ORIGINAL (INALTERADA) */}
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
               <tr>
                 <th
-                  className="px-6 py-4 cursor-pointer select-none"
+                  className="px-6 py-4 cursor-pointer"
                   onClick={toggleSortOrder}
                 >
                   <div className="flex items-center gap-2">
-                    <span>Data e KM</span>
-                    <span className="text-xs">
-                      {sortOrder === "asc" ? (
-                        <ArrowUp size={12} />
-                      ) : (
-                        <ArrowDown size={12} />
-                      )}
-                    </span>
+                    Data e KM{" "}
+                    {sortOrder === "asc" ? (
+                      <ArrowUp size={12} />
+                    ) : (
+                      <ArrowDown size={12} />
+                    )}
                   </div>
                 </th>
                 <th className="px-6 py-4">Abastecimento</th>
@@ -329,16 +282,21 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
-
             <tbody className="divide-y divide-border">
-              {processedData.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center">
+                    <LoaderComp />
+                  </td>
+                </tr>
+              ) : abastecimentos.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-muted">
                     Nenhum abastecimento encontrado.
                   </td>
                 </tr>
               ) : (
-                processedData.map((item) => (
+                abastecimentos.map((item) => (
                   <tr
                     key={item.id}
                     className="group hover:bg-background/40 transition-colors"
@@ -353,7 +311,6 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
                         </span>
                       </div>
                     </td>
-
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-success">
@@ -365,7 +322,6 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
                         </span>
                       </div>
                     </td>
-
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-muted">
@@ -380,19 +336,16 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
                         </span>
                       </div>
                     </td>
-
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm font-bold text-muted">
                         {item.postoNome || item.postoTipo}
                       </div>
                     </td>
-
                     <td className="px-6 py-4 text-sm font-bold text-info">
                       {item.media
                         ? `${Number(item.media).toFixed(2)} Km/L`
                         : "-"}
                     </td>
-
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <button
@@ -404,7 +357,6 @@ export function FuelHistoryTable({ vehicle, abastecimentos, onChange }: Props) {
                         >
                           <Edit2 size={16} />
                         </button>
-
                         <button
                           onClick={() => handleDelete(item.id)}
                           className="p-2 text-muted hover:text-error"

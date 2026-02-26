@@ -36,9 +36,11 @@ export function VehicleUsageTable({
   const [users, setUsers] = useState<User[]>([]);
 
   const activeFiltersCount = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { page, limit, vehicleId, ...rest } = filters;
 
     return Object.entries(rest).filter(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ([_, value]) => value !== undefined && value !== ""
     ).length;
   }, [filters]);
