@@ -18,10 +18,12 @@ export default function VehicleUsageFormModal({
   open,
   onClose,
   onSuccess,
+  vehicle,
 }: {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  vehicle?: Vehicle;
 }) {
   const [vehicleId, setVehicleId] = useState("");
   const [userId, setUserId] = useState("");
@@ -117,6 +119,12 @@ export default function VehicleUsageFormModal({
     }
   };
 
+  useEffect(() => {
+    if (vehicle && open) {
+      setVehicleId(vehicle.id);
+    }
+  }, [vehicle, open]);
+
   return (
     <PrimaryModal
       isOpen={open}
@@ -136,12 +144,13 @@ export default function VehicleUsageFormModal({
       <div className="space-y-4">
         <PrimarySelect
           label="Veículo"
-          value={vehicleId}
+          value={vehicle ? vehicle.id : vehicleId}
           onChange={(val) => setVehicleId(val)}
           options={vehicles.map((v) => ({
             label: v.placa + " " + v.modelo,
             value: v.id,
           }))}
+          disabled={!!vehicle}
         />
 
         {vehicleId && (

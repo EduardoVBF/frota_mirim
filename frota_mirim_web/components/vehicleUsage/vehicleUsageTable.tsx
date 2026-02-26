@@ -101,6 +101,7 @@ export function VehicleUsageTable({
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={onChange}
+        vehicle={vehicle}
       />
 
       {/* HEADER */}
