@@ -31,9 +31,7 @@ export const fuelSupplyResponseSchema = z.object({
   updatedAt: z.coerce.date(),
 });
 
-export type FuelSupplyResponseDTO = z.infer<
-  typeof fuelSupplyResponseSchema
->;
+export type FuelSupplyResponseDTO = z.infer<typeof fuelSupplyResponseSchema>;
 
 // CREATE
 export const createFuelSupplySchema = z.object({
@@ -53,18 +51,14 @@ export const createFuelSupplySchema = z.object({
   tanqueCheio: z.boolean(),
 });
 
-export type CreateFuelSupplyDTO = z.infer<
-  typeof createFuelSupplySchema
->;
+export type CreateFuelSupplyDTO = z.infer<typeof createFuelSupplySchema>;
 
 // PARAMS
 export const fuelSupplyParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
-export type FuelSupplyParamsDTO = z.infer<
-  typeof fuelSupplyParamsSchema
->;
+export type FuelSupplyParamsDTO = z.infer<typeof fuelSupplyParamsSchema>;
 
 // QUERY (GET ALL)
 export const fuelSupplyQuerySchema = z.object({
@@ -75,7 +69,12 @@ export const fuelSupplyQuerySchema = z.object({
 
   tipoCombustivel: fuelTypeSchema.optional(),
   postoTipo: fuelStationTypeSchema.optional(),
-  tanqueCheio: z.boolean().optional(),
+  
+  tanqueCheio: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
 
   page: z.preprocess((val) => {
     if (!val) return 1;
@@ -88,6 +87,4 @@ export const fuelSupplyQuerySchema = z.object({
   }, z.number().min(1).max(1000)),
 });
 
-export type FuelSupplyQueryDTO = z.infer<
-  typeof fuelSupplyQuerySchema
->;
+export type FuelSupplyQueryDTO = z.infer<typeof fuelSupplyQuerySchema>;
