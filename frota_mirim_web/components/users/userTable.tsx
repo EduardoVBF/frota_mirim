@@ -288,6 +288,7 @@ export function UserTable({
           <thead>
             <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
               <th className="px-6 py-4 font-bold">Usuário</th>
+              <th className="px-6 py-4 font-bold">Código</th>
               <th className="px-6 py-4 font-bold">CPF</th>
               <th className="px-6 py-4 font-bold">Função</th>
               <th className="px-6 py-4 font-bold">Status</th>
@@ -342,6 +343,12 @@ export function UserTable({
                         <span className="text-xs text-muted">{user.email}</span>
                       </div>
                     </div>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-muted tracking-wide">
+                      {user.internalCode || "-"}
+                    </span>
                   </td>
 
                   <td className="px-6 py-4">

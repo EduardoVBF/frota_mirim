@@ -13,6 +13,7 @@ export type User = {
   cnhExpiresAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  internalCode?: string | null;
 };
 
 export type UserPayload = {
