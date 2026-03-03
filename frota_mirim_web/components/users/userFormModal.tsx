@@ -1,6 +1,6 @@
 "use client";
+import { User, UserPayload, UserRole } from "../../services/users.service";
 import { translateApiErrors } from "../../utils/translateApiError";
-import { User, UserPayload } from "../../services/users.service";
 import React, { useEffect, useState } from "react";
 import PrimarySelect from "../form/primarySelect";
 import PrimarySwitch from "../form/primarySwitch";
@@ -35,7 +35,7 @@ export default function UserFormModal({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "motorista" | "editor">("admin");
+  const [role, setRole] = useState<UserRole>(UserRole.ADMIN);
   const [isActive, setIsActive] = useState(true);
   const [cpf, setCpf] = useState("");
 
@@ -63,7 +63,7 @@ export default function UserFormModal({
       setLastName("");
       setEmail("");
       setPassword("");
-      setRole("admin");
+      setRole(UserRole.ADMIN);
       setIsActive(true);
       setImageBase64(null);
       setCnhExpiresAt("");
@@ -88,9 +88,7 @@ export default function UserFormModal({
       });
     } catch (err) {
       if (err instanceof AxiosError && err.response?.data) {
-        const { toastMessage } = translateApiErrors(
-          err.response.data,
-        );
+        const { toastMessage } = translateApiErrors(err.response.data);
         toast.error(toastMessage || "Erro ao salvar usuário");
       } else {
         toast.error("Erro inesperado ao salvar");
@@ -226,13 +224,13 @@ export default function UserFormModal({
             <PrimarySelect
               label="Cargo"
               value={role}
-              onChange={(val) =>
-                setRole(val as "admin" | "motorista" | "editor")
-              }
+              onChange={(val) => setRole(val as UserRole)}
+              error={errors.role}
               options={[
-                { label: "Administrador", value: "admin" },
-                { label: "Motorista", value: "motorista" },
-                { label: "Editor", value: "editor" },
+                { label: "Administrador", value: UserRole.ADMIN },
+                { label: "Motorista", value: UserRole.MOTORISTA },
+                { label: "Auxiliar", value: UserRole.AUXILIAR },
+                { label: "Editor", value: UserRole.EDITOR },
               ]}
             />
 

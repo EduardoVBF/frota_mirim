@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export enum UserRole {
+  ADMIN = "ADMIN",
+  MOTORISTA = "MOTORISTA",
+  AUXILIAR = "AUXILIAR",
+  EDITOR = "EDITOR",
+}
+
 export const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(6),
@@ -10,7 +17,7 @@ export const registerSchema = z.object({
   lastName: z.string().min(1),
   email: z.email(),
   password: z.string().min(6),
-  role: z.enum(["admin", "motorista", "editor"]).optional(),
+  role: z.enum(Object.values(UserRole)).optional(),
   isActive: z.boolean(),
   imageBase64: z.string().optional(),
   cnhExpiresAt: z.coerce.date().optional(),

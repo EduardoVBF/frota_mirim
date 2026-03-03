@@ -1,11 +1,18 @@
 import { api } from "./api";
 
+enum UserRole {
+  ADMIN = "ADMIN",
+  MOTORISTA = "MOTORISTA",
+  AUXILIAR = "AUXILIAR",
+  EDITOR = "EDITOR",
+}
+
 export type LoginResponse = {
   accessToken: string;
   user: {
     id: string;
     email: string;
-    role: string;
+    role: UserRole;
     firstName: string;
     lastName: string;
     imageUrl?: string;
@@ -17,7 +24,7 @@ export type LoginResponse = {
 export type AuthUser = {
   id: string;
   email: string;
-  role: string;
+  role: UserRole;
   firstName: string;
   lastName: string;
   accessToken: string;

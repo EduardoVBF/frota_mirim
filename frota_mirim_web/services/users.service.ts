@@ -1,13 +1,20 @@
 import { api } from "./api";
 import qs from "qs";
 
+export enum UserRole {
+  ADMIN = "ADMIN",
+  MOTORISTA = "MOTORISTA",
+  AUXILIAR = "AUXILIAR",
+  EDITOR = "EDITOR",
+}
+
 export type User = {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   cpf: string;
-  role: "admin" | "motorista" | "editor";
+  role: UserRole;
   isActive: boolean;
   imageUrl?: string;
   cnhExpiresAt?: string | null;
@@ -22,7 +29,7 @@ export type UserPayload = {
   email: string;
   password?: string;
   cpf: string;
-  role: "admin" | "motorista" | "editor";
+  role: UserRole;
   isActive: boolean;
   imageBase64?: string | null;
   cnhExpiresAt?: string | null;
@@ -46,7 +53,7 @@ export type CreateUserPayload = {
   lastName: string;
   email: string;
   password: string;
-  role: "admin" | "motorista" | "editor";
+  role: UserRole;
   isActive: boolean;
   cpf: string;
   imageBase64?: string | null;
@@ -56,7 +63,7 @@ export type CreateUserPayload = {
 export type UpdateUserPayload = {
   firstName?: string;
   lastName?: string;
-  role?: "admin" | "motorista" | "editor";
+  role?: UserRole;
   isActive?: boolean;
   cpf?: string;
   imageBase64?: string | null;

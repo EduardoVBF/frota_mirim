@@ -38,14 +38,14 @@ enum UserRole {
 
 model User {
   id           String @id @default(uuid())
-  internalCode Int    @unique @default(autoincrement())
+  internalCode Int    @unique
 
   firstName    String
   lastName     String
-  email        String  @unique
+  email        String   @unique
   passwordHash String
   role         UserRole @default(ADMIN)
-  isActive     Boolean @default(true)
+  isActive     Boolean  @default(true)
 
   cpf String @unique @db.VarChar(11)
 

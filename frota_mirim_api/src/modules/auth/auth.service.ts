@@ -2,17 +2,12 @@ import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
 import bcrypt from "bcrypt";
 import { uploadBase64ToFirebase } from "../../services/uploadImageBase64";
+import { UserRole } from "../users/users.schema";
 
 type LoginInput = {
   email: string;
   password: string;
 };
-
-enum UserRole {
-  ADMIN = "admin",
-  MOTORISTA = "motorista",
-  EDITOR = "editor",
-}
 
 type RegisterInput = {
   firstName: string;
@@ -85,19 +80,23 @@ export class AuthService {
 
     // Upload da imagem se enviada
     if (data.imageBase64) {
-      imageUrl = await uploadBase64ToFirebase(
-        data.imageBase64,
-        "users"
-      );
+      imageUrl = await uploadBase64ToFirebase(data.imageBase64, "users");
     }
+
+    const lastUser = await prisma.user.findFirst({
+      orderBy: { internalCode: "desc" },
+    });
+
+    const nextInternalCode = lastUser ? lastUser.internalCode + 1 : 1;
 
     const user = await prisma.user.create({
       data: {
+        internalCode: nextInternalCode,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         passwordHash,
-        role: data.role ?? UserRole.EDITOR,
+        role: data.role ?? "MOTORISTA",
         isActive: data.isActive,
         imageUrl,
         cnhExpiresAt: data.cnhExpiresAt,
