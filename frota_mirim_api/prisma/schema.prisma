@@ -31,6 +31,7 @@ enum FuelStationType {
 
 model User {
   id           String  @id @default(uuid())
+  internalCode Int      @unique @default(autoincrement())
   firstName    String
   lastName     String
   email        String  @unique

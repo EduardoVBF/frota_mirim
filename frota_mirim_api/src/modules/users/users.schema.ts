@@ -1,13 +1,12 @@
 import { z } from "zod";
 
 export const USER_ROLES = ["admin", "editor", "motorista"] as const;
-
 export const userRoleSchema = z.enum(USER_ROLES);
-
 export type UserRole = z.infer<typeof userRoleSchema>;
 
 export const userResponseSchema = z.object({
   id: z.uuid(),
+  internalCode: z.string(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.email(),
@@ -26,6 +25,7 @@ export type UsersListResponseDTO = z.infer<typeof usersListResponseSchema>;
 export const userParamsSchema = z.object({
   id: z.uuid(),
 });
+
 export type UserParamsDTO = z.infer<typeof userParamsSchema>;
 
 export const updateUserBodySchema = z.object({
@@ -38,11 +38,13 @@ export const updateUserBodySchema = z.object({
   imageBase64: z.string().optional(),
   cnhExpiresAt: z.coerce.date().optional(),
 });
+
 export type UpdateUserBodyDTO = z.infer<typeof updateUserBodySchema>;
 
 export const resetPasswordBodySchema = z.object({
   newPassword: z.string().min(8),
 });
+
 export type ResetPasswordBodyDTO = z.infer<typeof resetPasswordBodySchema>;
 
 export const userQuerySchema = z.object({

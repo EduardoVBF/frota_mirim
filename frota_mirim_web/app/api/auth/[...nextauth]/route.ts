@@ -42,6 +42,7 @@ const handler = NextAuth({
     async jwt({ token, user }: { token: JWT; user?: AuthUser }) {
       if (user) {
         token.accessToken = user.accessToken;
+        token.internalCode = user.internalCode;
         token.role = user.role;
         token.firstName = user.firstName;
         token.lastName = user.lastName;
@@ -55,6 +56,7 @@ const handler = NextAuth({
       session.accessToken = token.accessToken as string;
 
       if (session.user) {
+        session.user.internalCode = token.internalCode as string;
         session.user.role = token.role as string;
         session.user.firstName = token.firstName as string;
         session.user.lastName = token.lastName as string;

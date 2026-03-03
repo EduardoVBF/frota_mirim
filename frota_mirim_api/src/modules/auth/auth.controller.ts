@@ -23,6 +23,7 @@ export async function loginController(
     accessToken,
     user: {
       id: user.id,
+      internalCode: user.internalCode,
       email: user.email,
       role: user.role,
       firstName: user.firstName,

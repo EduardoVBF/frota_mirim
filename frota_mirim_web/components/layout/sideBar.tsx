@@ -35,6 +35,7 @@ const menuItems = [
 export default function Sidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  console.log("Session in Sidebar:", session);
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-background transition-transform">

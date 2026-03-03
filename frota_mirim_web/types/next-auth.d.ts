@@ -5,6 +5,7 @@ declare module "next-auth" {
     accessToken: string;
 
     user: {
+      internalCode: string;
       role: string;
       firstName?: string;
       lastName?: string;
@@ -15,6 +16,7 @@ declare module "next-auth" {
 
   interface User {
     role: string;
+    internalCode: string;
     email: string;
     firstName: string;
     lastName: string;
@@ -28,6 +30,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     accessToken: string;
     role: string;
+    internalCode: string;
     firstName?: string;
     lastName?: string;
     imageUrl?: string;

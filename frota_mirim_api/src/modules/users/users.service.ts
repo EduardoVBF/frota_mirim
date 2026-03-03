@@ -11,6 +11,10 @@ import { prisma } from "../../shared/database/prisma";
 import { startOfMonth } from "date-fns";
 import bcrypt from "bcrypt";
 
+function formatInternalCode(code: number) {
+  return code.toString().padStart(4, "0");
+}
+
 export class UsersService {
   async getAllUsers(query: UserQueryDTO) {
     const { search, role, isActive, page = 1, limit = 10 } = query;
@@ -18,12 +22,17 @@ export class UsersService {
     const where: any = { AND: [] };
 
     if (search) {
+      const numericSearch = Number(search);
+
       where.AND.push({
         OR: [
           { firstName: { contains: search, mode: "insensitive" } },
           { lastName: { contains: search, mode: "insensitive" } },
           { email: { contains: search, mode: "insensitive" } },
           { cpf: { contains: search, mode: "insensitive" } },
+          ...(Number.isInteger(numericSearch)
+            ? [{ internalCode: numericSearch }]
+            : []),
         ],
       });
     }
@@ -50,6 +59,7 @@ export class UsersService {
           take: limit,
           select: {
             id: true,
+            internalCode: true,
             firstName: true,
             lastName: true,
             email: true,
@@ -72,7 +82,10 @@ export class UsersService {
       ]);
 
     return {
-      users,
+      users: users.map((user) => ({
+        ...user,
+        internalCode: formatInternalCode(user.internalCode),
+      })),
       meta: {
         total: totalCount,
         totalFiltered,
@@ -94,10 +107,11 @@ export class UsersService {
       throw new AppError("Usuário não encontrado.", 404);
     }
 
-    return prisma.user.findUnique({
+    const result = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
+        internalCode: true,
         firstName: true,
         lastName: true,
         email: true,
@@ -107,18 +121,21 @@ export class UsersService {
         imageUrl: true,
         cnhExpiresAt: true,
       },
-    }) as Promise<UserResponseDTO>;
+    });
+
+    return {
+      ...result!,
+      internalCode: formatInternalCode(result!.internalCode),
+    } as UserResponseDTO;
   }
 
   async updateUser(
-    id: UserParamsDTO["id"],
+    id: string,
     data: Partial<UpdateUserBodyDTO> & { imageBase64?: string },
     requesterRole: "admin" | "editor",
     requesterId: string,
   ) {
-    const user = await prisma.user.findUnique({
-      where: { id },
-    });
+    const user = await prisma.user.findUnique({ where: { id } });
 
     if (!user) {
       throw new AppError("Usuário não encontrado.", 404);
@@ -142,7 +159,7 @@ export class UsersService {
       }
     }
 
-    return prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id },
       data: {
         firstName: data.firstName ?? user.firstName,
@@ -155,6 +172,7 @@ export class UsersService {
       },
       select: {
         id: true,
+        internalCode: true,
         firstName: true,
         lastName: true,
         email: true,
@@ -165,12 +183,15 @@ export class UsersService {
         cnhExpiresAt: true,
       },
     });
+
+    return {
+      ...updated,
+      internalCode: formatInternalCode(updated.internalCode),
+    };
   }
 
-  async resetPassword(id: UserParamsDTO["id"], data: ResetPasswordBodyDTO) {
-    const user = await prisma.user.findUnique({
-      where: { id },
-    });
+  async resetPassword(id: string, data: ResetPasswordBodyDTO) {
+    const user = await prisma.user.findUnique({ where: { id } });
 
     if (!user) {
       throw new AppError("Usuário não encontrado.", 404);

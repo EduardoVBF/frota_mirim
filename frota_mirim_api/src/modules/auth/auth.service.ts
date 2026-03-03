@@ -27,6 +27,11 @@ type RegisterInput = {
   cnhExpiresAt?: Date;
 };
 
+// Função para formatar internalCode modelo: 000X
+function formatInternalCode(code: number) {
+  return code.toString().padStart(4, "0");
+}
+
 export class AuthService {
   async login({ email, password }: LoginInput) {
     const user = await prisma.user.findUnique({
@@ -45,6 +50,7 @@ export class AuthService {
 
     return {
       id: user.id,
+      internalCode: formatInternalCode(user.internalCode),
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -77,7 +83,7 @@ export class AuthService {
 
     let imageUrl: string | undefined;
 
-    // ✅ Upload da imagem se enviada
+    // Upload da imagem se enviada
     if (data.imageBase64) {
       imageUrl = await uploadBase64ToFirebase(
         data.imageBase64,
@@ -101,6 +107,7 @@ export class AuthService {
 
     return {
       id: user.id,
+      internalCode: formatInternalCode(user.internalCode),
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,

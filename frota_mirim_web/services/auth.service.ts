@@ -10,6 +10,7 @@ export type LoginResponse = {
     lastName: string;
     imageUrl?: string;
     cnhExpiresAt?: Date;
+    internalCode: string;
   };
 };
 
@@ -22,6 +23,7 @@ export type AuthUser = {
   accessToken: string;
   imageUrl?: string;
   cnhExpiresAt?: Date;
+  internalCode: string;
 };
 
 
