@@ -12,6 +12,7 @@ export class VehicleUsageService {
     const {
       vehicleId,
       userId,
+      assistantId,
       type,
       dataInicio,
       dataFim,
@@ -22,6 +23,7 @@ export class VehicleUsageService {
     const where: any = {};
 
     if (vehicleId) where.vehicleId = vehicleId;
+    if (assistantId) where.assistantId = assistantId;
     if (userId) where.userId = userId;
     if (type) where.type = type;
 
@@ -101,6 +103,13 @@ export class VehicleUsageService {
         orderBy: { eventAt: "desc" },
       });
 
+      const lastAssistantEvent = data.assistantId
+        ? await tx.vehicleUsage.findFirst({
+            where: { assistantId: data.assistantId },
+            orderBy: { eventAt: "desc" },
+          })
+        : null;
+
       if (data.type === "ENTRY") {
         if (lastVehicleEvent?.type === "ENTRY") {
           throw new AppError("Este veículo já está em uso.", 400);
@@ -109,6 +118,13 @@ export class VehicleUsageService {
         if (lastUserEvent?.type === "ENTRY") {
           throw new AppError(
             "Este usuário já está utilizando um veículo.",
+            400,
+          );
+        }
+
+        if (data.assistantId && lastAssistantEvent?.type === "ENTRY") {
+          throw new AppError(
+            "Este auxiliar já está auxiliando em um veículo.",
             400,
           );
         }
@@ -128,6 +144,19 @@ export class VehicleUsageService {
 
         if (data.eventAt <= lastVehicleEvent.eventAt) {
           throw new AppError("Horário de saída inválido.", 400);
+        }
+
+        if (data.assistantId) {
+          if (
+            !lastAssistantEvent ||
+            lastAssistantEvent.type !== "ENTRY" ||
+            lastAssistantEvent.vehicleId !== data.vehicleId
+          ) {
+            throw new AppError(
+              "Este auxiliar não possui entrada aberta para este veículo.",
+              400,
+            );
+          }
         }
       }
 
@@ -283,30 +312,24 @@ export class VehicleUsageService {
       kmEnd: lastExit.km,
       kmDriven: lastExit.km - entry.km,
       userId: entry.userId,
+      assistantId: entry.assistantId,
     };
   }
 
   // VEHICLES IN USE
   async getVehiclesInUse() {
-    const vehicles = await prisma.vehicle.findMany({
-      where: { isActive: true },
-      include: {
-        usages: {
-          orderBy: { eventAt: "desc" },
-          take: 1,
-        },
-      },
+    const inUse = await prisma.vehicleUsage.findMany({
+      where: { type: "ENTRY" },
+      orderBy: { eventAt: "desc" },
+      distinct: ["vehicleId"],
     });
 
-    return vehicles
-      .filter((v) => v.usages[0]?.type === "ENTRY")
-      .map((v) => ({
-        vehicleId: v.id,
-        placa: v.placa,
-        kmAtual: v.kmAtual,
-        startedAt: v.usages[0].eventAt,
-        userId: v.usages[0].userId,
-      }));
+    return inUse.map((item) => ({
+      vehicleId: item.vehicleId,
+      userId: item.userId,
+      assistantId: item.assistantId,
+      startedAt: item.eventAt,
+    }));
   }
 
   // TRIPS BY VEHICLE
@@ -332,6 +355,7 @@ export class VehicleUsageService {
           kmEnd: event.km,
           kmDriven: event.km - openEntry.km,
           userId: openEntry.userId,
+          assistantId: openEntry.assistantId,
         });
 
         openEntry = null;
@@ -357,10 +381,12 @@ export class VehicleUsageService {
     });
 
     return {
+      userId: userId,
       vehicleId: vehicle?.id,
       placa: vehicle?.placa,
       startedAt: lastEvent.eventAt,
       kmStart: lastEvent.km,
+      assistantId: lastEvent.assistantId,
     };
   }
 }

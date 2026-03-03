@@ -8,6 +8,7 @@ export type VehicleUsage = {
   id: string;
   vehicleId: string;
   userId: string | null;
+  assistantId?: string | null;
 
   type: VehicleUsageType;
 
@@ -34,6 +35,7 @@ export type VehicleUsagesResponse = {
 export type CreateVehicleUsagePayload = {
   vehicleId: string;
   userId: string;
+  assistantId?: string;
   type: VehicleUsageType;
   eventAt: Date;
   km: number;
@@ -44,6 +46,7 @@ export type CreateVehicleUsagePayload = {
 export type VehicleUsageFilters = {
   vehicleId?: string;
   userId?: string;
+  assistantId?: string;
   type?: VehicleUsageType;
   dataInicio?: string;
   dataFim?: string;
@@ -61,6 +64,7 @@ export type VehicleTrip = {
   kmEnd: number;
   kmDriven: number;
   userId: string;
+  assistantId?: string;
 };
 
 export type VehicleInUse = {
@@ -69,6 +73,7 @@ export type VehicleInUse = {
   kmAtual: number;
   startedAt: string;
   userId: string;
+  assistantId?: string;
 };
 
 export type CurrentUserVehicle = {
@@ -76,6 +81,8 @@ export type CurrentUserVehicle = {
   placa: string;
   startedAt: string;
   kmStart: number;
+  assistantId?: string;
+  userId: string;
 } | null;
 
 // API CALLS

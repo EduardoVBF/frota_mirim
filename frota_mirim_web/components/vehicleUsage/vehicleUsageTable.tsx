@@ -37,13 +37,12 @@ export function VehicleUsageTable({
   const [editingUsage, setEditingUsage] = useState<VehicleUsage | null>(null);
 
   const activeFiltersCount = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { page, limit, vehicleId, ...rest } = filters;
-
-    return Object.entries(rest).filter(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ([_, value]) => value !== undefined && value !== "",
-    ).length;
+    let count = 0;
+    if (filters.type) count++;
+    if (filters.userId) count++;
+    if (filters.assistantId) count++;
+    if (filters.vehicleId) count++;
+    return count;
   }, [filters]);
 
   const vehicleMap = useMemo(() => {
@@ -134,6 +133,12 @@ export function VehicleUsageTable({
             Filtros
           </button>
 
+          {activeFiltersCount > 0 && (
+            <span className="text-xs bg-accent text-white px-2 py-1 rounded-full">
+              {activeFiltersCount} filtro(s)
+            </span>
+          )}
+
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold"
@@ -195,6 +200,24 @@ export function VehicleUsageTable({
             }))}
           />
 
+          <PrimarySelect
+            label="Assistente"
+            width="fit"
+            className="min-w-70"
+            value={filters.assistantId || ""}
+            onChange={(value) =>
+              setFilters({
+                assistantId: value || undefined,
+              })
+            }
+            options={[
+              ...users.map((u) => ({
+                label: `${u.firstName} ${u.lastName}`,
+                value: u.id,
+              })),
+            ]}
+          />
+
           {activeFiltersCount > 0 && (
             <button
               onClick={handleClearFilters}
@@ -221,6 +244,7 @@ export function VehicleUsageTable({
                 <th className="px-6 py-4">KM</th>
                 <th className="px-6 py-4">Veículo</th>
                 <th className="px-6 py-4">Usuário</th>
+                <th className="px-6 py-4">Assistente</th>
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
@@ -290,6 +314,19 @@ export function VehicleUsageTable({
                         </div>
                       ) : (
                         "Usuário não encontrado"
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {usage.assistantId && userMap[usage.assistantId] ? (
+                        <div>
+                          <p className="text-sm font-bold text-muted">
+                            {userMap[usage.assistantId]?.firstName}{" "}
+                            {userMap[usage.assistantId]?.lastName}
+                          </p>
+                        </div>
+                      ) : (
+                        "-"
                       )}
                     </td>
 

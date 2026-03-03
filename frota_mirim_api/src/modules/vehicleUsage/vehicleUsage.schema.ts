@@ -10,6 +10,7 @@ export const vehicleUsageResponseSchema = z.object({
 
   vehicleId: z.string().uuid(),
   userId: z.string().uuid().nullable(),
+  assistantId: z.string().uuid().nullable(),
 
   type: vehicleUsageTypeSchema,
 
@@ -29,6 +30,7 @@ export type VehicleUsageResponseDTO = z.infer<
 export const createVehicleUsageSchema = z.object({
   vehicleId: z.string().uuid(),
   userId: z.string().uuid(),
+  assistantId: z.string().uuid().optional(),
 
   type: vehicleUsageTypeSchema,
 
@@ -57,6 +59,7 @@ export type VehicleUsageParamsDTO = z.infer<
 export const vehicleUsageQuerySchema = z.object({
   vehicleId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
+  assistantId: z.string().uuid().optional(),
 
   type: vehicleUsageTypeSchema.optional(),
 

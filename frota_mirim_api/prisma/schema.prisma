@@ -30,8 +30,9 @@ enum FuelStationType {
 // USER
 
 model User {
-  id           String  @id @default(uuid())
-  internalCode Int      @unique @default(autoincrement())
+  id           String @id @default(uuid())
+  internalCode Int    @unique @default(autoincrement())
+
   firstName    String
   lastName     String
   email        String  @unique
@@ -44,9 +45,11 @@ model User {
   imageUrl     String?
   cnhExpiresAt DateTime?
 
-  abastecimentos FuelSupply[]
-  phones         UserPhone[]
-  usages         VehicleUsage[]
+  fuelSupplies FuelSupply[]
+  userPhones   UserPhone[]
+
+  vehicleUsagesAsDriver    VehicleUsage[] @relation("Driver")
+  vehicleUsagesAsAssistant VehicleUsage[] @relation("Assistant")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,8 +97,8 @@ model Vehicle {
 
   isActive Boolean @default(true)
 
-  abastecimentos FuelSupply[]
-  usages         VehicleUsage[]
+  fuelSupplies  FuelSupply[]
+  vehicleUsages VehicleUsage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -157,21 +160,24 @@ model VehicleUsage {
   vehicleId String
   vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
+  // MOTORISTA (OBRIGATÓRIO)
   userId String
-  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user   User   @relation("Driver", fields: [userId], references: [id], onDelete: Restrict)
+
+  // AUXILIAR (OPCIONAL)
+  assistantId String?
+  assistant   User?   @relation("Assistant", fields: [assistantId], references: [id], onDelete: SetNull)
 
   // EVENTO
-  type VehicleUsageType
-
+  type    VehicleUsageType
   eventAt DateTime
   km      Int
-
-  notes String?
+  notes   String?
 
   createdAt DateTime @default(now())
 
-  // INDEXES
   @@index([vehicleId, eventAt])
   @@index([userId, eventAt])
+  @@index([assistantId, eventAt])
   @@index([type])
 }

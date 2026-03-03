@@ -31,6 +31,7 @@ export default function VehicleUsageFormModal({
 }) {
   const [vehicleId, setVehicleId] = useState("");
   const [userId, setUserId] = useState("");
+  const [assistantId, setAssistantId] = useState<string | null>(null);
   const [type, setType] = useState<"ENTRY" | "EXIT">("ENTRY");
   const [km, setKm] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -42,11 +43,13 @@ export default function VehicleUsageFormModal({
     if (initialData) {
       setVehicleId(initialData.vehicleId);
       setUserId(initialData.userId || "");
+      setAssistantId(initialData.assistantId || null);
       setType(initialData.type);
       setKm(initialData.km.toString());
     } else {
       setVehicleId("");
       setUserId("");
+      setAssistantId(null);
       setType("ENTRY");
       setKm("");
     }
@@ -55,6 +58,7 @@ export default function VehicleUsageFormModal({
   const handleClose = () => {
     setVehicleId("");
     setUserId("");
+    setAssistantId(null);
     setType("ENTRY");
     setKm("");
     onClose();
@@ -110,6 +114,7 @@ export default function VehicleUsageFormModal({
         await updateVehicleUsage(initialData.id, {
           vehicleId,
           userId,
+          assistantId: assistantId || undefined,
           type,
           km: Number(km),
         });
@@ -122,6 +127,7 @@ export default function VehicleUsageFormModal({
           vehicleId,
           userId,
           type,
+          assistantId: assistantId || undefined,
           km: Number(km),
           eventAt: new Date(),
         });
@@ -208,6 +214,19 @@ export default function VehicleUsageFormModal({
             value: u.id,
           }))}
           error={errors.userId || ""}
+        />
+
+        <PrimarySelect
+          label="Assistente (opcional)"
+          value={assistantId || ""}
+          onChange={(val) => setAssistantId(val || null)}
+          options={[
+            { label: "Nenhum", value: "" },
+            ...users.map((u) => ({
+              label: u.firstName + " " + u.lastName,
+              value: u.id,
+            })),
+          ]}
         />
 
         <PrimaryInput
