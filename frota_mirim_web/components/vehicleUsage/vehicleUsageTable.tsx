@@ -7,7 +7,7 @@ import { Vehicle, getVehicles } from "@/services/vehicles.service";
 import { User, getAdminUsers } from "@/services/users.service";
 import VehicleUsageFormModal from "./vehicleUsageFormModal";
 import { useState, useEffect, useMemo } from "react";
-import { Filter, FilterX, Plus, ClockCheck, Car } from "lucide-react";
+import { Filter, FilterX, Plus, ClockCheck, Car, Edit2 } from "lucide-react";
 import FilterChips from "../fuel-supply/FilterChips";
 import LoaderComp from "../loaderComp";
 import PrimarySelect from "../form/primarySelect";
@@ -34,6 +34,7 @@ export function VehicleUsageTable({
   const [loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [editingUsage, setEditingUsage] = useState<VehicleUsage | null>(null);
 
   const activeFiltersCount = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -41,7 +42,7 @@ export function VehicleUsageTable({
 
     return Object.entries(rest).filter(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ([_, value]) => value !== undefined && value !== ""
+      ([_, value]) => value !== undefined && value !== "",
     ).length;
   }, [filters]);
 
@@ -102,6 +103,7 @@ export function VehicleUsageTable({
         onClose={() => setIsModalOpen(false)}
         onSuccess={onChange}
         vehicle={vehicle}
+        initialData={editingUsage || undefined}
       />
 
       {/* HEADER */}
@@ -219,6 +221,7 @@ export function VehicleUsageTable({
                 <th className="px-6 py-4">KM</th>
                 <th className="px-6 py-4">Veículo</th>
                 <th className="px-6 py-4">Usuário</th>
+                <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
 
@@ -253,9 +256,7 @@ export function VehicleUsageTable({
                     <td className="px-6 py-4">
                       <span
                         className={`text-xs font-bold ${
-                          usage.type === "ENTRY"
-                            ? "text-success"
-                            : "text-error"
+                          usage.type === "ENTRY" ? "text-success" : "text-error"
                         }`}
                       >
                         {usage.type === "ENTRY" ? "Entrada" : "Saída"}
@@ -290,6 +291,18 @@ export function VehicleUsageTable({
                       ) : (
                         "Usuário não encontrado"
                       )}
+                    </td>
+
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => {
+                          setEditingUsage(usage);
+                          setIsModalOpen(true);
+                        }}
+                        className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg"
+                      >
+                        <Edit2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))

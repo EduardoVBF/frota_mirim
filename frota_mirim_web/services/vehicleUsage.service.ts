@@ -109,7 +109,16 @@ export async function createVehicleUsage(
   return data;
 }
 
-// INTELIGÊNCIA OPERACIONAL
+// UPDATE
+export async function updateVehicleUsage(
+  id: string,
+  payload: Partial<CreateVehicleUsagePayload>,
+): Promise<VehicleUsage> {
+  const { data } = await api.put(`/vehicle-usages/${id}`, payload);
+  return data;
+}
+
+// *** INTELIGÊNCIA OPERACIONAL ***
 
 // Última viagem de um veículo
 export async function getLastTripByVehicle(

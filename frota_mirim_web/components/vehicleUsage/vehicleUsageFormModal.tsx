@@ -2,6 +2,8 @@
 import {
   createVehicleUsage,
   VehicleUsageType,
+  VehicleUsage,
+  updateVehicleUsage,
 } from "@/services/vehicleUsage.service";
 import { getVehicles, Vehicle } from "@/services/vehicles.service";
 import { getAdminUsers, User } from "@/services/users.service";
@@ -19,11 +21,13 @@ export default function VehicleUsageFormModal({
   onClose,
   onSuccess,
   vehicle,
+  initialData,
 }: {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   vehicle?: Vehicle;
+  initialData?: VehicleUsage;
 }) {
   const [vehicleId, setVehicleId] = useState("");
   const [userId, setUserId] = useState("");
@@ -33,6 +37,20 @@ export default function VehicleUsageFormModal({
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (initialData) {
+      setVehicleId(initialData.vehicleId);
+      setUserId(initialData.userId || "");
+      setType(initialData.type);
+      setKm(initialData.km.toString());
+    } else {
+      setVehicleId("");
+      setUserId("");
+      setType("ENTRY");
+      setKm("");
+    }
+  }, [initialData, open]);
 
   const handleClose = () => {
     setVehicleId("");
@@ -87,24 +105,38 @@ export default function VehicleUsageFormModal({
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await createVehicleUsage({
-        vehicleId,
-        userId,
-        type,
-        km: Number(km),
-        eventAt: new Date(),
-      });
+      if (initialData) {
+        // UPDATE
+        await updateVehicleUsage(initialData.id, {
+          vehicleId,
+          userId,
+          type,
+          km: Number(km),
+        });
+        toast.success("Evento atualizado!");
+        onSuccess();
+        handleClose();
+      } else {
+        // CREATE
+        await createVehicleUsage({
+          vehicleId,
+          userId,
+          type,
+          km: Number(km),
+          eventAt: new Date(),
+        });
 
-      toast.success("Evento registrado!");
-      onSuccess();
-      handleClose();
+        toast.success("Evento registrado!");
+        onSuccess();
+        handleClose();
+      }
     } catch (err) {
       if (!(err instanceof AxiosError)) {
-        toast.error("Erro ao salvar a categoria");
+        toast.error("Erro ao salvar o evento");
         return;
       } else {
         if (!err.response || !err.response.data) {
-          toast.error("Erro ao salvar a categoria");
+          toast.error("Erro ao salvar o evento");
           return;
         }
         const { fieldErrors, toastMessage } = translateApiErrors(
@@ -112,7 +144,7 @@ export default function VehicleUsageFormModal({
         );
 
         setErrors(fieldErrors);
-        toast.error(toastMessage || "Erro ao salvar a categoria");
+        toast.error(toastMessage || "Erro ao salvar o evento");
       }
     } finally {
       setLoading(false);
