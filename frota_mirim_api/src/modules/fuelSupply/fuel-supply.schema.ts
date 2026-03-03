@@ -69,6 +69,7 @@ export const fuelSupplyQuerySchema = z.object({
 
   tipoCombustivel: fuelTypeSchema.optional(),
   postoTipo: fuelStationTypeSchema.optional(),
+  userId: z.string().uuid().optional(),
   
   tanqueCheio: z.preprocess((val) => {
     if (val === "true") return true;

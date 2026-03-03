@@ -19,7 +19,7 @@ import { FastifyInstance } from "fastify";
 
 export async function fuelSupplyRoutes(app: FastifyInstance) {
 
-  // GET ALL (PROTEGIDO)
+  // GET ALL
   app.get(
     "/fuel-supplies",
     { preHandler: [authMiddleware] },

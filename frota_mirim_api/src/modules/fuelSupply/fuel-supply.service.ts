@@ -12,6 +12,7 @@ export class FuelSupplyService {
       tipoCombustivel,
       postoTipo,
       tanqueCheio,
+      userId,
       page = 1,
       limit = 10,
     } = query;
@@ -22,7 +23,8 @@ export class FuelSupplyService {
     if (tipoCombustivel) where.tipoCombustivel = tipoCombustivel;
     if (postoTipo) where.postoTipo = postoTipo;
     if (tanqueCheio !== undefined) where.tanqueCheio = tanqueCheio;
-
+    if (userId) where.userId = userId;
+    
     if (dataInicio || dataFim) {
       where.data = {};
       if (dataInicio) where.data.gte = dataInicio;
