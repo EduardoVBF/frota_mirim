@@ -62,6 +62,7 @@ export type FuelSupplyFilters = {
   tipoCombustivel?: FuelType[];
   postoTipo?: FuelStationType;
   tanqueCheio?: boolean;
+  userId?: string;
   dataInicio?: string;
   dataFim?: string;
   page?: number;

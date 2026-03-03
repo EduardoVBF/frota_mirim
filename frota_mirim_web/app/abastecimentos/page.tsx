@@ -26,6 +26,9 @@ export default function AbastecimentosPage() {
     tipoCombustivel: undefined,
     postoTipo: undefined,
     tanqueCheio: undefined,
+    userId: undefined,
+    page: 1,
+    limit: 10,
   });
 
   const [page, setPage] = useState(1);
@@ -95,6 +98,8 @@ export default function AbastecimentosPage() {
         if (dayjs(item.data).isAfter(dayjs(filters.dataFim).endOf("day")))
           return false;
       }
+
+      if (filters.userId && item.userId !== filters.userId) return false;
 
       return true;
     });

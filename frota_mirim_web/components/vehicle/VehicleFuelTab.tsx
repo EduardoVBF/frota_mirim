@@ -4,7 +4,6 @@ import { FuelHistoryTable } from "@/components/vehicle/FuelHistoryTable";
 import { useEffect, useState, useCallback } from "react";
 import { Vehicle } from "@/services/vehicles.service";
 import Pagination from "@/components/paginationComp";
-import LoaderComp from "@/components/loaderComp";
 
 type Props = {
   vehicle: Vehicle;
@@ -24,6 +23,7 @@ export default function VehicleFuelTab({ vehicle }: Props) {
     tanqueCheio: undefined,
     dataInicio: undefined,
     dataFim: undefined,
+    userId: undefined,
   });
 
   const fetchFuelHistory = useCallback(async () => {
@@ -51,8 +51,6 @@ export default function VehicleFuelTab({ vehicle }: Props) {
       page: 1, // Reset ao filtrar
     }));
   };
-
-  if (loading && filters.page === 1) return <LoaderComp />;
 
   return (
     <div className="space-y-6">

@@ -8,17 +8,18 @@ import {
   FuelSupplyFilters,
 } from "@/services/fuel-supply.service";
 import { Edit2, Trash2, Plus, Fuel, Filter, FilterX } from "lucide-react";
+import { getAdminUsers, User } from "@/services/users.service";
 import { translateApiErrors } from "@/utils/translateApiError";
 import FuelSupplyFormModal from "./FuelSupplyFormModal";
 import { Vehicle } from "@/services/vehicles.service";
 import PrimarySelect from "../form/primarySelect";
 import toast, { Toaster } from "react-hot-toast";
 import PrimaryInput from "../form/primaryInput";
+import { useState, useEffect } from "react";
 import FilterChips from "./FilterChips";
 import LoaderComp from "../loaderComp";
 import utc from "dayjs/plugin/utc";
 import { AxiosError } from "axios";
-import { useState } from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 
@@ -48,6 +49,7 @@ export function FuelSupplyTable({
   const [loadingAction, setLoadingAction] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [users, setUsers] = useState<User[]>([]);
 
   const activeFiltersCount =
     (filters.vehicleId ? 1 : 0) +
@@ -55,7 +57,8 @@ export function FuelSupplyTable({
     (filters.postoTipo ? 1 : 0) +
     (filters.tanqueCheio !== undefined ? 1 : 0) +
     (filters.dataInicio ? 1 : 0) +
-    (filters.dataFim ? 1 : 0);
+    (filters.dataFim ? 1 : 0) +
+    (filters.userId ? 1 : 0);
 
   const handleClearFilters = () => {
     setFilters({
@@ -65,6 +68,9 @@ export function FuelSupplyTable({
       tipoCombustivel: undefined,
       postoTipo: undefined,
       tanqueCheio: undefined,
+      userId: undefined,
+      page: 1,
+      limit: 10,
     });
   };
 
@@ -131,6 +137,20 @@ export function FuelSupplyTable({
       setLoadingAction(false);
     }
   };
+
+  // Get de usuários
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getAdminUsers({ limit: 1000, page: 1 });
+        setUsers(data.users);
+      } catch {
+        setUsers([]);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
@@ -256,7 +276,7 @@ export function FuelSupplyTable({
           </div>
 
           {/* FILTROS AVANÇADOS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <PrimarySelect
               label="Veículo"
               value={filters.vehicleId || ""}
@@ -271,6 +291,24 @@ export function FuelSupplyTable({
                 ...vehicles.map((v) => ({
                   label: `${v.modelo} - ${v.placa}`,
                   value: v.id,
+                })),
+              ]}
+            />
+
+            <PrimarySelect
+              label="Usuário"
+              value={filters.userId || ""}
+              onChange={(val) =>
+                setFilters({
+                  ...filters,
+                  userId: val || undefined,
+                })
+              }
+              options={[
+                { label: "Todos os usuários", value: "" },
+                ...users.map((u) => ({
+                  label: `${u.firstName} ${u.lastName}`,
+                  value: u.id,
                 })),
               ]}
             />
@@ -317,6 +355,7 @@ export function FuelSupplyTable({
           <thead>
             <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
               <th className="px-6 py-4">Veículo</th>
+              <th className="px-6 py-4">Usuário</th>
               <th className="px-6 py-4">Data e KM</th>
               <th className="px-6 py-4">Abastecimento</th>
               <th className="px-6 py-4">Combustível e Tanque</th>
@@ -365,6 +404,19 @@ export function FuelSupplyTable({
                           "-"}
                       </span>
                     </Link>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-muted">
+                        {users.find((u) => u.id === item.userId)
+                          ? `${users.find((u) => u.id === item.userId)?.firstName} ${users.find((u) => u.id === item.userId)?.lastName}`
+                          : "Usuário Desconecido"}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {users.find((u) => u.id === item.userId)?.email || "-"}
+                      </span>
+                    </div>
                   </td>
 
                   <td className="px-6 py-4">

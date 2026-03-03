@@ -18,15 +18,17 @@ import {
   ArrowUp,
 } from "lucide-react";
 import FuelSupplyFormModal from "@/components/fuel-supply/FuelSupplyFormModal";
+import { getAdminUsers, User } from "@/services/users.service";
 import { translateApiErrors } from "@/utils/translateApiError";
 import { Vehicle } from "@/services/vehicles.service";
 import FilterChips from "../fuel-supply/FilterChips";
+import PrimarySelect from "../form/primarySelect";
 import PrimaryInput from "../form/primaryInput";
+import { useState, useEffect } from "react";
 import LoaderComp from "../loaderComp";
 import toast from "react-hot-toast";
 import utc from "dayjs/plugin/utc";
 import { AxiosError } from "axios";
-import { useState } from "react";
 import dayjs from "dayjs";
 
 dayjs.extend(utc);
@@ -54,6 +56,7 @@ export function FuelHistoryTable({
   const [showFilters, setShowFilters] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [users, setUsers] = useState<User[]>([]);
 
   const activeFiltersCount = Object.entries(filters).filter(
     ([key, value]) =>
@@ -67,8 +70,11 @@ export function FuelHistoryTable({
       tipoCombustivel: undefined,
       postoTipo: undefined,
       tanqueCheio: undefined,
-      dataInicio: "",
-      dataFim: "",
+      dataInicio: undefined,
+      dataFim: undefined,
+      userId: undefined,
+      page: 1,
+      limit: 10,
     });
   };
 
@@ -123,6 +129,20 @@ export function FuelHistoryTable({
     }
   };
 
+  // Get de usuários
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getAdminUsers({ limit: 1000, page: 1 });
+        setUsers(data.users);
+      } catch {
+        setUsers([]);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   return (
     <>
       <div className="mt-10 bg-alternative-bg border border-border rounded-2xl overflow-hidden">
@@ -165,6 +185,13 @@ export function FuelHistoryTable({
               {showFilters ? <FilterX size={16} /> : <Filter size={16} />}{" "}
               Filtros
             </button>
+
+            {activeFiltersCount > 0 && (
+              <span className="text-xs bg-accent text-white px-2 py-1 rounded-full">
+                {activeFiltersCount} filtro(s)
+              </span>
+            )}
+            
             <button
               onClick={() => {
                 setEditingItem(null);
@@ -179,7 +206,7 @@ export function FuelHistoryTable({
 
         {/* FILTROS INTEGRADOS AO PAI */}
         {showFilters && (
-          <div className="px-6 py-4 border-b border-border bg-background/40 flex flex-wrap gap-4 items-end">
+          <div className="px-6 py-4 border-b border-border bg-background/40 flex flex-col gap-4 w-full">
             <div className="flex flex-wrap gap-4">
               <FilterChips
                 label="Combustível"
@@ -246,6 +273,24 @@ export function FuelHistoryTable({
                 value={filters.dataFim}
                 onChange={(e) => setFilters({ dataFim: e.target.value })}
               />
+
+              <PrimarySelect
+                label="Usuário"
+                value={filters.userId || ""}
+                onChange={(val) =>
+                  setFilters({
+                    ...filters,
+                    userId: val || undefined,
+                  })
+                }
+                options={[
+                  { label: "Todos os usuários", value: "" },
+                  ...users.map((u) => ({
+                    label: `${u.firstName} ${u.lastName}`,
+                    value: u.id,
+                  })),
+                ]}
+              />
             </div>
             {activeFiltersCount > 0 && (
               <button
@@ -276,6 +321,7 @@ export function FuelHistoryTable({
                   </div>
                 </th>
                 <th className="px-6 py-4">Abastecimento</th>
+                <th className="px-6 py-4">Usuário</th>
                 <th className="px-6 py-4">Combustível e Tanque</th>
                 <th className="px-6 py-4">Posto</th>
                 <th className="px-6 py-4">Média</th>
@@ -311,6 +357,21 @@ export function FuelHistoryTable({
                         </span>
                       </div>
                     </td>
+
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-muted">
+                          {users.find((u) => u.id === item.userId)
+                            ? `${users.find((u) => u.id === item.userId)?.firstName} ${users.find((u) => u.id === item.userId)?.lastName}`
+                            : "Usuário Desconecido"}
+                        </span>
+                        <span className="text-xs text-muted">
+                          {users.find((u) => u.id === item.userId)?.email ||
+                            "-"}
+                        </span>
+                      </div>
+                    </td>
+
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-success">
@@ -322,6 +383,7 @@ export function FuelHistoryTable({
                         </span>
                       </div>
                     </td>
+
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-muted">
@@ -336,16 +398,19 @@ export function FuelHistoryTable({
                         </span>
                       </div>
                     </td>
+
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm font-bold text-muted">
                         {item.postoNome || item.postoTipo}
                       </div>
                     </td>
+
                     <td className="px-6 py-4 text-sm font-bold text-info">
                       {item.media
                         ? `${Number(item.media).toFixed(2)} Km/L`
                         : "-"}
                     </td>
+
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <button
