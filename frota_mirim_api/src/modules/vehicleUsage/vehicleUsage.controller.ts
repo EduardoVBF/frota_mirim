@@ -42,6 +42,19 @@ export async function createVehicleUsageController(
   return reply.status(201).send(usage);
 }
 
+// UPDATE
+export async function updateVehicleUsageController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { id } = vehicleUsageParamsSchema.parse(request.params);
+  const body = createVehicleUsageSchema.partial().parse(request.body);
+  
+  const usage = await service.update(id, body);
+
+  return reply.send(usage);
+}
+
 // LAST TRIP BY VEHICLE
 export async function getLastTripByVehicleController(
   request: FastifyRequest,

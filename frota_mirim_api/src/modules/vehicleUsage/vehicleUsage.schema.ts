@@ -42,6 +42,8 @@ export type CreateVehicleUsageDTO = z.infer<
   typeof createVehicleUsageSchema
 >;
 
+export type UpdateVehicleUsageDTO = Partial<CreateVehicleUsageDTO>;
+
 // PARAMS
 export const vehicleUsageParamsSchema = z.object({
   id: z.string().uuid(),

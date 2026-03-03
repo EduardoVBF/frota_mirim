@@ -6,6 +6,7 @@ import {
   getVehiclesInUseController,
   getTripsByVehicleController,
   getCurrentVehicleByUserController,
+  updateVehicleUsageController,
 } from "./vehicleUsage.controller";
 import {
   vehicleUsageQuerySchema,
@@ -62,6 +63,23 @@ export async function vehicleUsageRoutes(app: FastifyInstance) {
 
       return createVehicleUsageController({ ...request, body } as any, reply);
     },
+  );
+
+  // UPDATE
+  app.put(
+    "/vehicle-usages/:id",
+    { preHandler: [authMiddleware] },
+    async (request, reply) => {
+      const { params, body } = await validateRequest(request, {
+        params: vehicleUsageParamsSchema,
+        body: createVehicleUsageSchema.partial(),
+      });
+
+      return updateVehicleUsageController(
+        { ...request, params, body } as any,
+        reply,
+      );
+    }
   );
 
   // VEHICLES IN USE

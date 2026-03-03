@@ -1,12 +1,12 @@
 import {
   CreateVehicleUsageDTO,
+  UpdateVehicleUsageDTO,
   VehicleUsageQueryDTO,
 } from "./vehicleUsage.schema";
 import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
 
 export class VehicleUsageService {
-
   // GET ALL
   async getAll(query: VehicleUsageQueryDTO) {
     const {
@@ -87,7 +87,7 @@ export class VehicleUsageService {
       if (data.km < vehicle.kmAtual) {
         throw new AppError(
           "KM não pode ser menor que o atual do veículo.",
-          400
+          400,
         );
       }
 
@@ -109,7 +109,7 @@ export class VehicleUsageService {
         if (lastUserEvent?.type === "ENTRY") {
           throw new AppError(
             "Este usuário já está utilizando um veículo.",
-            400
+            400,
           );
         }
       }
@@ -118,15 +118,12 @@ export class VehicleUsageService {
         if (!lastVehicleEvent || lastVehicleEvent.type !== "ENTRY") {
           throw new AppError(
             "Não existe entrada aberta para este veículo.",
-            400
+            400,
           );
         }
 
         if (!lastUserEvent || lastUserEvent.type !== "ENTRY") {
-          throw new AppError(
-            "Este usuário não possui entrada aberta.",
-            400
-          );
+          throw new AppError("Este usuário não possui entrada aberta.", 400);
         }
 
         if (data.eventAt <= lastVehicleEvent.eventAt) {
@@ -144,6 +141,111 @@ export class VehicleUsageService {
       });
 
       return usage;
+    });
+  }
+
+  // UPDATE
+  async update(id: string, data: UpdateVehicleUsageDTO) {
+    return prisma.$transaction(async (tx) => {
+      const usage = await tx.vehicleUsage.findUnique({
+        where: { id },
+      });
+
+      if (!usage) {
+        throw new AppError("Uso do veículo não encontrado.", 404);
+      }
+
+      const vehicle = await tx.vehicle.findUnique({
+        where: { id: usage.vehicleId },
+      });
+
+      if (!vehicle) {
+        throw new AppError("Veículo não encontrado.", 404);
+      }
+
+      const user = await tx.user.findUnique({
+        where: { id: usage.userId },
+      });
+
+      if (!user) {
+        throw new AppError("Usuário não encontrado.", 404);
+      }
+
+      const newKm = data.km ?? usage.km;
+      const newEventAt = data.eventAt ?? usage.eventAt;
+      const newType = data.type ?? usage.type;
+
+      // Validar KM nunca menor que km anterior
+      const previousEvent = await tx.vehicleUsage.findFirst({
+        where: {
+          vehicleId: usage.vehicleId,
+          eventAt: { lt: usage.eventAt },
+        },
+        orderBy: { eventAt: "desc" },
+      });
+
+      if (previousEvent && newKm < previousEvent.km) {
+        throw new AppError(
+          "KM não pode ser menor que o KM do evento anterior.",
+          400,
+        );
+      }
+
+      // Validar KM nunca maior que próximo evento
+      const nextEvent = await tx.vehicleUsage.findFirst({
+        where: {
+          vehicleId: usage.vehicleId,
+          eventAt: { gt: usage.eventAt },
+        },
+        orderBy: { eventAt: "asc" },
+      });
+
+      if (nextEvent && newKm > nextEvent.km) {
+        throw new AppError(
+          "KM não pode ser maior que o KM do próximo evento.",
+          400,
+        );
+      }
+
+      // Validar ordem cronológica
+      if (previousEvent && newEventAt <= previousEvent.eventAt) {
+        throw new AppError(
+          "Horário inválido. Não pode ser menor que o evento anterior.",
+          400,
+        );
+      }
+
+      if (nextEvent && newEventAt >= nextEvent.eventAt) {
+        throw new AppError(
+          "Horário inválido. Não pode ser maior que o próximo evento.",
+          400,
+        );
+      }
+
+      // Impedir mudar tipo quebrando sequência
+      if (newType !== usage.type) {
+        throw new AppError("Não é permitido alterar o tipo do evento.", 400);
+      }
+
+      const updated = await tx.vehicleUsage.update({
+        where: { id },
+        data,
+      });
+
+      // Se for o último evento do veículo, atualizar kmAtual
+      const lastEvent = await tx.vehicleUsage.findFirst({
+        where: { vehicleId: usage.vehicleId },
+        orderBy: { eventAt: "desc" },
+      });
+
+      if (lastEvent?.id === id) {
+        await tx.vehicle.update({
+          where: { id: usage.vehicleId },
+          data: { kmAtual: newKm },
+        });
+      }
+
+      return updated;
     });
   }
 
