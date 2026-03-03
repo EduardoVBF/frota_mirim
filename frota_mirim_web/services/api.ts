@@ -3,8 +3,8 @@ import toast from "react-hot-toast";
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "http://localhost:3333",
-  // baseURL: "https://frota-mirim-api.vercel.app",
+  // baseURL: "http://localhost:3333",
+  baseURL: "https://frota-mirim-api.vercel.app",
 });
 
 // 🔐 Request interceptor: injeta token
