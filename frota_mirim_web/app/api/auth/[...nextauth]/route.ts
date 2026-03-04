@@ -1,7 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { AuthUser } from "../../../../services/auth.service";
-import type { Session } from "next-auth";
-import { JWT } from "next-auth/jwt";
 import NextAuth from "next-auth";
 import axios from "axios";
 
@@ -39,7 +37,7 @@ const handler = NextAuth({
   ],
 
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: AuthUser }) {
+    async jwt({ token, user }) {
       if (user) {
         token.accessToken = user.accessToken;
         token.internalCode = user.internalCode;
@@ -52,7 +50,7 @@ const handler = NextAuth({
       return token;
     },
 
-    async session({ session, token }: { session: Session; token: JWT }) {
+    async session({ session, token }) {
       session.accessToken = token.accessToken as string;
 
       if (session.user) {
