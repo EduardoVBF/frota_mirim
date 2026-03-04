@@ -174,7 +174,7 @@ export function VehicleUsageTable({
               value={filters.vehicleId || ""}
               onChange={(value) =>
                 setFilters({
-                  vehicleId: value || undefined,
+                  vehicleId: value as string || undefined,
                 })
               }
               options={vehicles.map((v) => ({
@@ -191,7 +191,7 @@ export function VehicleUsageTable({
             value={filters.userId || ""}
             onChange={(value) =>
               setFilters({
-                userId: value || undefined,
+                userId: value as string || undefined,
               })
             }
             options={users.map((u) => ({
@@ -207,7 +207,7 @@ export function VehicleUsageTable({
             value={filters.assistantId || ""}
             onChange={(value) =>
               setFilters({
-                assistantId: value || undefined,
+                assistantId: value as string || undefined,
               })
             }
             options={[

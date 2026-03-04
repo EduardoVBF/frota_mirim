@@ -183,7 +183,7 @@ export default function VehicleUsageFormModal({
         <PrimarySelect
           label="Veículo"
           value={vehicle ? vehicle.id : vehicleId}
-          onChange={(val) => setVehicleId(val)}
+          onChange={(val) => setVehicleId(val as string)}
           options={vehicles.map((v) => ({
             label: v.placa + " " + v.modelo,
             value: v.id,
@@ -208,7 +208,7 @@ export default function VehicleUsageFormModal({
         <PrimarySelect
           label="Usuário"
           value={userId}
-          onChange={(val) => setUserId(val)}
+          onChange={(val) => setUserId(val as string)}
           options={users.map((u) => ({
             label: u.firstName + " " + u.lastName,
             value: u.id,
@@ -219,7 +219,7 @@ export default function VehicleUsageFormModal({
         <PrimarySelect
           label="Assistente (opcional)"
           value={assistantId || ""}
-          onChange={(val) => setAssistantId(val || null)}
+          onChange={(val) => setAssistantId(val as string || null)}
           options={[
             { label: "Nenhum", value: "" },
             ...users.map((u) => ({

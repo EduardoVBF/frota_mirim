@@ -280,7 +280,7 @@ export function FuelHistoryTable({
                 onChange={(val) =>
                   setFilters({
                     ...filters,
-                    userId: val || undefined,
+                    userId: val as string || undefined,
                   })
                 }
                 options={[
