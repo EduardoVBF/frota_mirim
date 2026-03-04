@@ -128,7 +128,7 @@ export default function UserPhoneFormModal({
           <PrimarySelect
             label="Usuário"
             value={userId}
-            onChange={(val) => setUserId(val)}
+            onChange={(val) => setUserId(val as string)}
             options={users.map((user) => ({
               label: user.firstName + " " + user.lastName,
               value: user.id,
