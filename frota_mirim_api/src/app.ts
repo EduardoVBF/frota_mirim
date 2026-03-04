@@ -6,7 +6,7 @@ import { itemCatalogRoutes } from "./modules/itemCatalog/itemCatalog.routes";
 import { fuelSupplyRoutes } from "./modules/fuelSupply/fuel-supply.routes";
 import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes";
 import { usersRoutes } from "./modules/users/users.routes";
-// import { stockRoutes } from "./modules/stock/stock.routes";
+import { stockRoutes } from "./modules/stock/stock.routes";
 import { errorHandler } from "./infra/http/error-handler";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { registerPlugins } from "./config/fastify";
@@ -30,7 +30,7 @@ app.register(async (app) => {
   await app.register(fuelSupplyRoutes);
   await app.register(vehiclesRoutes);
   await app.register(usersRoutes);
-  // await app.register(stockRoutes);
+  await app.register(stockRoutes);
   await app.register(authRoutes);
 });
 
