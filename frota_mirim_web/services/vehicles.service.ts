@@ -12,8 +12,8 @@ export type Vehicle = {
   tipo: VehicleType;
   kmAtual: number;
   kmUltimoAbastecimento?: number | null;
-  vencimentoDocumento: string;
-  vencimentoIPVA: string;
+  licensingDueMonth: number;
+  ipvaDueMonth: number;
   isActive: boolean;
 };
 
@@ -25,8 +25,8 @@ export type VehiclePayload = {
   tipo: VehicleType;
   kmAtual: number;
   kmUltimoAbastecimento?: number | null;
-  vencimentoDocumento: string;
-  vencimentoIPVA: string;
+  licensingDueMonth: number;
+  ipvaDueMonth: number;
   isActive: boolean;
 };
 
@@ -38,8 +38,8 @@ export type UpdateVehiclePayload = {
   tipo?: VehicleType;
   kmAtual?: number;
   kmUltimoAbastecimento?: number | null;
-  vencimentoDocumento?: string;
-  vencimentoIPVA?: string;
+  licensingDueMonth?: number;
+  ipvaDueMonth?: number;
   isActive?: boolean;
 };
 

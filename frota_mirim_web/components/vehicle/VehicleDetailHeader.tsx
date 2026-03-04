@@ -17,7 +17,6 @@ import { translateApiErrors } from "@/utils/translateApiError";
 import VehicleFormModal from "./vehicleFormModal";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import utc from "dayjs/plugin/utc";
 import { AxiosError } from "axios";
 import { useState } from "react";
 import dayjs from "dayjs";
@@ -25,8 +24,6 @@ import dayjs from "dayjs";
 type Props = {
   vehicle: Vehicle;
 };
-
-dayjs.extend(utc);
 
 export function VehicleDetailHeader({
   vehicle,
@@ -38,9 +35,10 @@ export function VehicleDetailHeader({
 
   const router = useRouter();
 
-  const today = new Date();
-  const docExpired = new Date(vehicle.vencimentoDocumento) < today;
-  const ipvaExpired = new Date(vehicle.vencimentoIPVA) < today;
+  const currentMonth = dayjs().month() + 1;
+
+  const docExpired = currentMonth >= vehicle.licensingDueMonth;
+  const ipvaExpired = currentMonth >= vehicle.ipvaDueMonth;
 
   const alertCount = (docExpired ? 1 : 0) + (ipvaExpired ? 1 : 0);
 
@@ -60,20 +58,52 @@ export function VehicleDetailHeader({
       if (!(err instanceof AxiosError)) {
         toast.error("Erro ao salvar o veículo");
         return;
-      } else {
-        if (!err.response || !err.response.data) {
-          toast.error("Erro ao salvar o veículo");
-          return;
-        }
-        const { fieldErrors, toastMessage } = translateApiErrors(
-          err.response.data,
-        );
-
-        setErrors(fieldErrors);
-        toast.error(toastMessage || "Erro ao salvar o veículo");
       }
+
+      if (!err.response || !err.response.data) {
+        toast.error("Erro ao salvar o veículo");
+        return;
+      }
+
+      const { fieldErrors, toastMessage } = translateApiErrors(
+        err.response.data,
+      );
+
+      setErrors(fieldErrors);
+      toast.error(toastMessage || "Erro ao salvar o veículo");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const formatMonth = (month: number) => {
+    switch (month) {
+      case 1:
+        return "Janeiro";
+      case 2:
+        return "Fevereiro";
+      case 3:
+        return "Março";
+      case 4:
+        return "Abril";
+      case 5:
+        return "Maio";
+      case 6:
+        return "Junho";
+      case 7:
+        return "Julho";
+      case 8:
+        return "Agosto";
+      case 9:
+        return "Setembro";
+      case 10:
+        return "Outubro";
+      case 11:
+        return "Novembro";
+      case 12:
+        return "Dezembro";
+      default:
+        return "—";
     }
   };
 
@@ -104,24 +134,21 @@ export function VehicleDetailHeader({
             <ArrowLeft size={16} /> Voltar para frota
           </button>
 
-          <div className="flex items-center gap-3">
-            {alertCount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-warning/10 border border-warning/20 text-warning rounded-full text-xs font-bold">
-                <AlertTriangle size={14} /> {alertCount} alerta(s)
-              </div>
-            )}
-
-            <button
-              className="p-2 rounded-xl bg-alternative-bg border border-border hover:border-accent/50 text-muted hover:text-accent transition-all"
-              onClick={() => handleEdit()}
-            >
-              <Edit3 size={18} />
-            </button>
-          </div>
+          <button
+            className="p-2 rounded-xl bg-alternative-bg border border-border hover:border-accent/50 text-muted hover:text-accent transition-all"
+            onClick={handleEdit}
+          >
+            <Edit3 size={18} />
+          </button>
         </div>
 
         {/* Title */}
         <div>
+          {alertCount > 0 && (
+            <div className="w-fit  flex items-center gap-2 px-3 py-1.5 bg-warning/10 border border-warning/20 text-warning rounded-full text-xs font-bold">
+              <AlertTriangle size={14} /> {alertCount} alerta(s)
+            </div>
+          )}
           <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase">
             {vehicle.modelo} -{" "}
             <span className="text-accent">{vehicle.placa}</span>
@@ -145,14 +172,14 @@ export function VehicleDetailHeader({
           <TelemetriaCard
             icon={<Calendar />}
             label="Documento"
-            value={dayjs.utc(vehicle.vencimentoDocumento).format("DD/MM/YYYY")}
+            value={`${formatMonth(vehicle.licensingDueMonth)} ${dayjs().year()}`}
             highlight={docExpired}
           />
 
           <TelemetriaCard
             icon={<Calendar />}
             label="IPVA"
-            value={dayjs.utc(vehicle.vencimentoIPVA).format("DD/MM/YYYY")}
+            value={`${formatMonth(vehicle.ipvaDueMonth)} ${dayjs().year()}`}
             highlight={ipvaExpired}
           />
 

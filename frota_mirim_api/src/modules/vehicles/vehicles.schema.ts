@@ -17,8 +17,8 @@ export const vehicleResponseSchema = z.object({
   tipo: vehicleTypeSchema,
   kmAtual: z.number(),
   kmUltimoAbastecimento: z.number().nullable().optional(),
-  vencimentoDocumento: z.coerce.date(),
-  vencimentoIPVA: z.coerce.date(),
+  licensingDueMonth: z.number(),
+  ipvaDueMonth: z.number(),
   isActive: z.boolean(),
 });
 
@@ -48,8 +48,8 @@ export const createVehicleSchema = z.object({
   tipo: vehicleTypeSchema,
   kmAtual: z.number().min(0),
   kmUltimoAbastecimento: z.number().min(0).optional(),
-  vencimentoDocumento: z.coerce.date(),
-  vencimentoIPVA: z.coerce.date(),
+  licensingDueMonth: z.number(),
+  ipvaDueMonth: z.number(),
   isActive: z.boolean().default(true),
 });
 

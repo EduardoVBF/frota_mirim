@@ -99,8 +99,8 @@ model Vehicle {
   kmAtual               Int
   kmUltimoAbastecimento Int?
 
-  vencimentoDocumento DateTime
-  vencimentoIPVA      DateTime
+  ipvaDueMonth      Int @default(1)
+  licensingDueMonth Int @default(1)
 
   isActive Boolean @default(true)
 
@@ -112,8 +112,8 @@ model Vehicle {
 
   @@index([tipo])
   @@index([isActive])
-  @@index([vencimentoDocumento])
-  @@index([vencimentoIPVA])
+  @@index([ipvaDueMonth])
+  @@index([licensingDueMonth])
 }
 
 // FUEL SUPPLY (ABASTECIMENTO)

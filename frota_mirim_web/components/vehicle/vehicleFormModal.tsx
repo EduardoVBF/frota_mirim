@@ -43,8 +43,10 @@ export default function VehicleFormModal({
   const [kmUltimoAbastecimento, setKmUltimoAbastecimento] = useState<
     number | ""
   >("");
-  const [vencimentoDocumento, setVencimentoDocumento] = useState("");
-  const [vencimentoIPVA, setVencimentoIPVA] = useState("");
+  const [vencimentoDocumento, setVencimentoDocumento] = useState<number | null>(
+    null,
+  );
+  const [vencimentoIPVA, setVencimentoIPVA] = useState<number | null>(null);
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
@@ -57,12 +59,8 @@ export default function VehicleFormModal({
       setTipo(initialData.tipo);
       setKmAtual(initialData.kmAtual);
       setKmUltimoAbastecimento(initialData.kmUltimoAbastecimento ?? "");
-      setVencimentoDocumento(
-        new Date(initialData.vencimentoDocumento).toISOString().split("T")[0],
-      );
-      setVencimentoIPVA(
-        new Date(initialData.vencimentoIPVA).toISOString().split("T")[0],
-      );
+      setVencimentoDocumento(initialData.licensingDueMonth);
+      setVencimentoIPVA(initialData.ipvaDueMonth);
       setIsActive(initialData.isActive);
     } else {
       setPlaca("");
@@ -72,8 +70,8 @@ export default function VehicleFormModal({
       setTipo("CARRO");
       setKmAtual("");
       setKmUltimoAbastecimento("");
-      setVencimentoDocumento("");
-      setVencimentoIPVA("");
+      setVencimentoDocumento(null);
+      setVencimentoIPVA(null);
       setIsActive(true);
     }
   }, [initialData, open]);
@@ -92,8 +90,8 @@ export default function VehicleFormModal({
         ...(kmUltimoAbastecimento !== "" && {
           kmUltimoAbastecimento: Number(kmUltimoAbastecimento),
         }),
-        vencimentoDocumento,
-        vencimentoIPVA,
+        licensingDueMonth: Number(vencimentoDocumento),
+        ipvaDueMonth: Number(vencimentoIPVA),
         isActive,
       });
     } catch (err) {
@@ -105,9 +103,7 @@ export default function VehicleFormModal({
           toast.error("Erro ao salvar o veículo");
           return;
         }
-        const { toastMessage } = translateApiErrors(
-          err.response.data,
-        );
+        const { toastMessage } = translateApiErrors(err.response.data);
 
         toast.error(toastMessage || "Erro ao salvar o veículo");
       }
@@ -207,19 +203,19 @@ export default function VehicleFormModal({
               />
             </div>
 
-            <PrimarySelect
-              label="Tipo"
-              value={tipo}
-              onChange={(val) => setTipo(val as VehicleType)}
-              options={[
-                { label: "Carro", value: "CARRO" },
-                { label: "Caminhão", value: "CAMINHAO" },
-                { label: "Moto", value: "MOTO" },
-                { label: "Ônibus", value: "ONIBUS" },
-              ]}
-            />
-
             <div className="grid grid-cols-2 gap-4">
+              <PrimarySelect
+                label="Tipo"
+                value={tipo}
+                onChange={(val) => setTipo(val as VehicleType)}
+                options={[
+                  { label: "Carro", value: "CARRO" },
+                  { label: "Caminhão", value: "CAMINHAO" },
+                  { label: "Moto", value: "MOTO" },
+                  { label: "Ônibus", value: "ONIBUS" },
+                ]}
+              />
+
               <PrimaryInput
                 label="KM Atual"
                 type="number"
@@ -227,31 +223,49 @@ export default function VehicleFormModal({
                 onChange={(e) => setKmAtual(Number(e.target.value))}
                 error={errors.kmAtual}
               />
-              <PrimaryInput
-                label="KM Último Abastecimento"
-                type="number"
-                value={kmUltimoAbastecimento}
-                onChange={(e) =>
-                  setKmUltimoAbastecimento(Number(e.target.value))
-                }
-                error={errors.kmUltimoAbastecimento}
-              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <PrimaryInput
+              <PrimarySelect
                 label="Vencimento Documento"
-                type="date"
-                value={vencimentoDocumento}
-                onChange={(e) => setVencimentoDocumento(e.target.value)}
-                error={errors.vencimentoDocumento}
+                value={vencimentoDocumento ? String(vencimentoDocumento) : ""}
+                onChange={(val) => setVencimentoDocumento(Number(val))}
+                options={[
+                  { label: "Janeiro", value: "1" },
+                  { label: "Fevereiro", value: "2" },
+                  { label: "Março", value: "3" },
+                  { label: "Abril", value: "4" },
+                  { label: "Maio", value: "5" },
+                  { label: "Junho", value: "6" },
+                  { label: "Julho", value: "7" },
+                  { label: "Agosto", value: "8" },
+                  { label: "Setembro", value: "9" },
+                  { label: "Outubro", value: "10" },
+                  { label: "Novembro", value: "11" },
+                  { label: "Dezembro", value: "12" },
+                ]}
+                error={errors.licensingDueMonth}
               />
-              <PrimaryInput
+
+              <PrimarySelect
                 label="Vencimento IPVA"
-                type="date"
-                value={vencimentoIPVA}
-                onChange={(e) => setVencimentoIPVA(e.target.value)}
-                error={errors.vencimentoIPVA}
+                value={vencimentoIPVA ? String(vencimentoIPVA) : ""}
+                onChange={(val) => setVencimentoIPVA(Number(val))}
+                options={[
+                  { label: "Janeiro", value: "1" },
+                  { label: "Fevereiro", value: "2" },
+                  { label: "Março", value: "3" },
+                  { label: "Abril", value: "4" },
+                  { label: "Maio", value: "5" },
+                  { label: "Junho", value: "6" },
+                  { label: "Julho", value: "7" },
+                  { label: "Agosto", value: "8" },
+                  { label: "Setembro", value: "9" },
+                  { label: "Outubro", value: "10" },
+                  { label: "Novembro", value: "11" },
+                  { label: "Dezembro", value: "12" },
+                ]}
+                error={errors.ipvaDueMonth}
               />
             </div>
 
