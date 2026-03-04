@@ -132,7 +132,7 @@ export class UsersService {
   async updateUser(
     id: string,
     data: Partial<UpdateUserBodyDTO> & { imageBase64?: string },
-    requesterRole: "admin" | "editor",
+    requesterRole: "ADMIN" | "USER",
     requesterId: string,
   ) {
     const user = await prisma.user.findUnique({ where: { id } });
@@ -141,7 +141,7 @@ export class UsersService {
       throw new AppError("Usuário não encontrado.", 404);
     }
 
-    if (data.role && requesterRole !== "admin") {
+    if (data.role && requesterRole !== "ADMIN") {
       throw new AppError("Sem permissão para alterar função.", 403);
     }
 

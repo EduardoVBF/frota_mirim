@@ -8,7 +8,7 @@ export async function adminOnly(
   const user = request.user as { role?: string };
 
   // esta condição pode ser ajustada conforme necessário.
-  if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'EDITOR')) {
     return reply.status(403).send({
       message: 'Acesso negado: apenas administradores podem acessar este recurso.',
     });

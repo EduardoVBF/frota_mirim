@@ -22,10 +22,12 @@ async function main() {
       data: {
         firstName: "Eduardo",
         lastName: "Vilas Boas",
+        internalCode: 9999,
         email,
         passwordHash,
-        role: "admin",
+        role: "ADMIN",
         isActive: true,
+        cpf: "000.000.000-00",
       },
     });
 

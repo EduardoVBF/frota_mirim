@@ -35,7 +35,7 @@ export async function updateUserController(
 
   const requester = request.user as {
     id: string;
-    role: "admin" | "editor";
+    role: "ADMIN" | "USER";
   };
 
   const updatedUser = await usersService.updateUser(

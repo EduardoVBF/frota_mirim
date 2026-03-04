@@ -265,9 +265,10 @@ export function UserTable({
               })
             }
             options={[
-              { label: "Admin", value: "admin" },
-              { label: "Editor", value: "editor" },
-              { label: "Motorista", value: "motorista" },
+              { label: "Admin", value: "ADMIN" },
+              { label: "Editor", value: "EDITOR" },
+              { label: "Motorista", value: "MOTORISTA" },
+              { label: "Ajudante", value: "AUXILIAR" },
             ]}
           />
 
