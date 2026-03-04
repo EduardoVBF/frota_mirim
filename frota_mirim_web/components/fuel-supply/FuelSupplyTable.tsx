@@ -283,7 +283,7 @@ export function FuelSupplyTable({
               onChange={(val) =>
                 setFilters({
                   ...filters,
-                  vehicleId: val || undefined,
+                  vehicleId: val as string || undefined,
                 })
               }
               options={[
@@ -301,7 +301,7 @@ export function FuelSupplyTable({
               onChange={(val) =>
                 setFilters({
                   ...filters,
-                  userId: val || undefined,
+                  userId: val as string || undefined,
                 })
               }
               options={[
