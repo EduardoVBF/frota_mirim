@@ -7,6 +7,8 @@ import {
   Fuel,
   Phone,
   ClockCheck,
+  Package,
+  // Forklift,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -30,6 +32,8 @@ const menuItems = [
     path: "/entradas&saidas",
     icon: <ClockCheck size={20} />,
   },
+  { name: "Itens de manutenção", path: "/itensManutencao", icon: <Package size={20} /> },
+  // { name: "Estoque", path: "/estoque", icon: <Forklift size={20} /> },
 ];
 
 export default function Sidebar() {
