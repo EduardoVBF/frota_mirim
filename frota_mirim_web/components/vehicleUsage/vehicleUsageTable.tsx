@@ -3,14 +3,15 @@ import {
   VehicleUsage,
   VehicleUsageFilters,
 } from "@/services/vehicleUsage.service";
+import { Filter, FilterX, Plus, ClockCheck, Car, Edit2 } from "lucide-react";
 import { Vehicle, getVehicles } from "@/services/vehicles.service";
 import { User, getAdminUsers } from "@/services/users.service";
 import VehicleUsageFormModal from "./vehicleUsageFormModal";
 import { useState, useEffect, useMemo } from "react";
-import { Filter, FilterX, Plus, ClockCheck, Car, Edit2 } from "lucide-react";
 import FilterChips from "../fuel-supply/FilterChips";
-import LoaderComp from "../loaderComp";
 import PrimarySelect from "../form/primarySelect";
+import LoaderComp from "../loaderComp";
+import Link from "next/link";
 
 export function VehicleUsageTable({
   isVehiclePage = false,
@@ -174,7 +175,7 @@ export function VehicleUsageTable({
               value={filters.vehicleId || ""}
               onChange={(value) =>
                 setFilters({
-                  vehicleId: value as string || undefined,
+                  vehicleId: (value as string) || undefined,
                 })
               }
               options={vehicles.map((v) => ({
@@ -191,7 +192,7 @@ export function VehicleUsageTable({
             value={filters.userId || ""}
             onChange={(value) =>
               setFilters({
-                userId: value as string || undefined,
+                userId: (value as string) || undefined,
               })
             }
             options={users.map((u) => ({
@@ -207,7 +208,7 @@ export function VehicleUsageTable({
             value={filters.assistantId || ""}
             onChange={(value) =>
               setFilters({
-                assistantId: value as string || undefined,
+                assistantId: (value as string) || undefined,
               })
             }
             options={[
@@ -290,18 +291,26 @@ export function VehicleUsageTable({
                     <td className="px-6 py-4">{usage.km} Km</td>
 
                     <td className="px-6 py-4">
-                      {vehicleMap[usage.vehicleId] ? (
-                        <div>
-                          <p className="text-sm font-bold text-muted">
-                            {vehicleMap[usage.vehicleId]?.modelo}
-                          </p>
-                          <p className="text-xs font-bold uppercase px-2 py-1 rounded bg-background border border-border w-fit">
-                            {vehicleMap[usage.vehicleId]?.placa}
-                          </p>
-                        </div>
-                      ) : (
-                        "Veículo não encontrado"
-                      )}
+                      {vehicleMap[usage.vehicleId]
+                        ? (() => {
+                            const vehicle = vehicleMap[usage.vehicleId];
+
+                            return (
+                              <Link
+                                href={`/veiculos/${vehicle?.placa}`}
+                                className="flex flex-col gap-1"
+                              >
+                                <p className="text-sm font-bold text-muted">
+                                  {vehicle?.modelo}
+                                </p>
+
+                                <p className="text-xs font-bold uppercase px-2 py-1 rounded bg-background border border-border w-fit">
+                                  {vehicle?.placa}
+                                </p>
+                              </Link>
+                            );
+                          })()
+                        : "Veículo não encontrado"}
                     </td>
 
                     <td className="px-6 py-4">

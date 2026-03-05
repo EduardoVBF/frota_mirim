@@ -58,7 +58,7 @@ export default function StockMovementModal({
     <PrimaryModal
       isOpen={open}
       onClose={onClose}
-      title={`Movimentação - ${item?.itemCatalog?.name}`}
+      title={`Movimentação de estoque`}
       footer={
         <button
           onClick={handleSubmit}
@@ -69,6 +69,15 @@ export default function StockMovementModal({
       }
     >
       <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <p className="uppercase font-bold">{item?.itemCatalog?.name}</p>
+          {item?.itemCatalog?.reference && (
+            <p className="text-sm text-muted">
+              {item.itemCatalog.reference}
+            </p>
+          )}
+        </div>
+        
         <PrimarySelect
           label="Tipo de movimentação"
           value={type}
