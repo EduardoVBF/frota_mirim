@@ -143,4 +143,24 @@ export class StockService {
       return { message: "Ajuste de estoque realizado." };
     });
   }
+
+  async updateStockConfig(itemCatalogId: string, data: any) {
+    const stock = await prisma.stockItem.findUnique({
+      where: { itemCatalogId },
+    });
+
+    if (!stock) {
+      throw new AppError("Item de estoque não encontrado.", 404);
+    }
+
+    await prisma.stockItem.update({
+      where: { itemCatalogId },
+      data: {
+        minimumQuantity: data.minimumQuantity,
+        location: data.location,
+      },
+    });
+
+    return { message: "Configurações de estoque atualizadas." };
+  }
 }

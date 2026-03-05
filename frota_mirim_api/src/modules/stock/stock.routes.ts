@@ -3,12 +3,14 @@ import {
   getStockMovementsController,
   stockInController,
   adjustStockController,
+  updateStockConfigController,
 } from "./stock.controller";
 
 import {
   stockQuerySchema,
   stockEntrySchema,
   stockAdjustSchema,
+  stockUpdateConfigSchema,
 } from "./stock.schema";
 
 import { authMiddleware } from "../../shared/middlewares/auth";
@@ -59,5 +61,18 @@ export async function stockRoutes(app: FastifyInstance) {
 
       return adjustStockController({ ...request, body } as any, reply);
     },
+  );
+
+  // update stock config
+  app.put(
+    "/stock/:itemCatalogId/config",
+    { preHandler: [authMiddleware, adminOnly] },
+    async (request, reply) => {
+      const { body } = await validateRequest(request, {
+        body: stockUpdateConfigSchema,
+      });
+    
+      return updateStockConfigController({ ...request, body } as any, reply);
+    }
   );
 }

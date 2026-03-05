@@ -4,13 +4,12 @@ import {
   stockQuerySchema,
   stockEntrySchema,
   stockAdjustSchema,
+  stockUpdateConfigSchema,
 } from "./stock.schema";
 
 const service = new StockService();
 
-export async function getStockController(
-  request: FastifyRequest
-) {
+export async function getStockController(request: FastifyRequest) {
   const query = stockQuerySchema.parse(request.query);
 
   return service.getStock(query);
@@ -18,7 +17,7 @@ export async function getStockController(
 
 export async function getStockMovementsController(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const movements = await service.getStockMovements();
 
@@ -27,7 +26,7 @@ export async function getStockMovementsController(
 
 export async function stockInController(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = stockEntrySchema.parse(request.body);
 
@@ -40,7 +39,7 @@ export async function stockInController(
 
 export async function adjustStockController(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = stockAdjustSchema.parse(request.body);
 
@@ -49,4 +48,15 @@ export async function adjustStockController(
   const result = await service.adjustStock(body, userId);
 
   return reply.send(result);
+}
+
+export async function updateStockConfigController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { itemCatalogId } = request.params as any;
+  const body = stockUpdateConfigSchema.parse(request.body);
+
+  await service.updateStockConfig(itemCatalogId, body);
+  return reply.send({ message: "Configurações de estoque atualizadas" });
 }

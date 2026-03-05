@@ -4,6 +4,11 @@ export const stockParamsSchema = z.object({
   itemCatalogId: z.uuid(),
 });
 
+export const stockUpdateConfigSchema = z.object({
+  minimumQuantity: z.number().min(0).optional(),
+  location: z.string().optional(),
+});
+
 export const stockEntrySchema = z.object({
   itemCatalogId: z.uuid(),
   quantity: z.number().min(1),
