@@ -3,7 +3,6 @@ import { AppError } from "../../infra/errors/app-error";
 import { StockQueryDTO } from "./stock.schema";
 
 export class StockService {
-
   async getStock(query: StockQueryDTO) {
     const { search, page = 1, limit = 10 } = query;
 
@@ -45,15 +44,51 @@ export class StockService {
     };
   }
 
-  async getStockMovements() {
-    return prisma.stockMovement.findMany({
-      include: {
-        itemCatalog: true,
+  async getStockMovements(query: StockQueryDTO) {
+    const { search, page = 1, limit = 10, type } = query;
+
+    const where: any = {};
+
+    if (search) {
+      where.itemCatalog = {
+        name: { contains: search, mode: "insensitive" },
+      };
+    }
+
+    if (type) {
+      where.type = {
+        in: type,
+      };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [movements, totalFiltered, totalCount] = await Promise.all([
+      prisma.stockMovement.findMany({
+        where,
+        include: {
+          itemCatalog: true,
+        },
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prisma.stockMovement.count({ where }),
+      prisma.stockMovement.count(),
+    ]);
+
+    return {
+      items: movements,
+      meta: {
+        total: totalCount,
+        totalFiltered,
+        page,
+        limit,
+        totalPages: Math.ceil(totalFiltered / limit),
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    };
   }
 
   async stockIn(data: any, userId?: string) {
@@ -93,9 +128,7 @@ export class StockService {
           type: "IN",
           quantity: data.quantity,
           unitCost: data.unitCost,
-          totalCost: data.unitCost
-            ? data.unitCost * data.quantity
-            : null,
+          totalCost: data.unitCost ? data.unitCost * data.quantity : null,
           reason: data.reason,
           referenceType: "PURCHASE",
           createdByUserId: userId,

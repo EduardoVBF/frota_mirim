@@ -19,9 +19,11 @@ export async function getStockMovementsController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const movements = await service.getStockMovements();
+  const movements = await service.getStockMovements({
+    ...stockQuerySchema.parse(request.query),
+  });
 
-  return reply.send({ movements });
+  return reply.send(movements);
 }
 
 export async function stockInController(

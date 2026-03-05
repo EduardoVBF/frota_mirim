@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// ENUMS
+export const stockMovementTypes = ["IN", "OUT", "ADJUST"] as const;
+export const stockMovementTypeSchema = z.enum(stockMovementTypes);
+
 export const stockParamsSchema = z.object({
   itemCatalogId: z.uuid(),
 });
@@ -24,6 +28,11 @@ export const stockAdjustSchema = z.object({
 
 export const stockQuerySchema = z.object({
   search: z.string().optional(),
+
+  type: z.preprocess((val) => {
+    if (!val) return undefined;
+    return Array.isArray(val) ? val : [val];
+  }, z.array(stockMovementTypeSchema).optional()),
 
   page: z.preprocess((val) => {
     if (!val) return 1;

@@ -33,8 +33,12 @@ export async function stockRoutes(app: FastifyInstance) {
     "/stock/movements",
     { preHandler: [authMiddleware] },
     async (request, reply) => {
-      return getStockMovementsController(request, reply);
-    },
+      const { query } = await validateRequest(request, {
+        query: stockQuerySchema,
+      });
+
+      return getStockMovementsController({ ...request, query } as any, reply);
+    }
   );
 
   // post stock entry
