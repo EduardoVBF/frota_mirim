@@ -62,6 +62,11 @@ const menuItems: MenuItem[] = [
     icon: <Package size={20} />,
     children: [
       {
+        name: "Manutenções",
+        path: "/manutencoes",
+        icon: <Package size={20} />,
+      },
+      {
         name: "Peças e Serviços",
         path: "/itensManutencao",
         icon: <Package size={20} />,
