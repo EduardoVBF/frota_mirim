@@ -1,4 +1,4 @@
-// import { maintenanceItemRoutes } from "./modules/maintenanceItem/maintenanceItem.routes";
+import { maintenanceItemRoutes } from "./modules/maintenanceItem/maintenanceItem.routes";
 import { userPhonesRoutes } from "./modules/usersTelephones/usersTelephones.routes";
 import { vehicleUsageRoutes } from "./modules/vehicleUsage/vehicleUsage.routes";
 import { itemCatalogRoutes } from "./modules/itemCatalog/itemCatalog.routes";
@@ -22,7 +22,7 @@ app.register(async (app) => {
 
   await registerPlugins(app);
 
-  // await app.register(maintenanceItemRoutes);
+  await app.register(maintenanceItemRoutes);
   await app.register(vehicleUsageRoutes);
   await app.register(itemCatalogRoutes);
   await app.register(maintenanceRoutes);
