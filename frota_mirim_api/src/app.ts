@@ -2,7 +2,7 @@
 import { userPhonesRoutes } from "./modules/usersTelephones/usersTelephones.routes";
 import { vehicleUsageRoutes } from "./modules/vehicleUsage/vehicleUsage.routes";
 import { itemCatalogRoutes } from "./modules/itemCatalog/itemCatalog.routes";
-// import { maintenanceRoutes } from "./modules/maintenance/maintenance.routes";
+import { maintenanceRoutes } from "./modules/maintenance/maintenance.routes";
 import { fuelSupplyRoutes } from "./modules/fuelSupply/fuel-supply.routes";
 import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes";
 import { usersRoutes } from "./modules/users/users.routes";
@@ -25,7 +25,7 @@ app.register(async (app) => {
   // await app.register(maintenanceItemRoutes);
   await app.register(vehicleUsageRoutes);
   await app.register(itemCatalogRoutes);
-  // await app.register(maintenanceRoutes);
+  await app.register(maintenanceRoutes);
   await app.register(userPhonesRoutes);
   await app.register(fuelSupplyRoutes);
   await app.register(vehiclesRoutes);
