@@ -1,15 +1,16 @@
 "use client";
 import { getStock, StockItem, StockFilters } from "@/services/stock.service";
+import { Package, AlertTriangle, ArrowUpDown } from "lucide-react";
 import { translateApiErrors } from "@/utils/translateApiError";
 import { StockTable } from "@/components/stock/stockTable";
 import { useEffect, useState, useCallback } from "react";
-import { Package, AlertTriangle } from "lucide-react";
 import Pagination from "@/components/paginationComp";
 import { FadeIn } from "@/components/motion/fadeIn";
 import { StatsCard } from "@/components/statsCard";
 import LoaderComp from "@/components/loaderComp";
 import toast, { Toaster } from "react-hot-toast";
 import { AxiosError } from "axios";
+import Link from "next/link";
 
 export default function StockPage() {
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ export default function StockPage() {
 
       const { toastMessage } = translateApiErrors(err.response.data);
 
-      toast.error(toastMessage || "Erro ao buscar os itens");
+      toast.error(toastMessage || "Erro ao buscar estoque");
       setItems([]);
     } finally {
       setLoading(false);
@@ -118,13 +119,14 @@ export default function StockPage() {
           onPageChange={setPage}
         />
 
-        <div className="pt-4">
-          <a
+        <div className="pt-4 w-full justify-end flex">
+          <Link
             href="/estoque/movimentacoes"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded hover:bg-accent-dark transition"
+            className="flex items-center gap-2 w-fit bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-accent/20 hover:scale-[1.02] hover:bg-accent-dark transition-all"
           >
+            <ArrowUpDown size={18} />
             Ver movimentações de estoque
-          </a>
+          </Link>
         </div>
       </div>
     </FadeIn>

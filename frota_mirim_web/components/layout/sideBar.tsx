@@ -54,7 +54,7 @@ export default function Sidebar() {
         </div>
 
         {/* Menu Principal */}
-        <nav className="flex-1 space-y-2">
+        <nav className="flex-1 space-y-1">
           {menuItems.map((item) => {
             const active = pathname.includes(item.path);
             return (

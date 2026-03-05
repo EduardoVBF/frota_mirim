@@ -23,11 +23,12 @@ export type StockItem = {
   };
 };
 
+export type StockMovementType = "IN" | "OUT" | "ADJUST";
+
 export type StockFilters = {
   search: string;
+  type?: StockMovementType[]; 
 };
-
-export type StockMovementType = "IN" | "OUT" | "ADJUST";
 
 export type StockMovement = {
   id: string;
@@ -53,6 +54,17 @@ export type StockMovement = {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+  };
+};
+
+export type StockMovementListResponse = {
+  items: StockMovement[];
+  meta: {
+    total: number;
+    totalFiltered: number;
+    page: number;
+    limit: number;
+    totalPages: number;
   };
 };
 
@@ -94,9 +106,13 @@ export async function stockAdjust(payload: StockAdjustPayload): Promise<void> {
   await api.post("/stock/adjust", payload);
 }
 
-export async function getStockMovements(): Promise<StockMovement[]> {
-  const { data } = await api.get("/stock/movements");
-  return data.movements;
+export async function getStockMovements(
+  filters: StockFilters & { page?: number; limit?: number },
+): Promise<StockMovement[]> {
+  const { data } = await api.get("/stock/movements", {
+    params: filters,
+  });
+  return data;
 }
 
 export async function updateStockConfig(
