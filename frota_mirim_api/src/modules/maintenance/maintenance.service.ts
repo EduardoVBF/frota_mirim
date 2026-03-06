@@ -4,45 +4,119 @@ import { MaintenanceQueryDTO, MAINTENANCE_STATUS } from "./maintenance.schema";
 
 export class MaintenanceService {
   async getAllMaintenance(query: MaintenanceQueryDTO) {
-    const { vehicleId, status, page = 1, limit = 10 } = query;
+    const {
+      vehicleId,
+      search,
+      type,
+      status,
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = query;
 
-    const where: any = { AND: [] };
+    const where: any = {};
 
     if (vehicleId) {
-      where.AND.push({ vehicleId });
+      where.vehicleId = vehicleId;
     }
 
-    if (status) {
-      where.AND.push({
-        status: { in: status },
-      });
+    if (type?.length) {
+      where.type = { in: type };
     }
 
-    const finalWhere = where.AND.length ? where : {};
+    if (status?.length) {
+      where.status = { in: status };
+    }
+
+    if (search) {
+      where.OR = [
+        {
+          description: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          vehicle: {
+            plate: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        },
+      ];
+    }
+
     const skip = (page - 1) * limit;
 
-    const [maintenances, totalFiltered, totalCount] = await Promise.all([
-      prisma.maintenanceOrder.findMany({
-        where: finalWhere,
-        include: {
-          vehicle: true,
-        },
-        orderBy: { createdAt: "desc" },
-        skip,
-        take: limit,
-      }),
-      prisma.maintenanceOrder.count({ where: finalWhere }),
-      prisma.maintenanceOrder.count(),
-    ]);
+    const [maintenances, totalFiltered, totalCount, statsStatus, statsType] =
+      await Promise.all([
+        prisma.maintenanceOrder.findMany({
+          where,
+          include: {
+            vehicle: true,
+          },
+          orderBy: {
+            [sortBy]: sortOrder,
+          },
+          skip,
+          take: limit,
+        }),
+
+        prisma.maintenanceOrder.count({ where }),
+
+        prisma.maintenanceOrder.count(),
+
+        prisma.maintenanceOrder.groupBy({
+          by: ["status"],
+          _count: true,
+        }),
+
+        prisma.maintenanceOrder.groupBy({
+          by: ["type"],
+          _count: true,
+        }),
+      ]);
+
+    const statusStats = {
+      open: 0,
+      inProgress: 0,
+      done: 0,
+      canceled: 0,
+    };
+
+    statsStatus.forEach((s) => {
+      if (s.status === "OPEN") statusStats.open = s._count;
+      if (s.status === "IN_PROGRESS") statusStats.inProgress = s._count;
+      if (s.status === "DONE") statusStats.done = s._count;
+      if (s.status === "CANCELED") statusStats.canceled = s._count;
+    });
+
+    const typeStats = {
+      preventive: 0,
+      corrective: 0,
+    };
+
+    statsType.forEach((t) => {
+      if (t.type === "PREVENTIVE") typeStats.preventive = t._count;
+      if (t.type === "CORRECTIVE") typeStats.corrective = t._count;
+    });
 
     return {
-      maintenances,
+      items: maintenances,
+
       meta: {
         total: totalCount,
         totalFiltered,
         page,
         limit,
         totalPages: Math.ceil(totalFiltered / limit),
+      },
+
+      stats: {
+        status: statusStats,
+        type: typeStats,
       },
     };
   }

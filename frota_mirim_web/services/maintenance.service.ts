@@ -57,6 +57,9 @@ export type MaintenanceFilters = {
   type?: MaintenanceType;
   status?: MaintenanceStatus;
 
+  sortBy?: "createdAt" | "scheduledAt" | "completedAt" | "odometer";
+  sortOrder?: "asc" | "desc";
+
   search?: string;
 
   page?: number;
@@ -64,13 +67,28 @@ export type MaintenanceFilters = {
 };
 
 export type MaintenancesResponse = {
-  maintenances: Maintenance[];
+  items: Maintenance[];
 
   meta: {
     total: number;
+    totalFiltered: number;
     page: number;
     limit: number;
     totalPages: number;
+  };
+
+  stats: {
+    status: {
+      open: number;
+      inProgress: number;
+      done: number;
+      canceled: number;
+    };
+
+    type: {
+      preventive: number;
+      corrective: number;
+    };
   };
 };
 
@@ -105,9 +123,7 @@ export async function getMaintenances(
   return data;
 }
 
-export async function getMaintenanceById(
-  id: string,
-): Promise<Maintenance> {
+export async function getMaintenanceById(id: string): Promise<Maintenance> {
   const { data } = await api.get(`/maintenance/${id}`);
 
   return data.maintenance;
@@ -131,8 +147,11 @@ export async function updateMaintenance(
 }
 
 export async function createMaintenanceItem(
-    payload: CreateMaintenanceItemPayload,
+  payload: CreateMaintenanceItemPayload,
 ) {
-    const { data } = await api.post(`/maintenance/${payload.maintenanceOrderId}/items`, payload);
-    return data;
+  const { data } = await api.post(
+    `/maintenance/${payload.maintenanceOrderId}/items`,
+    payload,
+  );
+  return data;
 }

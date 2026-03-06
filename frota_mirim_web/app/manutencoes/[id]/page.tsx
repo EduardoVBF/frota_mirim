@@ -74,8 +74,6 @@ export default function MaintenanceDetailsPage() {
 
         {/* INFO */}
         <div className="rounded-2xl border border-border bg-alternative-bg p-6 space-y-4">
-          <h2 className="text-lg font-bold">Informações da manutenção</h2>
-
           <div className="grid grid-cols-4 gap-4">
             <div>
               <p className="text-xs text-muted">Veículo</p>

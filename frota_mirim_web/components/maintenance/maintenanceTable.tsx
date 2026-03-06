@@ -4,9 +4,11 @@ import {
   MaintenanceFilters,
   MaintenanceStatus,
 } from "@/services/maintenance.service";
-import { Filter, FilterX, Search, Wrench, Plus, Eye } from "lucide-react";
+import { Filter, FilterX, Wrench, Plus, Eye } from "lucide-react";
 import MaintenanceFormModal from "./maintenanceFormModal";
+import { Vehicle } from "@/services/vehicles.service";
 import FilterChips from "../fuel-supply/FilterChips";
+import PrimarySelect from "../form/primarySelect";
 import LoaderComp from "../loaderComp";
 import { useState } from "react";
 import Link from "next/link";
@@ -16,11 +18,13 @@ export function MaintenanceTable({
   isLoading,
   filters,
   setFilters,
+  vehicles,
 }: {
   maintenances: Maintenance[];
   isLoading: boolean;
   filters: MaintenanceFilters & { search?: string };
   setFilters: (filters: Partial<MaintenanceFilters>) => void;
+  vehicles: Vehicle[];
   onChange: () => void;
 }) {
   const [showFilters, setShowFilters] = useState(false);
@@ -38,6 +42,41 @@ export function MaintenanceTable({
       status: undefined,
       vehicleId: undefined,
     });
+  };
+
+  const handleStatusBadge = (status: MaintenanceStatus) => {
+    switch (status) {
+      case "OPEN":
+        return (
+          <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded-full">
+            Aberta
+          </span>
+        );
+      case "IN_PROGRESS":
+        return (
+          <span className="text-xs bg-blue-500/20 text-blue-500 px-2 py-1 rounded-full">
+            Em andamento
+          </span>
+        );
+      case "COMPLETED":
+        return (
+          <span className="text-xs bg-green-500/20 text-green-500 px-2 py-1 rounded-full">
+            Concluída
+          </span>
+        );
+      case "CANCELLED":
+        return (
+          <span className="text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded-full">
+            Cancelada
+          </span>
+        );
+      default:
+        return (
+          <span className="text-xs bg-gray-500/20 text-gray-500 px-2 py-1 rounded-full">
+            Desconecido
+          </span>
+        );
+    }
   };
 
   return (
@@ -84,25 +123,27 @@ export function MaintenanceTable({
       {/* FILTERS */}
       {showFilters && (
         <div className="px-6 py-4 border-b border-border flex items-end gap-4">
-          {/* SEARCH */}
-
-          <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm h-fit">
-            <Search size={18} className="text-muted" />
-
-            <input
-              type="text"
-              value={filters.search || ""}
-              onChange={(e) =>
+          <div className="flex items-center gap-4 w-full">
+            {/* VEICULO */}
+            <PrimarySelect
+              label="Veículo"
+              value={filters.vehicleId || ""}
+              onChange={(val) =>
                 setFilters({
-                  search: e.target.value,
+                  ...filters,
+                  vehicleId: (val as string) || undefined,
                 })
               }
-              className="w-full bg-transparent text-sm focus:outline-none"
-              placeholder="Buscar manutenção..."
+              options={[
+                { label: "Todos os veículos", value: "" },
+                ...vehicles.map((v) => ({
+                  label: `${v.modelo} - ${v.placa}`,
+                  value: v.id,
+                })),
+              ]}
+              className="max-w-72"
             />
-          </div>
-
-          <div className="flex items-center gap-4">
+            
             {/* TIPO */}
             <FilterChips
               label="Tipo"
@@ -204,8 +245,30 @@ export function MaintenanceTable({
                     <td className="px-6 py-4">
                       {new Date(maintenance.createdAt).toLocaleDateString()}
                     </td>
-
-                    <td className="px-6 py-4">{maintenance.vehicleId}</td>
+                    {vehicles ? (
+                      <td className="px-6 py-4 capitalize">
+                        <Link
+                          className="flex flex-col"
+                          href={`/veiculos/${
+                            vehicles.find((v) => v.id === maintenance.vehicleId)
+                              ?.placa
+                          }`}
+                        >
+                          <span className="text-sm font-bold text-muted">
+                            {vehicles.find(
+                              (v) => v.id === maintenance.vehicleId,
+                            )?.modelo || "Veículo Desconhecido"}
+                          </span>
+                          <span className="text-xs font-bold uppercase px-2 py-1 rounded bg-background border border-border w-fit">
+                            {vehicles.find(
+                              (v) => v.id === maintenance.vehicleId,
+                            )?.placa || "-"}
+                          </span>
+                        </Link>
+                      </td>
+                    ) : (
+                      <td className="px-6 py-4">-</td>
+                    )}
 
                     <td className="px-6 py-4">
                       {maintenance.type === "PREVENTIVE"
@@ -213,7 +276,9 @@ export function MaintenanceTable({
                         : "Corretiva"}
                     </td>
 
-                    <td className="px-6 py-4">{maintenance.status}</td>
+                    <td className="px-6 py-4">
+                      {handleStatusBadge(maintenance.status)}
+                    </td>
 
                     <td className="px-6 py-4">{maintenance.odometer} km</td>
 

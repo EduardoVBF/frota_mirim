@@ -38,10 +38,27 @@ export const maintenanceStatusUpdateSchema = z.object({
 export const maintenanceQuerySchema = z.object({
   vehicleId: z.uuid().optional(),
 
+  search: z.string().optional(),
+
+  type: z.preprocess((val) => {
+    if (!val) return undefined;
+    return Array.isArray(val) ? val : [val];
+  }, z.array(maintenanceTypeSchema).optional()),
+
   status: z.preprocess((val) => {
     if (!val) return undefined;
     return Array.isArray(val) ? val : [val];
   }, z.array(maintenanceStatusSchema).optional()),
+
+  sortBy: z
+    .enum(["createdAt", "scheduledAt", "completedAt", "odometer"])
+    .optional()
+    .default("createdAt"),
+
+  sortOrder: z
+    .enum(["asc", "desc"])
+    .optional()
+    .default("desc"),
 
   page: z.preprocess((val) => {
     if (!val) return 1;
