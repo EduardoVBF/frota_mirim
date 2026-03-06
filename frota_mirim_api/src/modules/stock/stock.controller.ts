@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { StockService } from "./stock.service";
 import {
   stockQuerySchema,
+  stockMovementsQuerySchema,
   stockEntrySchema,
   stockAdjustSchema,
   stockUpdateConfigSchema,
@@ -20,7 +21,7 @@ export async function getStockMovementsController(
   reply: FastifyReply,
 ) {
   const movements = await service.getStockMovements({
-    ...stockQuerySchema.parse(request.query),
+    ...stockMovementsQuerySchema.parse(request.query),
   });
 
   return reply.send(movements);

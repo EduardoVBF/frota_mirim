@@ -1,6 +1,6 @@
+import { StockQueryDTO, StockMovementsQueryDTO } from "./stock.schema";
 import { prisma } from "../../shared/database/prisma";
 import { AppError } from "../../infra/errors/app-error";
-import { StockQueryDTO } from "./stock.schema";
 
 export class StockService {
   async getStock(query: StockQueryDTO) {
@@ -99,18 +99,28 @@ export class StockService {
     };
   }
 
-  async getStockMovements(query: StockQueryDTO) {
-    const { search, page = 1, limit = 10, type } = query;
+  async getStockMovements(query: StockMovementsQueryDTO) {
+    const {
+      search,
+      page = 1,
+      limit = 10,
+      type,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = query;
 
     const where: any = {};
 
     if (search) {
       where.itemCatalog = {
-        name: { contains: search, mode: "insensitive" },
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
       };
     }
 
-    if (type) {
+    if (type && type.length > 0) {
       where.type = {
         in: type,
       };
@@ -118,7 +128,20 @@ export class StockService {
 
     const skip = (page - 1) * limit;
 
-    const [movements, totalFiltered, totalCount] = await Promise.all([
+    const orderBy =
+      sortBy === "quantity"
+        ? { quantity: sortOrder }
+        : { createdAt: sortOrder };
+
+    const [
+      movements,
+      totalFiltered,
+      totalCount,
+      totalQuantity,
+      inCount,
+      outCount,
+      adjustCount,
+    ] = await Promise.all([
       prisma.stockMovement.findMany({
         where,
         include: {
@@ -126,22 +149,49 @@ export class StockService {
         },
         skip,
         take: limit,
-        orderBy: {
-          createdAt: "desc",
+        orderBy,
+      }),
+
+      prisma.stockMovement.count({ where }),
+
+      prisma.stockMovement.count(),
+
+      prisma.stockMovement.aggregate({
+        _sum: {
+          quantity: true,
         },
       }),
-      prisma.stockMovement.count({ where }),
-      prisma.stockMovement.count(),
+
+      prisma.stockMovement.count({
+        where: { type: "IN" },
+      }),
+
+      prisma.stockMovement.count({
+        where: { type: "OUT" },
+      }),
+
+      prisma.stockMovement.count({
+        where: { type: "ADJUST" },
+      }),
     ]);
 
     return {
       items: movements,
+
       meta: {
         total: totalCount,
         totalFiltered,
         page,
         limit,
         totalPages: Math.ceil(totalFiltered / limit),
+      },
+
+      stats: {
+        totalMovements: totalCount,
+        totalQuantity: totalQuantity._sum.quantity ?? 0,
+        entries: inCount,
+        exits: outCount,
+        adjustments: adjustCount,
       },
     };
   }

@@ -63,3 +63,34 @@ export const stockQuerySchema = z.object({
 });
 
 export type StockQueryDTO = z.infer<typeof stockQuerySchema>;
+
+export const stockMovementsQuerySchema = z.object({
+  search: z.string().optional(),
+
+  type: z.preprocess((val) => {
+    if (!val) return undefined;
+    return Array.isArray(val) ? val : [val];
+  }, z.array(stockMovementTypeSchema).optional()),
+
+  sortBy: z
+    .enum(["createdAt", "quantity"])
+    .optional()
+    .default("createdAt"),
+
+  sortOrder: z
+    .enum(["asc", "desc"])
+    .optional()
+    .default("desc"),
+
+  page: z.preprocess((val) => {
+    if (!val) return 1;
+    return Number(val);
+  }, z.number().min(1)),
+
+  limit: z.preprocess((val) => {
+    if (!val) return 10;
+    return Number(val);
+  }, z.number().min(1).max(1000)),
+});
+
+export type StockMovementsQueryDTO = z.infer<typeof stockMovementsQuerySchema>;

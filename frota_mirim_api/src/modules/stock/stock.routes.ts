@@ -8,6 +8,7 @@ import {
 
 import {
   stockQuerySchema,
+  stockMovementsQuerySchema,
   stockEntrySchema,
   stockAdjustSchema,
   stockUpdateConfigSchema,
@@ -34,7 +35,7 @@ export async function stockRoutes(app: FastifyInstance) {
     { preHandler: [authMiddleware] },
     async (request, reply) => {
       const { query } = await validateRequest(request, {
-        query: stockQuerySchema,
+        query: stockMovementsQuerySchema,
       });
 
       return getStockMovementsController({ ...request, query } as any, reply);
