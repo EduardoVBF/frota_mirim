@@ -1,100 +1,137 @@
 import { prisma } from "../../shared/database/prisma";
 import { AppError } from "../../infra/errors/app-error";
+import { MaintenanceService } from "../maintenance/maintenance.service";
+
+const maintenanceService = new MaintenanceService();
 
 export class MaintenanceItemService {
 
   async addItem(maintenanceId: string, data: any) {
 
-    const maintenance = await prisma.maintenanceOrder.findUnique({
-      where: { id: maintenanceId },
-    });
+    return prisma.$transaction(async (tx) => {
 
-    if (!maintenance) {
-      throw new AppError("Manutenção não encontrada.", 404);
-    }
+      const maintenance = await tx.maintenanceOrder.findUnique({
+        where: { id: maintenanceId },
+      });
 
-    if (maintenance.status === "DONE") {
-      throw new AppError("Não é possível alterar manutenção finalizada.", 400);
-    }
+      if (!maintenance) {
+        throw new AppError("Manutenção não encontrada.", 404);
+      }
 
-    const catalogItem = await prisma.itemCatalog.findUnique({
-      where: { id: data.itemCatalogId },
-    });
+      if (maintenance.status === "DONE") {
+        throw new AppError(
+          "Não é possível alterar manutenção finalizada.",
+          400
+        );
+      }
 
-    if (!catalogItem) {
-      throw new AppError("Item do catálogo não encontrado.", 404);
-    }
+      const catalogItem = await tx.itemCatalog.findUnique({
+        where: { id: data.itemCatalogId },
+      });
 
-    const unitPrice =
-      data.unitPrice ?? Number(catalogItem.defaultPrice ?? 0);
+      if (!catalogItem) {
+        throw new AppError("Item do catálogo não encontrado.", 404);
+      }
 
-    const totalPrice = unitPrice * data.quantity;
+      const unitPrice =
+        data.unitPrice ?? Number(catalogItem.defaultPrice ?? 0);
 
-    return prisma.maintenanceItem.create({
-      data: {
-        maintenanceOrderId: maintenanceId,
-        itemCatalogId: catalogItem.id,
+      const totalPrice = unitPrice * data.quantity;
 
-        nameSnapshot: catalogItem.name,
-        referenceSnapshot: catalogItem.reference,
-        typeSnapshot: catalogItem.type,
+      const item = await tx.maintenanceItem.create({
+        data: {
+          maintenanceOrderId: maintenanceId,
+          itemCatalogId: catalogItem.id,
 
-        quantity: data.quantity,
-        unitPrice,
-        totalPrice,
-      },
+          nameSnapshot: catalogItem.name,
+          referenceSnapshot: catalogItem.reference,
+          typeSnapshot: catalogItem.type,
+
+          quantity: data.quantity,
+          unitPrice,
+          totalPrice,
+        },
+      });
+
+      await maintenanceService.recalculateMaintenanceCosts(tx, maintenanceId);
+
+      return item;
     });
   }
 
   async updateItem(id: string, data: any) {
 
-    const item = await prisma.maintenanceItem.findUnique({
-      where: { id },
-      include: { maintenanceOrder: true },
-    });
+    return prisma.$transaction(async (tx) => {
 
-    if (!item) {
-      throw new AppError("Item não encontrado.", 404);
-    }
+      const item = await tx.maintenanceItem.findUnique({
+        where: { id },
+        include: { maintenanceOrder: true },
+      });
 
-    if (item.maintenanceOrder.status === "DONE") {
-      throw new AppError("Não é possível editar item de manutenção finalizada.", 400);
-    }
+      if (!item) {
+        throw new AppError("Item não encontrado.", 404);
+      }
 
-    const quantity = data.quantity ?? item.quantity;
-    const unitPrice = data.unitPrice ?? Number(item.unitPrice);
+      if (item.maintenanceOrder.status === "DONE") {
+        throw new AppError(
+          "Não é possível editar item de manutenção finalizada.",
+          400
+        );
+      }
 
-    const totalPrice = quantity * unitPrice;
+      const quantity = data.quantity ?? item.quantity;
+      const unitPrice = data.unitPrice ?? Number(item.unitPrice);
 
-    return prisma.maintenanceItem.update({
-      where: { id },
-      data: {
-        quantity,
-        unitPrice,
-        totalPrice,
-      },
+      const totalPrice = quantity * unitPrice;
+
+      const updatedItem = await tx.maintenanceItem.update({
+        where: { id },
+        data: {
+          quantity,
+          unitPrice,
+          totalPrice,
+        },
+      });
+
+      await maintenanceService.recalculateMaintenanceCosts(
+        tx,
+        item.maintenanceOrderId
+      );
+
+      return updatedItem;
     });
   }
 
   async deleteItem(id: string) {
 
-    const item = await prisma.maintenanceItem.findUnique({
-      where: { id },
-      include: { maintenanceOrder: true },
+    return prisma.$transaction(async (tx) => {
+
+      const item = await tx.maintenanceItem.findUnique({
+        where: { id },
+        include: { maintenanceOrder: true },
+      });
+
+      if (!item) {
+        throw new AppError("Item não encontrado.", 404);
+      }
+
+      if (item.maintenanceOrder.status === "DONE") {
+        throw new AppError(
+          "Não é possível remover item de manutenção finalizada.",
+          400
+        );
+      }
+
+      await tx.maintenanceItem.delete({
+        where: { id },
+      });
+
+      await maintenanceService.recalculateMaintenanceCosts(
+        tx,
+        item.maintenanceOrderId
+      );
+
+      return { message: "Item removido com sucesso." };
     });
-
-    if (!item) {
-      throw new AppError("Item não encontrado.", 404);
-    }
-
-    if (item.maintenanceOrder.status === "DONE") {
-      throw new AppError("Não é possível remover item de manutenção finalizada.", 400);
-    }
-
-    await prisma.maintenanceItem.delete({
-      where: { id },
-    });
-
-    return { message: "Item removido com sucesso." };
   }
 }

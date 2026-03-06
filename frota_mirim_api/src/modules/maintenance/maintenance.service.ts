@@ -3,6 +3,58 @@ import { AppError } from "../../infra/errors/app-error";
 import { MaintenanceQueryDTO, MAINTENANCE_STATUS } from "./maintenance.schema";
 
 export class MaintenanceService {
+  async ensureMaintenanceExists(id: string) {
+    const maintenance = await prisma.maintenanceOrder.findUnique({
+      where: { id },
+    });
+
+    if (!maintenance) {
+      throw new AppError("Manutenção não encontrada.", 404);
+    }
+
+    return maintenance;
+  }
+
+  async ensureMaintenanceEditable(id: string) {
+    const maintenance = await this.ensureMaintenanceExists(id);
+
+    if (maintenance.status === "DONE") {
+      throw new AppError("Não é possível alterar manutenção finalizada.", 400);
+    }
+
+    return maintenance;
+  }
+
+  async recalculateMaintenanceCosts(tx: any, maintenanceId: string) {
+    const items = await tx.maintenanceItem.findMany({
+      where: { maintenanceOrderId: maintenanceId },
+    });
+
+    let partsCost = 0;
+    let servicesCost = 0;
+
+    for (const item of items) {
+      const total = Number(item.totalPrice);
+
+      if (item.typeSnapshot === "PART") {
+        partsCost += total;
+      } else {
+        servicesCost += total;
+      }
+    }
+
+    const totalCost = partsCost + servicesCost;
+
+    await tx.maintenanceOrder.update({
+      where: { id: maintenanceId },
+      data: {
+        partsCost,
+        servicesCost,
+        totalCost,
+      },
+    });
+  }
+
   async getAllMaintenance(query: MaintenanceQueryDTO) {
     const {
       vehicleId,
@@ -105,7 +157,6 @@ export class MaintenanceService {
 
     return {
       items: maintenances,
-
       meta: {
         total: totalCount,
         totalFiltered,
@@ -113,7 +164,6 @@ export class MaintenanceService {
         limit,
         totalPages: Math.ceil(totalFiltered / limit),
       },
-
       stats: {
         status: statusStats,
         type: typeStats,
@@ -155,17 +205,7 @@ export class MaintenanceService {
   }
 
   async updateMaintenance(id: string, data: any, userId?: string) {
-    const maintenance = await prisma.maintenanceOrder.findUnique({
-      where: { id },
-    });
-
-    if (!maintenance) {
-      throw new AppError("Manutenção não encontrada.", 404);
-    }
-
-    if (maintenance.status === "DONE") {
-      throw new AppError("Não é possível editar manutenção finalizada.", 400);
-    }
+    await this.ensureMaintenanceEditable(id);
 
     return prisma.maintenanceOrder.update({
       where: { id },
@@ -177,13 +217,7 @@ export class MaintenanceService {
   }
 
   async updateMaintenanceStatus(id: string, status: string) {
-    const maintenance = await prisma.maintenanceOrder.findUnique({
-      where: { id },
-    });
-
-    if (!maintenance) {
-      throw new AppError("Manutenção não encontrada.", 404);
-    }
+    await this.ensureMaintenanceExists(id);
 
     return prisma.maintenanceOrder.update({
       where: { id },
