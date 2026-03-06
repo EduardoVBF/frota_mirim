@@ -61,13 +61,13 @@ export function MaintenanceTable({
             Em andamento
           </span>
         );
-      case "COMPLETED":
+      case "DONE":
         return (
           <span className="text-xs bg-green-500/20 text-green-500 px-2 py-1 rounded-full">
             Concluída
           </span>
         );
-      case "CANCELLED":
+      case "CANCELED":
         return (
           <span className="text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded-full">
             Cancelada

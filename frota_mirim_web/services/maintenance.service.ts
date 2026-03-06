@@ -6,8 +6,26 @@ export type MaintenanceType = "PREVENTIVE" | "CORRECTIVE";
 export type MaintenanceStatus =
   | "OPEN"
   | "IN_PROGRESS"
-  | "COMPLETED"
-  | "CANCELLED";
+  | "DONE"
+  | "CANCELED";
+
+export type MaintenanceItem = {
+  id: string;
+
+  typeSnapshot: "PART" | "SERVICE";
+
+  itemCatalogId: string;
+
+  nameSnapshot: string;
+
+  quantity: number;
+
+  unitPrice: number;
+
+  totalPrice: number;
+
+  referenceSnapshot?: string;
+};
 
 export type Maintenance = {
   id: string;
@@ -15,6 +33,7 @@ export type Maintenance = {
   vehicleId: string;
 
   type: MaintenanceType;
+
   status: MaintenanceStatus;
 
   description?: string;
@@ -22,47 +41,46 @@ export type Maintenance = {
   odometer: number;
 
   scheduledAt?: string;
+
   startedAt?: string;
+
   completedAt?: string;
 
   partsCost: number;
+
   servicesCost: number;
+
   totalCost: number;
 
   createdAt: string;
 
   vehicle: {
-    ano?: number;
-    kmAtual?: number;
-    marca?: string;
     id: string;
     modelo: string;
     placa: string;
+    marca?: string;
+    ano?: number;
+    kmAtual?: number;
   };
 
-  maintenanceItems: {
-    id: string;
-    typeSnapshot: "PART" | "SERVICE";
-    itemCatalogId: string;
-    nameSnapshot: string;
-    quantity: number;
-    unitPrice: string;
-    totalPrice: string;
-    referenceSnapshot?: string;
-  }[];
+  maintenanceItems: MaintenanceItem[];
 };
 
 export type MaintenanceFilters = {
   vehicleId?: string;
+
   type?: MaintenanceType;
+
   status?: MaintenanceStatus;
 
   sortBy?: "createdAt" | "scheduledAt" | "completedAt" | "odometer";
+
   sortOrder?: "asc" | "desc";
 
   search?: string;
 
   page?: number;
+
   limit?: number;
 };
 
@@ -104,13 +122,6 @@ export type CreateMaintenancePayload = {
   odometer: number;
 };
 
-export type CreateMaintenanceItemPayload = {
-  maintenanceOrderId: string;
-  itemCatalogId: string;
-  quantity: string;
-  unitPrice: string;
-};
-
 export async function getMaintenances(
   filters: MaintenanceFilters,
 ): Promise<MaintenancesResponse> {
@@ -143,15 +154,5 @@ export async function updateMaintenance(
 ): Promise<Maintenance> {
   const { data } = await api.put(`/maintenance/${id}`, payload);
 
-  return data;
-}
-
-export async function createMaintenanceItem(
-  payload: CreateMaintenanceItemPayload,
-) {
-  const { data } = await api.post(
-    `/maintenance/${payload.maintenanceOrderId}/items`,
-    payload,
-  );
   return data;
 }

@@ -117,7 +117,10 @@ export default function MaintenanceDetailsPage() {
         </div>
 
         {/* ITEMS */}
-        <MaintenanceItemsTable maintenance={maintenance} />
+        <MaintenanceItemsTable
+          maintenance={maintenance}
+          onUpdate={fetchMaintenance}
+        />
       </div>
     </FadeIn>
   );
