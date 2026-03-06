@@ -2,6 +2,7 @@
 import {
   getMaintenanceById,
   Maintenance,
+  MaintenanceStatus,
 } from "@/services/maintenance.service";
 import { MaintenanceItemsTable } from "@/components/maintenance/maintenanceItemsTable";
 import { Wrench, Package, DollarSign } from "lucide-react";
@@ -31,6 +32,41 @@ export default function MaintenanceDetailsPage() {
       setLoading(false);
     }
   }, [id]);
+
+  const handleStatusBadge = (status: MaintenanceStatus) => {
+    switch (status) {
+      case "OPEN":
+        return (
+          <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded-full">
+            Aberta
+          </span>
+        );
+      case "IN_PROGRESS":
+        return (
+          <span className="text-xs bg-blue-500/20 text-blue-500 px-2 py-1 rounded-full">
+            Em andamento
+          </span>
+        );
+      case "DONE":
+        return (
+          <span className="text-xs bg-green-500/20 text-green-500 px-2 py-1 rounded-full">
+            Concluída
+          </span>
+        );
+      case "CANCELED":
+        return (
+          <span className="text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded-full">
+            Cancelada
+          </span>
+        );
+      default:
+        return (
+          <span className="text-xs bg-gray-500/20 text-gray-500 px-2 py-1 rounded-full">
+            Desconecido
+          </span>
+        );
+    }
+  };
 
   useEffect(() => {
     fetchMaintenance();
@@ -99,7 +135,7 @@ export default function MaintenanceDetailsPage() {
 
             <div>
               <p className="text-xs text-muted">Status</p>
-              <p className="font-bold">{maintenance.status}</p>
+              <p className="font-bold">{handleStatusBadge(maintenance.status)}</p>
             </div>
 
             <div>

@@ -1,20 +1,14 @@
 "use client";
-
 import {
   deleteMaintenanceItem,
+  MaintenanceItem,
 } from "@/services/maintenanceItem.service";
-
-import { Maintenance } from "@/services/maintenance.service";
-
-import { useState } from "react";
-
 import AddMaintenanceItemModal from "./addMaintenanceItemModal";
-
-import { Plus, Trash2, Wrench } from "lucide-react";
-
+import { Maintenance } from "@/services/maintenance.service";
+import { Plus, Trash2, Wrench, Pencil } from "lucide-react";
 import LoaderComp from "../loaderComp";
-
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 export function MaintenanceItemsTable({
   maintenance,
@@ -27,6 +21,10 @@ export function MaintenanceItemsTable({
 
   const [modalOpen, setModalOpen] = useState(false);
 
+  const [selectedItem, setSelectedItem] = useState<MaintenanceItem | null>(
+    null,
+  );
+
   const items = maintenance.maintenanceItems;
 
   const handleDelete = async (id: string) => {
@@ -38,7 +36,6 @@ export function MaintenanceItemsTable({
       toast.success("Item removido");
 
       onUpdate();
-
     } catch {
       toast.error("Erro ao remover item");
     } finally {
@@ -46,36 +43,45 @@ export function MaintenanceItemsTable({
     }
   };
 
+  const handleEdit = (item: MaintenanceItem) => {
+    setSelectedItem(item);
+    setModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedItem(null);
+    setModalOpen(true);
+  };
+
   return (
     <div className="rounded-2xl border border-border bg-alternative-bg overflow-hidden">
-
       <AddMaintenanceItemModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedItem(null);
+        }}
         onSuccess={onUpdate}
         maintenanceId={maintenance.id}
+        item={selectedItem}
       />
 
       <div className="p-4 border-b border-border flex justify-between items-center">
-
         <div className="flex items-center gap-3">
-
           <div className="p-2 bg-accent/10 rounded-lg text-accent">
             <Wrench size={24} />
           </div>
 
           <h2 className="text-lg font-bold">Itens utilizados</h2>
-
         </div>
 
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={handleCreate}
           className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold"
         >
           <Plus size={16} />
           Adicionar item
         </button>
-
       </div>
 
       {loading ? (
@@ -84,9 +90,7 @@ export function MaintenanceItemsTable({
         </div>
       ) : (
         <div className="overflow-x-auto">
-
           <table className="w-full text-left">
-
             <thead>
               <tr className="text-xs uppercase text-muted border-b border-border">
                 <th className="px-6 py-4">Item</th>
@@ -99,7 +103,6 @@ export function MaintenanceItemsTable({
             </thead>
 
             <tbody>
-
               {items.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
@@ -108,20 +111,14 @@ export function MaintenanceItemsTable({
                 </tr>
               ) : (
                 items.map((item) => (
-
                   <tr key={item.id} className="border-b border-border">
-
-                    <td className="px-6 py-4 font-bold">
-                      {item.nameSnapshot}
-                    </td>
+                    <td className="px-6 py-4 font-bold">{item.nameSnapshot}</td>
 
                     <td className="px-6 py-4">
                       {item.typeSnapshot === "PART" ? "Peça" : "Serviço"}
                     </td>
 
-                    <td className="px-6 py-4">
-                      {item.quantity}
-                    </td>
+                    <td className="px-6 py-4">{item.quantity}</td>
 
                     <td className="px-6 py-4">
                       {item.unitPrice.toLocaleString("pt-BR", {
@@ -138,28 +135,29 @@ export function MaintenanceItemsTable({
                     </td>
 
                     <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(item as MaintenanceItem)}
+                          className="p-2 hover:text-accent"
+                        >
+                          <Pencil size={16} />
+                        </button>
 
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-2 hover:text-error"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-2 hover:text-error"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
-
                   </tr>
-
                 ))
               )}
-
             </tbody>
-
           </table>
-
         </div>
       )}
-
     </div>
   );
 }

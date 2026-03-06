@@ -1,12 +1,13 @@
 "use client";
-
+import {
+  createMaintenanceItem,
+  updateMaintenanceItem,
+  MaintenanceItem,
+} from "@/services/maintenanceItem.service";
 import { getItemCatalog, ItemCatalog } from "@/services/itemCatalog.service";
-import { createMaintenanceItem } from "@/services/maintenanceItem.service";
-
 import PrimarySelect from "../form/primarySelect";
 import PrimaryModal from "../form/primaryModal";
 import PrimaryInput from "../form/primaryInput";
-
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
@@ -15,17 +16,22 @@ export default function AddMaintenanceItemModal({
   onClose,
   onSuccess,
   maintenanceId,
+  item,
 }: {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   maintenanceId: string;
+  item?: MaintenanceItem | null;
 }) {
+  const isEdit = !!item;
+
   const [items, setItems] = useState<ItemCatalog[]>([]);
 
   const [itemCatalogId, setItemCatalogId] = useState("");
 
   const [quantity, setQuantity] = useState("1");
+
   const [unitPrice, setUnitPrice] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -45,18 +51,18 @@ export default function AddMaintenanceItemModal({
       }
     }
 
-    if (open) {
+    if (open && !isEdit) {
       fetchItems();
     }
-  }, [open]);
+  }, [open, isEdit]);
 
   useEffect(() => {
-    const selected = items.find((i) => i.id === itemCatalogId);
-
-    if (selected?.defaultPrice) {
-      setUnitPrice(String(selected.defaultPrice));
+    if (item) {
+      setItemCatalogId(item.itemCatalogId);
+      setQuantity(String(item.quantity));
+      setUnitPrice(String(item.unitPrice));
     }
-  }, [itemCatalogId, items]);
+  }, [item]);
 
   const resetForm = () => {
     setItemCatalogId("");
@@ -65,21 +71,25 @@ export default function AddMaintenanceItemModal({
   };
 
   const handleSubmit = async () => {
-    if (!itemCatalogId) {
-      toast.error("Selecione um item");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      await createMaintenanceItem(maintenanceId, {
-        itemCatalogId,
-        quantity: Number(quantity),
-        unitPrice: Number(unitPrice),
-      });
+      if (isEdit && item) {
+        await updateMaintenanceItem(item.id, {
+          quantity: Number(quantity),
+          unitPrice: Number(unitPrice),
+        });
 
-      toast.success("Item adicionado");
+        toast.success("Item atualizado");
+      } else {
+        await createMaintenanceItem(maintenanceId, {
+          itemCatalogId,
+          quantity: Number(quantity),
+          unitPrice: Number(unitPrice),
+        });
+
+        toast.success("Item adicionado");
+      }
 
       resetForm();
 
@@ -87,7 +97,7 @@ export default function AddMaintenanceItemModal({
 
       onClose();
     } catch {
-      toast.error("Erro ao adicionar item");
+      toast.error("Erro ao salvar item");
     } finally {
       setLoading(false);
     }
@@ -102,7 +112,7 @@ export default function AddMaintenanceItemModal({
         resetForm();
         onClose();
       }}
-      title="Adicionar item"
+      title={isEdit ? "Editar item" : "Adicionar item"}
       footer={
         <button
           onClick={handleSubmit}
@@ -114,18 +124,20 @@ export default function AddMaintenanceItemModal({
       }
     >
       <div className="space-y-4">
-        <PrimarySelect
-          label="Item do catálogo"
-          value={itemCatalogId}
-          onChange={(val) => setItemCatalogId(val as string)}
-          options={[
-            { label: "Selecione um item", value: "" },
-            ...items.map((i) => ({
-              label: `${i.name} (${i.type === "PART" ? "Peça" : "Serviço"})`,
-              value: i.id,
-            })),
-          ]}
-        />
+        {!isEdit && (
+          <PrimarySelect
+            label="Item do catálogo"
+            value={itemCatalogId}
+            onChange={(val) => setItemCatalogId(val as string)}
+            options={[
+              { label: "Selecione um item", value: "" },
+              ...items.map((i) => ({
+                label: `${i.name} (${i.type === "PART" ? "Peça" : "Serviço"})`,
+                value: i.id,
+              })),
+            ]}
+          />
+        )}
 
         <PrimaryInput
           label="Quantidade"
