@@ -25,7 +25,7 @@ export default function ItemCatalogPage() {
     search: "",
     type: undefined,
     isStockItem: undefined,
-    isActive: true,
+    isActive: undefined,
   });
 
   const [page, setPage] = useState(1);

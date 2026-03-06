@@ -11,6 +11,8 @@ import {
   Forklift,
   ChevronDown,
   ArrowUpDown,
+  Wrench,
+  Bolt,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -58,18 +60,18 @@ const menuItems: MenuItem[] = [
     icon: <Fuel size={20} />,
   },
   {
-    name: "Manutenção",
-    icon: <Package size={20} />,
+    name: "Manutenções",
+    icon: <Wrench size={20} />,
     children: [
       {
         name: "Manutenções",
         path: "/manutencoes",
-        icon: <Package size={20} />,
+        icon: <Wrench size={20} />,
       },
       {
         name: "Peças e Serviços",
         path: "/itensManutencao",
-        icon: <Package size={20} />,
+        icon: <Bolt size={20} />,
       },
     ],
   },
@@ -80,7 +82,7 @@ const menuItems: MenuItem[] = [
       {
         name: "Itens em Estoque",
         path: "/estoque",
-        icon: <Forklift size={20} />,
+        icon: <Package size={20} />,
       },
       {
         name: "Movimentações",

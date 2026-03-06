@@ -138,10 +138,10 @@ export function StockMovementsTable({
               <th className="px-6 py-4">Data</th>
               <th className="px-6 py-4">Tipo</th>
               <th className="px-6 py-4">Item</th>
+              <th className="px-6 py-4">Referência</th>
               <th className="px-6 py-4">Quantidade</th>
               <th className="px-6 py-4">Motivo</th>
               <th className="px-6 py-4">Custo</th>
-              <th className="px-6 py-4">Referência</th>
             </tr>
           </thead>
 
@@ -160,7 +160,7 @@ export function StockMovementsTable({
               </tr>
             ) : (
               movements.map((movement) => (
-                <tr key={movement.id} className="border-b border-border">
+                <tr key={movement.id} className="border-b border-border text-sm">
                   <td className="px-6 py-4">
                     {new Date(movement.createdAt).toLocaleDateString()}
                   </td>
@@ -178,6 +178,8 @@ export function StockMovementsTable({
                     {movement.itemCatalog.name || "-"}
                   </td>
 
+                  <td className="px-6 py-4">{movement.itemCatalog.reference || "-"}</td>
+
                   <td className="px-6 py-4 font-bold">{movement.quantity}</td>
 
                   <td className="px-6 py-4">{movement.reason || "-"}</td>
@@ -185,8 +187,6 @@ export function StockMovementsTable({
                   <td className="px-6 py-4">
                     {movement.unitCost ? `R$ ${movement.unitCost}` : "-"}
                   </td>
-
-                  <td className="px-6 py-4">{movement.referenceId || "-"}</td>
                 </tr>
               ))
             )}
