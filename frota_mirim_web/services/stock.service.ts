@@ -25,7 +25,6 @@ export type StockItem = {
 
 export type StockMovementType = "IN" | "OUT" | "ADJUST";
 
-
 // FILTERS
 export type StockFilters = {
   search?: string;
@@ -39,6 +38,14 @@ export type StockFilters = {
   type?: StockMovementType[];
 };
 
+export type StockMovementFilters = {
+  search?: string;
+
+  type?: StockMovementType[];
+
+  sortBy?: "createdAt" | "quantity";
+  sortOrder?: "asc" | "desc";
+};
 
 // RESPONSE TYPES
 export type StockListResponse = {
@@ -96,8 +103,15 @@ export type StockMovementListResponse = {
     limit: number;
     totalPages: number;
   };
-};
 
+  stats: {
+    totalMovements: number;
+    totalQuantity: number;
+    entries: number;
+    exits: number;
+    adjustments: number;
+  };
+};
 
 // PAYLOADS
 export type StockEntryPayload = {
@@ -117,7 +131,6 @@ export type UpdateStockConfigPayload = {
   minimumQuantity?: number;
   location?: string;
 };
-
 
 // API
 export async function getStock(

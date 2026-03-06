@@ -26,7 +26,15 @@ export default function StockMovementsPage() {
       limit: 20,
       totalPages: 1,
     },
+    stats: {
+      totalMovements: 0,
+      totalQuantity: 0,
+      entries: 0,
+      exits: 0,
+      adjustments: 0,
+    },
   });
+
   const [filters, setFilters] = useState<StockFilters>({
     search: "",
     type: undefined,
@@ -43,7 +51,8 @@ export default function StockMovementsPage() {
         page,
         limit,
       });
-      setMovements(data as unknown as StockMovementListResponse);
+
+      setMovements(data);
     } catch (err) {
       if (!(err instanceof AxiosError)) {
         toast.error("Erro ao buscar movimentações");
@@ -58,6 +67,7 @@ export default function StockMovementsPage() {
       const { toastMessage } = translateApiErrors(err.response.data);
 
       toast.error(toastMessage || "Erro ao buscar movimentações");
+
       setMovements({
         items: [],
         meta: {
@@ -67,11 +77,18 @@ export default function StockMovementsPage() {
           limit: 20,
           totalPages: 1,
         },
+        stats: {
+          totalMovements: 0,
+          totalQuantity: 0,
+          entries: 0,
+          exits: 0,
+          adjustments: 0,
+        },
       });
     } finally {
       setLoading(false);
     }
-  }, [filters, page]);
+  }, [filters, page, limit]);
 
   useEffect(() => {
     fetchMovements();
@@ -81,9 +98,7 @@ export default function StockMovementsPage() {
     setPage(1);
   }, [filters]);
 
-  const totalPages = movements?.meta?.totalPages;
-  const entries = movements?.items.filter((m) => m.type === "IN");
-  const exits = movements?.items.filter((m) => m.type === "OUT");
+  const totalPages = movements.meta.totalPages;
 
   return (
     <FadeIn>
@@ -102,21 +117,21 @@ export default function StockMovementsPage() {
           <div className="grid grid-cols-3 gap-6">
             <StatsCard
               label="Total movimentações"
-              value={movements.meta.total.toString()}
+              value={movements.stats.totalMovements.toString()}
               icon={<PackageSearch />}
               iconColor="text-accent"
             />
 
             <StatsCard
               label="Entradas"
-              value={entries.length.toString()}
+              value={movements.stats.entries.toString()}
               icon={<ArrowDown />}
               iconColor="text-success"
             />
 
             <StatsCard
               label="Saídas"
-              value={exits.length.toString()}
+              value={movements.stats.exits.toString()}
               icon={<ArrowUp />}
               iconColor="text-error"
             />
