@@ -5,7 +5,15 @@ import {
   MaintenanceStatus,
 } from "@/services/maintenance.service";
 import { MaintenanceItemsTable } from "@/components/maintenance/maintenanceItemsTable";
-import { Wrench, Package, DollarSign } from "lucide-react";
+import {
+  Wrench,
+  Package,
+  DollarSign,
+  Gauge,
+  Car,
+  Calendar,
+  ChartCandlestick,
+} from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { FadeIn } from "@/components/motion/fadeIn";
 import { StatsCard } from "@/components/statsCard";
@@ -109,47 +117,110 @@ export default function MaintenanceDetailsPage() {
         </div>
 
         {/* INFO */}
-        <div className="rounded-2xl border border-border bg-alternative-bg p-6 space-y-4">
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <p className="text-xs text-muted">Veículo</p>
-              <p className="font-bold">
-                {maintenance.vehicle.modelo} - {maintenance.vehicle.placa}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted">Data</p>
-              <p className="font-bold">
-                {maintenance.createdAt
-                  ? dayjs(maintenance.createdAt).format("DD/MM/YYYY")
-                  : "N/A"}
-              </p>
+        <div className="rounded-2xl border border-border bg-alternative-bg p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* VEICULO */}
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-background">
+              <div className="p-2 rounded-lg bg-accent/10 text-accent">
+                <Car size={18} />
+              </div>
+
+              <div>
+                <p className="text-xs text-muted uppercase tracking-wide">
+                  Veículo
+                </p>
+
+                <div className="flex items-center gap-1">
+                  <p className="font-semibold">{maintenance.vehicle.modelo}</p>
+                  <p>-</p>
+                  <p className="text-muted">{maintenance.vehicle.placa}</p>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <p className="text-xs text-muted">Tipo</p>
-              <p className="font-bold">
-                {maintenance.type === "PREVENTIVE" ? "Preventiva" : "Corretiva"}
-              </p>
+            {/* DATA */}
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-background">
+              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                <Calendar size={18} />
+              </div>
+
+              <div>
+                <p className="text-xs text-muted uppercase tracking-wide">
+                  Data
+                </p>
+
+                <p className="font-semibold">
+                  {maintenance.createdAt
+                    ? dayjs(maintenance.createdAt).format("DD/MM/YYYY")
+                    : "N/A"}
+                </p>
+              </div>
             </div>
 
-            <div>
-              <p className="text-xs text-muted">Status</p>
-              <p className="font-bold">{handleStatusBadge(maintenance.status)}</p>
+            {/* TIPO */}
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-background">
+              <div className="p-2 rounded-lg bg-warning/10 text-warning">
+                <Wrench size={18} />
+              </div>
+
+              <div>
+                <p className="text-xs text-muted uppercase tracking-wide">
+                  Tipo
+                </p>
+
+                <span className="text-sm font-semibold">
+                  {maintenance.type === "PREVENTIVE"
+                    ? "Preventiva"
+                    : "Corretiva"}
+                </span>
+              </div>
             </div>
 
-            <div>
-              <p className="text-xs text-muted">KM</p>
-              <p className="font-bold">{maintenance.odometer} km</p>
+            {/* KM */}
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-background">
+              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
+                <Gauge size={18} />
+              </div>
+
+              <div>
+                <p className="text-xs text-muted uppercase tracking-wide">
+                  Quilometragem
+                </p>
+
+                <p className="font-semibold">{maintenance.odometer} km</p>
+              </div>
+            </div>
+
+            {/* STATUS */}
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-background">
+              <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
+                <ChartCandlestick size={18} />
+              </div>
+
+              <div>
+                <p className="text-xs text-muted uppercase tracking-wide">
+                  Status
+                </p>
+
+                <p className="font-semibold">{handleStatusBadge(maintenance.status)}</p>
+              </div>
             </div>
           </div>
 
-          {maintenance.description && (
-            <div>
-              <p className="text-xs text-muted">Descrição</p>
-              <p>{maintenance.description}</p>
-            </div>
-          )}
+          <div className="flex items-center border-t border-border pt-4">
+            {/* DESCRIÇÃO */}
+            {maintenance.description && (
+              <div className="">
+                <p className="text-xs text-muted uppercase tracking-wide mb-2">
+                  Descrição
+                </p>
+
+                <p className="text-sm leading-relaxed text-muted">
+                  {maintenance.description}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ITEMS */}
