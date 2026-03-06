@@ -5,7 +5,7 @@ import {
   StockMovementListResponse,
 } from "@/services/stock.service";
 import { StockMovementsTable } from "@/components/stock/stockMovementsTable";
-import { PackageSearch, ArrowDown, ArrowUp, ArrowLeft } from "lucide-react";
+import { PackageSearch, ArrowDown, ArrowUp } from "lucide-react";
 import { translateApiErrors } from "@/utils/translateApiError";
 import { useEffect, useState, useCallback } from "react";
 import Pagination from "@/components/paginationComp";
@@ -14,7 +14,6 @@ import { StatsCard } from "@/components/statsCard";
 import LoaderComp from "@/components/loaderComp";
 import toast, { Toaster } from "react-hot-toast";
 import { AxiosError } from "axios";
-import Link from "next/link";
 
 export default function StockMovementsPage() {
   const [loading, setLoading] = useState(false);
@@ -91,13 +90,6 @@ export default function StockMovementsPage() {
       <Toaster />
 
       <div className="max-w-7xl mx-auto space-y-4">
-        <Link
-          href="/estoque"
-          className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
-        >
-          <ArrowLeft size={16} /> Voltar para estoque
-        </Link>
-
         <header>
           <h1 className="text-3xl font-bold">
             Movimentações de <span className="text-accent">Estoque</span>

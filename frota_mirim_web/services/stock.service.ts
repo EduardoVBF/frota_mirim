@@ -25,9 +25,38 @@ export type StockItem = {
 
 export type StockMovementType = "IN" | "OUT" | "ADJUST";
 
+
+// FILTERS
 export type StockFilters = {
-  search: string;
-  type?: StockMovementType[]; 
+  search?: string;
+
+  lowStock?: boolean;
+  zeroStock?: boolean;
+
+  sortBy?: "name" | "quantity";
+  sortOrder?: "asc" | "desc";
+
+  type?: StockMovementType[];
+};
+
+
+// RESPONSE TYPES
+export type StockListResponse = {
+  items: StockItem[];
+
+  meta: {
+    total: number;
+    totalFiltered: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+
+  stats: {
+    totalItems: number;
+    totalUnits: number;
+    lowStock: number;
+  };
 };
 
 export type StockMovement = {
@@ -59,6 +88,7 @@ export type StockMovement = {
 
 export type StockMovementListResponse = {
   items: StockMovement[];
+
   meta: {
     total: number;
     totalFiltered: number;
@@ -67,6 +97,7 @@ export type StockMovementListResponse = {
     totalPages: number;
   };
 };
+
 
 // PAYLOADS
 export type StockEntryPayload = {
@@ -87,15 +118,16 @@ export type UpdateStockConfigPayload = {
   location?: string;
 };
 
+
 // API
 export async function getStock(
   filters: StockFilters & { page?: number; limit?: number },
-): Promise<StockItem[]> {
+): Promise<StockListResponse> {
   const { data } = await api.get("/stock", {
     params: filters,
   });
 
-  return data.items;
+  return data;
 }
 
 export async function stockEntry(payload: StockEntryPayload): Promise<void> {
@@ -108,10 +140,11 @@ export async function stockAdjust(payload: StockAdjustPayload): Promise<void> {
 
 export async function getStockMovements(
   filters: StockFilters & { page?: number; limit?: number },
-): Promise<StockMovement[]> {
+): Promise<StockMovementListResponse> {
   const { data } = await api.get("/stock/movements", {
     params: filters,
   });
+
   return data;
 }
 

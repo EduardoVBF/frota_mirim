@@ -29,10 +29,27 @@ export const stockAdjustSchema = z.object({
 export const stockQuerySchema = z.object({
   search: z.string().optional(),
 
-  type: z.preprocess((val) => {
-    if (!val) return undefined;
-    return Array.isArray(val) ? val : [val];
-  }, z.array(stockMovementTypeSchema).optional()),
+  type: z.enum(["IN", "OUT", "ADJUST"]).optional(),
+
+  lowStock: z.preprocess(
+    (v) => v === "true" || v === true,
+    z.boolean().optional(),
+  ),
+
+  zeroStock: z.preprocess(
+    (v) => v === "true" || v === true,
+    z.boolean().optional(),
+  ),
+
+  sortBy: z
+    .enum(["name", "quantity"])
+    .optional()
+    .default("name"),
+
+  sortOrder: z
+    .enum(["asc", "desc"])
+    .optional()
+    .default("asc"),
 
   page: z.preprocess((val) => {
     if (!val) return 1;

@@ -4,42 +4,97 @@ import { StockQueryDTO } from "./stock.schema";
 
 export class StockService {
   async getStock(query: StockQueryDTO) {
-    const { search, page = 1, limit = 10 } = query;
+    const {
+      search,
+      page = 1,
+      limit = 10,
+      lowStock,
+      zeroStock,
+      sortBy = "name",
+      sortOrder = "asc",
+    } = query;
 
     const where: any = {};
 
     if (search) {
       where.itemCatalog = {
-        name: { contains: search, mode: "insensitive" },
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
       };
+    }
+
+    if (zeroStock) {
+      where.currentQuantity = 0;
     }
 
     const skip = (page - 1) * limit;
 
-    const [items, totalFiltered, totalCount] = await Promise.all([
-      prisma.stockItem.findMany({
-        where,
-        include: {
-          itemCatalog: true,
-        },
-        skip,
-        take: limit,
-        orderBy: {
-          itemCatalog: { name: "asc" },
-        },
-      }),
-      prisma.stockItem.count({ where }),
-      prisma.stockItem.count(),
-    ]);
+    const orderBy =
+      sortBy === "name"
+        ? { itemCatalog: { name: sortOrder } }
+        : { currentQuantity: sortOrder };
+
+    const [items, totalFiltered, totalCount, totalUnits, lowStockItems] =
+      await Promise.all([
+        prisma.stockItem.findMany({
+          where,
+          include: {
+            itemCatalog: true,
+          },
+          skip,
+          take: limit,
+          orderBy,
+        }),
+
+        prisma.stockItem.count({ where }),
+
+        prisma.stockItem.count(),
+
+        prisma.stockItem.aggregate({
+          _sum: {
+            currentQuantity: true,
+          },
+        }),
+
+        prisma.stockItem.findMany({
+          select: {
+            currentQuantity: true,
+            minimumQuantity: true,
+          },
+        }),
+      ]);
+
+    const lowStockCount = lowStockItems.filter(
+      (i) =>
+        i.minimumQuantity !== null && i.currentQuantity < i.minimumQuantity,
+    ).length;
+
+    let filteredItems = items;
+
+    if (lowStock) {
+      filteredItems = items.filter(
+        (i) =>
+          i.minimumQuantity !== null && i.currentQuantity < i.minimumQuantity,
+      );
+    }
 
     return {
-      items,
+      items: filteredItems,
+
       meta: {
         total: totalCount,
         totalFiltered,
         page,
         limit,
         totalPages: Math.ceil(totalFiltered / limit),
+      },
+
+      stats: {
+        totalItems: totalCount,
+        totalUnits: totalUnits._sum.currentQuantity ?? 0,
+        lowStock: lowStockCount,
       },
     };
   }
