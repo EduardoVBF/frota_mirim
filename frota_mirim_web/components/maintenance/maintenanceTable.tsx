@@ -4,7 +4,7 @@ import {
   MaintenanceFilters,
   MaintenanceStatus,
 } from "@/services/maintenance.service";
-import { Filter, FilterX, Wrench, Plus, Eye } from "lucide-react";
+import { Filter, FilterX, Wrench, Plus, Eye, Pencil } from "lucide-react";
 import MaintenanceFormModal from "./maintenanceFormModal";
 import { Vehicle } from "@/services/vehicles.service";
 import FilterChips from "../fuel-supply/FilterChips";
@@ -19,6 +19,7 @@ export function MaintenanceTable({
   filters,
   setFilters,
   vehicles,
+  onChange,
 }: {
   maintenances: Maintenance[];
   isLoading: boolean;
@@ -27,6 +28,8 @@ export function MaintenanceTable({
   vehicles: Vehicle[];
   onChange: () => void;
 }) {
+  const [selectedMaintenance, setSelectedMaintenance] =
+    useState<Maintenance | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -83,7 +86,12 @@ export function MaintenanceTable({
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       <MaintenanceFormModal
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        maintenance={selectedMaintenance}
+        onClose={() => {
+          setSelectedMaintenance(null);
+          setIsModalOpen(false);
+          onChange();
+        }}
       />
       {/* HEADER */}
       <div className="p-4 border-b border-border flex justify-between items-center">
@@ -143,7 +151,7 @@ export function MaintenanceTable({
               ]}
               className="max-w-72"
             />
-            
+
             {/* TIPO */}
             <FilterChips
               label="Tipo"
@@ -285,12 +293,24 @@ export function MaintenanceTable({
                     <td className="px-6 py-4">R$ {maintenance.totalCost}</td>
 
                     <td className="px-6 py-4 text-right">
-                      <Link
-                        href={`/manutencoes/${maintenance.id}`}
-                        className="p-2 hover:text-accent"
-                      >
-                        <Eye size={16} />
-                      </Link>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedMaintenance(maintenance);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-2 hover:text-accent"
+                        >
+                          <Pencil size={16} />
+                        </button>
+
+                        <Link
+                          href={`/manutencoes/${maintenance.id}`}
+                          className="p-2 hover:text-accent"
+                        >
+                          <Eye size={16} />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))

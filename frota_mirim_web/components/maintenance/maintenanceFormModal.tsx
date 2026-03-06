@@ -1,5 +1,9 @@
 "use client";
-import { createMaintenance } from "@/services/maintenance.service";
+import {
+  createMaintenance,
+  Maintenance,
+  updateMaintenance,
+} from "@/services/maintenance.service";
 import { getVehicles, Vehicle } from "@/services/vehicles.service";
 import PrimarySelect from "@/components/form/primarySelect";
 import PrimaryModal from "@/components/form/primaryModal";
@@ -12,9 +16,11 @@ import toast from "react-hot-toast";
 export default function MaintenanceFormModal({
   open,
   onClose,
+  maintenance,
 }: {
   open: boolean;
   onClose: () => void;
+  maintenance?: Maintenance | null;
 }) {
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -25,8 +31,9 @@ export default function MaintenanceFormModal({
     "INTERNAL",
   );
   const [description, setDescription] = useState("");
-
   const [loading, setLoading] = useState(false);
+
+  const isEdit = !!maintenance;
 
   useEffect(() => {
     async function fetchVehicles() {
@@ -62,31 +69,52 @@ export default function MaintenanceFormModal({
     setLoading(true);
 
     try {
-      const maintenance = await createMaintenance({
-        vehicleId,
-        type,
-        performerType,
-        odometer: Number(odometer),
-        description,
-      });
+      if (isEdit && maintenance) {
+        await updateMaintenance(maintenance.id, {
+          vehicleId,
+          type,
+          performerType,
+          odometer: Number(odometer),
+          description,
+        });
 
-      toast.success("Manutenção criada");
+        toast.success("Manutenção atualizada");
+      } else {
+        const created = await createMaintenance({
+          vehicleId,
+          type,
+          performerType,
+          odometer: Number(odometer),
+          description,
+        });
+
+        toast.success("Manutenção criada");
+
+        router.push(`/manutencoes/${created.id}`);
+      }
 
       handleClose();
-
-      router.push(`/manutencoes/${maintenance.id}`);
     } catch {
-      toast.error("Erro ao criar manutenção");
+      toast.error("Erro ao salvar manutenção");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (maintenance) {
+      setVehicleId(maintenance.vehicleId);
+      setType(maintenance.type);
+      setOdometer(String(maintenance.odometer));
+      setDescription(maintenance.description || "");
+    }
+  }, [maintenance]);
+
   return (
     <PrimaryModal
       isOpen={open}
       onClose={handleClose}
-      title="Nova manutenção"
+      title={isEdit ? "Editar manutenção" : "Nova manutenção"}
       footer={
         <button
           onClick={handleSubmit}
@@ -95,7 +123,13 @@ export default function MaintenanceFormModal({
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
-          {loading ? "Criando..." : "Criar manutenção"}
+          {loading
+            ? isEdit
+              ? "Salvando..."
+              : "Criando..."
+            : isEdit
+              ? "Salvar alterações"
+              : "Criar manutenção"}
         </button>
       }
     >
