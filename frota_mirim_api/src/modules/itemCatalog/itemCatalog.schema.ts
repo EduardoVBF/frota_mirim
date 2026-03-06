@@ -71,6 +71,16 @@ export const itemCatalogQuerySchema = z.object({
     return val;
   }, z.boolean().optional()),
 
+  sortBy: z
+    .enum(["name", "createdAt", "defaultPrice"])
+    .optional()
+    .default("createdAt"),
+
+  sortOrder: z
+    .enum(["asc", "desc"])
+    .optional()
+    .default("desc"),
+
   page: z.preprocess((val) => {
     if (!val) return 1;
     return Number(val);
