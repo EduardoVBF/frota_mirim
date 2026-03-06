@@ -22,12 +22,18 @@ export type ItemCatalog = {
 // RESPONSE PAGINADA
 export type ItemCatalogResponse = {
   items: ItemCatalog[];
+
   meta: {
     total: number;
     totalFiltered: number;
     page: number;
     limit: number;
     totalPages: number;
+  };
+
+  stats: {
+    parts: number;
+    services: number;
   };
 };
 

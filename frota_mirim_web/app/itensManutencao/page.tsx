@@ -3,6 +3,7 @@ import {
   getItemCatalog,
   ItemCatalog,
   ItemCatalogFilters,
+  ItemCatalogResponse,
 } from "@/services/itemCatalog.service";
 import { ItemCatalogTable } from "@/components/itemCatalog/itemCatalogTable";
 import { translateApiErrors } from "@/utils/translateApiError";
@@ -17,7 +18,21 @@ import { AxiosError } from "axios";
 
 export default function ItemCatalogPage() {
   const [loading, setLoading] = useState(false);
+
   const [items, setItems] = useState<ItemCatalog[]>([]);
+
+  const [meta, setMeta] = useState({
+    total: 0,
+    totalFiltered: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 1,
+  });
+
+  const [stats, setStats] = useState({
+    parts: 0,
+    services: 0,
+  });
 
   const [filters, setFilters] = useState<
     ItemCatalogFilters & { search?: string }
@@ -35,13 +50,15 @@ export default function ItemCatalogPage() {
     setLoading(true);
 
     try {
-      const data = await getItemCatalog({
+      const data: ItemCatalogResponse = await getItemCatalog({
         ...filters,
         page,
         limit,
       });
 
       setItems(data.items);
+      setMeta(data.meta);
+      setStats(data.stats);
     } catch (err) {
       if (!(err instanceof AxiosError)) {
         toast.error("Erro ao buscar os itens");
@@ -56,11 +73,12 @@ export default function ItemCatalogPage() {
       const { toastMessage } = translateApiErrors(err.response.data);
 
       toast.error(toastMessage || "Erro ao buscar os itens");
+
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [filters, page]);
+  }, [filters, page, limit]);
 
   useEffect(() => {
     fetchItems();
@@ -70,7 +88,7 @@ export default function ItemCatalogPage() {
     setPage(1);
   }, [filters]);
 
-  const totalPages = Math.ceil(items.length / limit);
+  const totalPages = meta.totalPages;
 
   return (
     <FadeIn>
@@ -89,25 +107,21 @@ export default function ItemCatalogPage() {
           <div className="grid grid-cols-3 gap-6">
             <StatsCard
               label="Total Itens"
-              value={items.length.toString()}
+              value={meta.total.toString()}
               icon={<Package />}
               iconColor="text-accent"
             />
 
             <StatsCard
               label="Peças"
-              value={items
-                .filter((i) => i.type === "PART")
-                .length.toString()}
+              value={stats.parts.toString()}
               icon={<Wrench />}
               iconColor="text-warning"
             />
 
             <StatsCard
               label="Serviços"
-              value={items
-                .filter((i) => i.type === "SERVICE")
-                .length.toString()}
+              value={stats.services.toString()}
               icon={<Wrench />}
               iconColor="text-success"
             />
