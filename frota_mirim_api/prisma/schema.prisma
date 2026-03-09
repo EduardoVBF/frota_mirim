@@ -307,6 +307,7 @@ model StockMovement {
 // ORDEM DE MANUTENÇÃO
 model MaintenanceOrder {
   id String @id @default(uuid())
+  sequenceId Int @unique
 
   vehicleId String
   vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)

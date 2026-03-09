@@ -1,6 +1,7 @@
 import { prisma } from "../../shared/database/prisma";
 import { AppError } from "../../infra/errors/app-error";
 import { MaintenanceQueryDTO, MAINTENANCE_STATUS } from "./maintenance.schema";
+import { Prisma } from "@prisma/client";
 
 export class MaintenanceService {
   async ensureMaintenanceExists(id: string) {
@@ -25,7 +26,10 @@ export class MaintenanceService {
     return maintenance;
   }
 
-  async recalculateMaintenanceCosts(tx: any, maintenanceId: string) {
+  async recalculateMaintenanceCosts(
+    tx: Prisma.TransactionClient,
+    maintenanceId: string,
+  ) {
     const items = await tx.maintenanceItem.findMany({
       where: { maintenanceOrderId: maintenanceId },
     });
@@ -67,7 +71,7 @@ export class MaintenanceService {
       sortOrder = "desc",
     } = query;
 
-    const where: any = {};
+    const where: Prisma.MaintenanceOrderWhereInput = {};
 
     if (vehicleId) {
       where.vehicleId = vehicleId;
@@ -82,6 +86,8 @@ export class MaintenanceService {
     }
 
     if (search) {
+      const seq = Number(search);
+
       where.OR = [
         {
           description: {
@@ -91,12 +97,19 @@ export class MaintenanceService {
         },
         {
           vehicle: {
-            plate: {
+            placa: {
               contains: search,
               mode: "insensitive",
             },
           },
         },
+        ...(Number.isNaN(seq)
+          ? []
+          : [
+              {
+                sequenceId: seq,
+              },
+            ]),
       ];
     }
 
@@ -107,7 +120,14 @@ export class MaintenanceService {
         prisma.maintenanceOrder.findMany({
           where,
           include: {
-            vehicle: true,
+            vehicle: {
+              select: {
+                id: true,
+                placa: true,
+                modelo: true,
+                marca: true,
+              },
+            },
           },
           orderBy: {
             [sortBy]: sortOrder,
@@ -122,11 +142,13 @@ export class MaintenanceService {
 
         prisma.maintenanceOrder.groupBy({
           by: ["status"],
+          where,
           _count: true,
         }),
 
         prisma.maintenanceOrder.groupBy({
           by: ["type"],
+          where,
           _count: true,
         }),
       ]);
@@ -156,6 +178,7 @@ export class MaintenanceService {
     });
 
     const totalCostResult = await prisma.maintenanceOrder.aggregate({
+      where,
       _sum: {
         totalCost: true,
       },
@@ -171,7 +194,7 @@ export class MaintenanceService {
         page,
         limit,
         totalPages: Math.ceil(totalFiltered / limit),
-        AllTotalCost: totalCost,
+        allTotalCost: totalCost,
       },
       stats: {
         status: statusStats,
@@ -184,7 +207,14 @@ export class MaintenanceService {
     const maintenance = await prisma.maintenanceOrder.findUnique({
       where: { id },
       include: {
-        vehicle: true,
+        vehicle: {
+          select: {
+            id: true,
+            placa: true,
+            modelo: true,
+            marca: true,
+          },
+        },
         maintenanceItems: true,
       },
     });
@@ -205,11 +235,22 @@ export class MaintenanceService {
       throw new AppError("Veículo não encontrado.", 404);
     }
 
-    return prisma.maintenanceOrder.create({
-      data: {
-        ...data,
-        createdByUserId: userId,
-      },
+    return prisma.$transaction(async (tx) => {
+      const last = await tx.maintenanceOrder.aggregate({
+        _max: {
+          sequenceId: true,
+        },
+      });
+
+      const nextSequence = (last._max.sequenceId ?? 0) + 1;
+
+      return tx.maintenanceOrder.create({
+        data: {
+          ...data,
+          sequenceId: nextSequence,
+          createdByUserId: userId,
+        },
+      });
     });
   }
 
