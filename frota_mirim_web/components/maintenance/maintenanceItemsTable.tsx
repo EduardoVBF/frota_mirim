@@ -138,14 +138,14 @@ export function MaintenanceItemsTable({
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleEdit(item as MaintenanceItem)}
-                          className="p-2 hover:text-accent"
+                          className="p-2 hover:text-accent cursor-pointer"
                         >
                           <Pencil size={16} />
                         </button>
 
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-2 hover:text-error"
+                          className="p-2 hover:text-error cursor-pointer"
                         >
                           <Trash2 size={16} />
                         </button>

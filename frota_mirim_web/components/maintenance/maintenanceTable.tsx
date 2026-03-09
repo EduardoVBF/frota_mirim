@@ -230,6 +230,7 @@ export function MaintenanceTable({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
+                <th className="px-6 py-4">#</th>
                 <th className="px-6 py-4">Data</th>
                 <th className="px-6 py-4">Veículo</th>
                 <th className="px-6 py-4">Tipo</th>
@@ -250,9 +251,16 @@ export function MaintenanceTable({
               ) : (
                 maintenances.map((maintenance) => (
                   <tr key={maintenance.id} className="border-b border-border">
+                    <td className="px-6 py-4 font-bold">
+                      {maintenance.sequenceId
+                        ? maintenance.sequenceId.toString().padStart(5, "0")
+                        : "-"}
+                    </td>
+
                     <td className="px-6 py-4">
                       {new Date(maintenance.createdAt).toLocaleDateString()}
                     </td>
+
                     {vehicles ? (
                       <td className="px-6 py-4 capitalize">
                         <Link

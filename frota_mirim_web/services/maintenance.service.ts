@@ -3,11 +3,7 @@ import qs from "qs";
 
 export type MaintenanceType = "PREVENTIVE" | "CORRECTIVE";
 
-export type MaintenanceStatus =
-  | "OPEN"
-  | "IN_PROGRESS"
-  | "DONE"
-  | "CANCELED";
+export type MaintenanceStatus = "OPEN" | "IN_PROGRESS" | "DONE" | "CANCELED";
 
 export type MaintenanceItem = {
   id: string;
@@ -29,6 +25,7 @@ export type MaintenanceItem = {
 
 export type Maintenance = {
   id: string;
+  sequenceId: number;
 
   vehicleId: string;
 
@@ -112,6 +109,8 @@ export type MaintenancesResponse = {
 };
 
 export type CreateMaintenancePayload = {
+  status?: MaintenanceStatus;
+
   vehicleId: string;
 
   type: MaintenanceType;
@@ -154,6 +153,53 @@ export async function updateMaintenance(
   payload: Partial<CreateMaintenancePayload>,
 ): Promise<Maintenance> {
   const { data } = await api.put(`/maintenance/${id}`, payload);
+
+  return data;
+}
+
+export async function updateMaintenanceStatus(
+  id: string,
+  status: MaintenanceStatus,
+): Promise<Maintenance> {
+  if (!["OPEN", "IN_PROGRESS", "DONE", "CANCELED"].includes(status)) {
+    throw new Error("Status inválido");
+  }
+
+  const maintenance = await getMaintenanceById(id);
+
+  if (status === "IN_PROGRESS") {
+    if (maintenance.status !== "OPEN") {
+      throw new Error(
+        "Só é permitido iniciar uma manutenção que esteja com status 'ABERTA'",
+      );
+    }
+  }
+
+  if (status === "DONE") {
+    if (maintenance.status !== "IN_PROGRESS") {
+      throw new Error(
+        "Só é permitido finalizar uma manutenção que esteja 'EM ANDAMENTO'",
+      );
+    }
+  }
+
+  if (status === "CANCELED") {
+    if (maintenance.status === "DONE") {
+      throw new Error(
+        "Não é permitido cancelar uma manutenção que já esteja 'FINALIZADA'",
+      );
+    }
+  }
+
+  if (status === "OPEN") {
+    if (maintenance.status !== "IN_PROGRESS") {
+      throw new Error(
+        "Só é permitido reabrir uma manutenção que esteja 'EM ANDAMENTO'",
+      );
+    }
+  }
+
+  const { data } = await api.patch(`/maintenance/${id}/status`, { status });
 
   return data;
 }
