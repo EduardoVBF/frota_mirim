@@ -135,7 +135,7 @@ export function VehicleDetailHeader({
           </button>
 
           <button
-            className="p-2 rounded-xl bg-alternative-bg border border-border hover:border-accent/50 text-muted hover:text-accent transition-all"
+            className="p-2 rounded-xl bg-alternative-bg border border-border hover:border-accent/50 text-muted hover:text-accent transition-all cursor-pointer"
             onClick={handleEdit}
           >
             <Edit3 size={18} />
