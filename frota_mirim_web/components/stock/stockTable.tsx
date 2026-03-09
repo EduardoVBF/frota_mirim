@@ -38,6 +38,15 @@ export function StockTable({
     });
   };
 
+  const formatMoney = (value: string | number) => {
+    const numberValue = typeof value === "string" ? parseFloat(value) : value;
+
+    return numberValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       <StockMovementModal
@@ -125,6 +134,7 @@ export function StockTable({
               <tr className="text-xs uppercase text-muted border-b border-border">
                 <th className="px-6 py-4">Item</th>
                 <th className="px-6 py-4">Referência</th>
+                <th className="px-6 py-4">Preço padrão</th>
                 <th className="px-6 py-4">Quantidade</th>
                 <th className="px-6 py-4">Mínimo</th>
                 <th className="px-6 py-4 text-right">Ações</th>
@@ -157,6 +167,10 @@ export function StockTable({
 
                       <td className="px-6 py-4">
                         {item.itemCatalog.reference || "-"}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {formatMoney(item.itemCatalog.defaultPrice) || "-"}
                       </td>
 
                       <td className="px-6 py-4 font-bold">

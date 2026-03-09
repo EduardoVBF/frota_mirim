@@ -53,6 +53,15 @@ export function MaintenanceItemsTable({
     setModalOpen(true);
   };
 
+  const formatMoney = (value: string | number) => {
+    const numberValue = typeof value === "string" ? parseFloat(value) : value;
+
+    return numberValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
   return (
     <div className="rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       <AddMaintenanceItemModal
@@ -121,17 +130,11 @@ export function MaintenanceItemsTable({
                     <td className="px-6 py-4">{item.quantity}</td>
 
                     <td className="px-6 py-4">
-                      {item.unitPrice.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
+                      {formatMoney(item.unitPrice)}
                     </td>
 
                     <td className="px-6 py-4 font-bold">
-                      {item.totalPrice.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
+                      {formatMoney(item.totalPrice)}
                     </td>
 
                     <td className="px-6 py-4 text-right">

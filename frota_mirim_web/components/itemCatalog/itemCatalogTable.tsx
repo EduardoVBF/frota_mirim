@@ -196,7 +196,7 @@ export function ItemCatalogTable({
                 <th className="px-6 py-4">Nome</th>
                 <th className="px-6 py-4">Tipo</th>
                 <th className="px-6 py-4">Referência</th>
-                <th className="px-6 py-4">Preço</th>
+                <th className="px-6 py-4">Preço padrão</th>
                 <th className="px-6 py-4">Estoque</th>
                 <th className="px-6 py-4">Ativo</th>
                 <th className="px-6 py-4 text-right">Ações</th>

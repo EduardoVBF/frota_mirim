@@ -70,6 +70,15 @@ export default function AddMaintenanceItemModal({
     setUnitPrice("");
   };
 
+  const formatMoney = (value: string | number) => {
+    const numberValue = typeof value === "string" ? parseFloat(value) : value;
+
+    return numberValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
 
@@ -124,7 +133,7 @@ export default function AddMaintenanceItemModal({
       }
     >
       <div className="space-y-4">
-        {!isEdit && (
+        {!isEdit ? (
           <PrimarySelect
             label="Item do catálogo"
             value={itemCatalogId}
@@ -132,11 +141,30 @@ export default function AddMaintenanceItemModal({
             options={[
               { label: "Selecione um item", value: "" },
               ...items.map((i) => ({
-                label: `${i.name} (${i.type === "PART" ? "Peça" : "Serviço"})`,
+                label: `${i.name} (${i.type === "PART" ? "Peça" : "Serviço"}) - ${i.reference}`,
                 value: i.id,
               })),
             ]}
           />
+        ) : (
+          <div className="text-sm">
+            Item:{" "}
+            <strong>
+              {items.find((i) => i.id === item.itemCatalogId)?.name ||
+                item.nameSnapshot}
+            </strong>
+          </div>
+        )}
+
+        {itemCatalogId && (
+          <div className="text-sm text-muted">
+            Preço padrão:{" "}
+            <strong>
+              {formatMoney(
+                items.find((i) => i.id === itemCatalogId)?.defaultPrice || 0,
+              )}
+            </strong>
+          </div>
         )}
 
         <PrimaryInput
@@ -157,13 +185,7 @@ export default function AddMaintenanceItemModal({
 
         {quantity && unitPrice && (
           <div className="text-sm text-muted">
-            Total:{" "}
-            <strong>
-              {total.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              })}
-            </strong>
+            Total: <strong>{formatMoney(total)}</strong>
           </div>
         )}
       </div>

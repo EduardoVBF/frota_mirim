@@ -90,7 +90,7 @@ export type MaintenancesResponse = {
     page: number;
     limit: number;
     totalPages: number;
-    AllTotalCost: string;
+    allTotalCost: number;
   };
 
   stats: {
@@ -157,49 +157,27 @@ export async function updateMaintenance(
   return data;
 }
 
+/* UPDATE STATUS */
+
 export async function updateMaintenanceStatus(
   id: string,
   status: MaintenanceStatus,
 ): Promise<Maintenance> {
-  if (!["OPEN", "IN_PROGRESS", "DONE", "CANCELED"].includes(status)) {
-    throw new Error("Status inválido");
-  }
-
-  const maintenance = await getMaintenanceById(id);
-
-  if (status === "IN_PROGRESS") {
-    if (maintenance.status !== "OPEN") {
-      throw new Error(
-        "Só é permitido iniciar uma manutenção que esteja com status 'ABERTA'",
-      );
-    }
-  }
-
-  if (status === "DONE") {
-    if (maintenance.status !== "IN_PROGRESS") {
-      throw new Error(
-        "Só é permitido finalizar uma manutenção que esteja 'EM ANDAMENTO'",
-      );
-    }
-  }
-
-  if (status === "CANCELED") {
-    if (maintenance.status === "DONE") {
-      throw new Error(
-        "Não é permitido cancelar uma manutenção que já esteja 'FINALIZADA'",
-      );
-    }
-  }
-
-  if (status === "OPEN") {
-    if (maintenance.status !== "IN_PROGRESS") {
-      throw new Error(
-        "Só é permitido reabrir uma manutenção que esteja 'EM ANDAMENTO'",
-      );
-    }
+  if (!["OPEN", "IN_PROGRESS", "CANCELED"].includes(status)) {
+    throw new Error("Status inválido para atualização direta");
   }
 
   const { data } = await api.patch(`/maintenance/${id}/status`, { status });
+
+  return data;
+}
+
+/* FINALIZE MAINTENANCE */
+
+export async function finalizeMaintenance(
+  id: string,
+): Promise<Maintenance> {
+  const { data } = await api.post(`/maintenance/${id}/finalize`);
 
   return data;
 }

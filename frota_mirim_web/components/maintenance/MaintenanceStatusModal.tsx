@@ -1,6 +1,7 @@
 "use client";
 import {
   updateMaintenanceStatus,
+  finalizeMaintenance,
   MaintenanceStatus,
 } from "@/services/maintenance.service";
 import { translateApiErrors } from "@/utils/translateApiError";
@@ -46,9 +47,13 @@ export default function MaintenanceStatusModal({
     setLoading(true);
 
     try {
-      await updateMaintenanceStatus(maintenanceId, status);
-
-      toast.success("Status atualizado");
+      if (status === "DONE") {
+        await finalizeMaintenance(maintenanceId);
+        toast.success("Manutenção finalizada com sucesso");
+      } else {
+        await updateMaintenanceStatus(maintenanceId, status);
+        toast.success("Status atualizado");
+      }
 
       onSuccess();
       onClose();
@@ -95,7 +100,6 @@ export default function MaintenanceStatusModal({
       }
     >
       <div className="space-y-6">
-        {/* STATUS ATUAL */}
         <div className="text-sm text-muted">
           Status atual:{" "}
           <span className="font-semibold">
@@ -103,7 +107,6 @@ export default function MaintenanceStatusModal({
           </span>
         </div>
 
-        {/* OPTIONS */}
         <div className="grid grid-cols-2 gap-3">
           {statuses.map((s) => {
             const isCurrent = s.value === currentStatus;
@@ -127,13 +130,16 @@ export default function MaintenanceStatusModal({
                       ? "border-accent bg-accent/10"
                       : "border-border bg-background"
                   }
-                  ${!isAllowed ? "opacity-40 cursor-not-allowed" : "hover:border-accent"}
+                  ${
+                    !isAllowed
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:border-accent"
+                  }
                 `}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Circle size={14} className={s.color} />
-
                     <span className="text-sm font-medium">{s.label}</span>
                   </div>
 
