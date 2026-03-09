@@ -299,26 +299,48 @@ export class MaintenanceService {
     }
 
     return prisma.$transaction(async (tx) => {
+      const itemCatalogIds = maintenance.maintenanceItems.map(
+        (i) => i.itemCatalogId,
+      );
+
+      const catalogs = await tx.itemCatalog.findMany({
+        where: {
+          id: { in: itemCatalogIds },
+        },
+      });
+
+      const catalogMap = new Map(catalogs.map((c) => [c.id, c]));
+
+      const stockItems = await tx.stockItem.findMany({
+        where: {
+          itemCatalogId: {
+            in: catalogs.filter((c) => c.isStockItem).map((c) => c.id),
+          },
+        },
+      });
+
+      const stockMap = new Map(stockItems.map((s) => [s.itemCatalogId, s]));
+
       let partsCost = 0;
       let servicesCost = 0;
 
+      // 🔎 valida estoque antes
       for (const item of maintenance.maintenanceItems) {
         const total = Number(item.totalPrice);
 
         if (item.typeSnapshot === "PART") {
           partsCost += total;
 
-          const catalog = await tx.itemCatalog.findUnique({
-            where: { id: item.itemCatalogId },
-          });
+          const catalog = catalogMap.get(item.itemCatalogId);
 
           if (catalog?.isStockItem) {
-            const stock = await tx.stockItem.findUnique({
-              where: { itemCatalogId: catalog.id },
-            });
+            const stock = stockMap.get(catalog.id);
 
             if (!stock) {
-              throw new AppError("Estoque não encontrado.", 500);
+              throw new AppError(
+                `Estoque não encontrado para ${catalog.name}`,
+                500,
+              );
             }
 
             if (stock.currentQuantity < item.quantity) {
@@ -327,31 +349,40 @@ export class MaintenanceService {
                 400,
               );
             }
-
-            const newQuantity = stock.currentQuantity - item.quantity;
-
-            await tx.stockItem.update({
-              where: { itemCatalogId: catalog.id },
-              data: {
-                currentQuantity: newQuantity,
-              },
-            });
-
-            await tx.stockMovement.create({
-              data: {
-                itemCatalogId: catalog.id,
-                type: "OUT",
-                quantity: item.quantity,
-                unitCost: item.unitPrice,
-                totalCost: item.totalPrice,
-                referenceType: "MAINTENANCE",
-                referenceId: maintenance.id,
-                createdByUserId: userId,
-              },
-            });
           }
         } else {
           servicesCost += total;
+        }
+      }
+
+      // 📦 baixa estoque
+      for (const item of maintenance.maintenanceItems) {
+        const catalog = catalogMap.get(item.itemCatalogId);
+
+        if (catalog?.isStockItem) {
+          const stock = stockMap.get(catalog.id)!;
+
+          const newQuantity = stock.currentQuantity - item.quantity;
+
+          await tx.stockItem.update({
+            where: { itemCatalogId: catalog.id },
+            data: {
+              currentQuantity: newQuantity,
+            },
+          });
+
+          await tx.stockMovement.create({
+            data: {
+              itemCatalogId: catalog.id,
+              type: "OUT",
+              quantity: item.quantity,
+              unitCost: item.unitPrice,
+              totalCost: item.totalPrice,
+              referenceType: "MAINTENANCE",
+              referenceId: maintenance.id,
+              createdByUserId: userId,
+            },
+          });
         }
       }
 
