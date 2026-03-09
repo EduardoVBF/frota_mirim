@@ -8,7 +8,7 @@ import {
 import { MaintenanceTable } from "@/components/maintenance/maintenanceTable";
 import { getVehicles, Vehicle } from "@/services/vehicles.service";
 import { useEffect, useState, useCallback } from "react";
-import { Wrench, AlertTriangle } from "lucide-react";
+import { Wrench, AlertTriangle, Coins } from "lucide-react";
 import Pagination from "@/components/paginationComp";
 import { FadeIn } from "@/components/motion/fadeIn";
 import { StatsCard } from "@/components/statsCard";
@@ -26,6 +26,7 @@ export default function MaintenancePage() {
     page: 1,
     limit: 10,
     totalPages: 1,
+    AllTotalCost: "0",
   });
 
   const [stats, setStats] = useState({
@@ -119,12 +120,19 @@ export default function MaintenancePage() {
         {loading ? (
           <LoaderComp />
         ) : (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-4 gap-6">
             <StatsCard
               label="Total manutenções"
               value={meta.total.toString()}
               icon={<Wrench />}
               iconColor="text-accent"
+            />
+            
+            <StatsCard
+              label="Valor total"
+              value={meta.AllTotalCost ? `R$ ${meta.AllTotalCost}` : "R$ 0"}
+              icon={<Coins />}
+              iconColor="text-success"
             />
 
             <StatsCard

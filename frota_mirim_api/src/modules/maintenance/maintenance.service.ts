@@ -155,6 +155,14 @@ export class MaintenanceService {
       if (t.type === "CORRECTIVE") typeStats.corrective = t._count;
     });
 
+    const totalCostResult = await prisma.maintenanceOrder.aggregate({
+      _sum: {
+        totalCost: true,
+      },
+    });
+
+    const totalCost = totalCostResult._sum.totalCost ?? 0;
+
     return {
       items: maintenances,
       meta: {
@@ -163,6 +171,7 @@ export class MaintenanceService {
         page,
         limit,
         totalPages: Math.ceil(totalFiltered / limit),
+        AllTotalCost: totalCost,
       },
       stats: {
         status: statusStats,

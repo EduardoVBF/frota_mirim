@@ -93,6 +93,7 @@ export type MaintenancesResponse = {
     page: number;
     limit: number;
     totalPages: number;
+    AllTotalCost: string;
   };
 
   stats: {
