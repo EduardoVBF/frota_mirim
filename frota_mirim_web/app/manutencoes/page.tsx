@@ -26,7 +26,7 @@ export default function MaintenancePage() {
     page: 1,
     limit: 10,
     totalPages: 1,
-    AllTotalCost: "0",
+    allTotalCost: "0",
   });
 
   const [stats, setStats] = useState({
@@ -130,7 +130,7 @@ export default function MaintenancePage() {
             
             <StatsCard
               label="Valor total"
-              value={meta.AllTotalCost ? `R$ ${meta.AllTotalCost}` : "R$ 0"}
+              value={meta.allTotalCost ? `R$ ${meta.allTotalCost}` : "R$ 0"}
               icon={<Coins />}
               iconColor="text-success"
             />

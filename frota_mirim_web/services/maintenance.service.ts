@@ -90,7 +90,7 @@ export type MaintenancesResponse = {
     page: number;
     limit: number;
     totalPages: number;
-    allTotalCost: number;
+    allTotalCost: string;
   };
 
   stats: {
