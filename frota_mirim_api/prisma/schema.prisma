@@ -73,6 +73,42 @@ enum StockMovementType {
   ADJUST
 }
 
+enum AlertType {
+  // ESTOQUE
+  LOW_STOCK
+  ZERO_STOCK
+
+  // MANUTENÇÃO
+  MAINTENANCE_DUE
+  MAINTENANCE_OVERDUE
+  MAINTENANCE_OPEN_TOO_LONG
+  MAINTENANCE_IN_PROGRESS_TOO_LONG
+
+  // DOCUMENTOS
+  VEHICLE_DOCUMENT_EXPIRING
+  VEHICLE_DOCUMENT_EXPIRED
+
+  // ABASTECIMENTO
+  FUEL_CONSUMPTION_ANOMALY
+
+  // USO DO VEÍCULO
+  VEHICLE_CHECKOUT_TOO_LONG
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertEntityType {
+  STOCK_ITEM
+  VEHICLE
+  MAINTENANCE
+  FUEL_SUPPLY
+  DOCUMENT
+}
+
 // USER
 model User {
   id           String @id @default(uuid())
@@ -382,4 +418,38 @@ model MaintenanceItem {
   @@index([maintenanceOrderId])
   @@index([itemCatalogId])
   @@index([typeSnapshot])
+}
+
+// ALERTAS
+model Alert {
+  id String @id @default(uuid())
+
+  // ID para exibição
+  sequenceId Int @unique @default(autoincrement())
+
+  type     AlertType
+  severity AlertSeverity
+
+  title   String
+  message String
+
+  entityType AlertEntityType
+  entityId   String?
+
+  // dados adicionais do alerta (flexível)
+  metadata Json?
+
+  isRead Boolean @default(false)
+  readAt DateTime?
+
+  // quando o problema foi resolvido
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([severity])
+  @@index([entityType, entityId])
+  @@index([isRead])
+  @@index([createdAt])
 }
