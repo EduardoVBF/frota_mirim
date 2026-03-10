@@ -2,8 +2,68 @@ import { prisma } from "../../shared/database/prisma";
 import { AppError } from "../../infra/errors/app-error";
 import { MaintenanceQueryDTO, MAINTENANCE_STATUS } from "./maintenance.schema";
 import { Prisma } from "@prisma/client";
+import { AlertsService } from "../alerts/alerts.service";
+
+const alertsService = new AlertsService();
 
 export class MaintenanceService {
+  /* INTERNAL: CHECK STOCK ALERTS */
+  private async checkStockAlerts(
+    itemCatalogId: string,
+    currentQuantity: number,
+    minimumQuantity: number | null,
+    itemName: string,
+  ) {
+    /* ZERO STOCK */
+    if (currentQuantity === 0) {
+      await alertsService.createAlertIfNotExists({
+        type: "ZERO_STOCK",
+        severity: "CRITICAL",
+        title: "Item sem estoque",
+        message: `${itemName} está sem estoque`,
+        entityType: "STOCK_ITEM",
+        entityId: itemCatalogId,
+        metadata: {
+          currentQuantity,
+          minimumQuantity,
+        },
+      });
+    } else {
+      await alertsService.resolveAlertsByEntity({
+        type: "ZERO_STOCK",
+        entityType: "STOCK_ITEM",
+        entityId: itemCatalogId,
+      });
+    }
+
+    /* LOW STOCK */
+    if (
+      minimumQuantity !== null &&
+      currentQuantity < minimumQuantity &&
+      currentQuantity > 0
+    ) {
+      await alertsService.createAlertIfNotExists({
+        type: "LOW_STOCK",
+        severity: "WARNING",
+        title: "Estoque baixo",
+        message: `${itemName} está abaixo do estoque mínimo`,
+        entityType: "STOCK_ITEM",
+        entityId: itemCatalogId,
+        metadata: {
+          currentQuantity,
+          minimumQuantity,
+        },
+      });
+    } else {
+      await alertsService.resolveAlertsByEntity({
+        type: "LOW_STOCK",
+        entityType: "STOCK_ITEM",
+        entityId: itemCatalogId,
+      });
+    }
+  }
+
+  /* ENSURE MAINTENANCE EXISTS */
   async ensureMaintenanceExists(id: string) {
     const maintenance = await prisma.maintenanceOrder.findUnique({
       where: { id },
@@ -16,6 +76,7 @@ export class MaintenanceService {
     return maintenance;
   }
 
+  /* ENSURE MAINTENANCE EDITABLE */
   async ensureMaintenanceEditable(id: string) {
     const maintenance = await this.ensureMaintenanceExists(id);
 
@@ -26,6 +87,7 @@ export class MaintenanceService {
     return maintenance;
   }
 
+  /* RECALCULATE COSTS */
   async recalculateMaintenanceCosts(
     tx: Prisma.TransactionClient,
     maintenanceId: string,
@@ -59,6 +121,7 @@ export class MaintenanceService {
     });
   }
 
+  /* GET ALL MAINTENANCE */
   async getAllMaintenance(query: MaintenanceQueryDTO) {
     const {
       vehicleId,
@@ -203,6 +266,7 @@ export class MaintenanceService {
     };
   }
 
+  /* GET BY ID */
   async getMaintenanceById(id: string) {
     const maintenance = await prisma.maintenanceOrder.findUnique({
       where: { id },
@@ -226,6 +290,7 @@ export class MaintenanceService {
     return maintenance;
   }
 
+  /* CREATE */
   async createMaintenance(data: any, userId?: string) {
     const vehicle = await prisma.vehicle.findUnique({
       where: { id: data.vehicleId },
@@ -254,6 +319,7 @@ export class MaintenanceService {
     });
   }
 
+  /* UPDATE */
   async updateMaintenance(id: string, data: any, userId?: string) {
     await this.ensureMaintenanceEditable(id);
 
@@ -266,6 +332,7 @@ export class MaintenanceService {
     });
   }
 
+  /* UPDATE STATUS */
   async updateMaintenanceStatus(id: string, status: string) {
     await this.ensureMaintenanceExists(id);
 
@@ -278,6 +345,7 @@ export class MaintenanceService {
     });
   }
 
+  /* FINALIZE MAINTENANCE */
   async finalizeMaintenance(id: string, userId?: string) {
     const maintenance = await prisma.maintenanceOrder.findUnique({
       where: { id },
@@ -298,15 +366,15 @@ export class MaintenanceService {
       throw new AppError("Não é possível finalizar manutenção sem itens.", 400);
     }
 
-    return prisma.$transaction(async (tx) => {
+    const stockResults: any[] = [];
+
+    const result = await prisma.$transaction(async (tx) => {
       const itemCatalogIds = maintenance.maintenanceItems.map(
         (i) => i.itemCatalogId,
       );
 
       const catalogs = await tx.itemCatalog.findMany({
-        where: {
-          id: { in: itemCatalogIds },
-        },
+        where: { id: { in: itemCatalogIds } },
       });
 
       const catalogMap = new Map(catalogs.map((c) => [c.id, c]));
@@ -324,7 +392,7 @@ export class MaintenanceService {
       let partsCost = 0;
       let servicesCost = 0;
 
-      // 🔎 valida estoque antes
+      /* VALIDATE STOCK */
       for (const item of maintenance.maintenanceItems) {
         const total = Number(item.totalPrice);
 
@@ -355,7 +423,7 @@ export class MaintenanceService {
         }
       }
 
-      // 📦 baixa estoque
+      /* APPLY STOCK */
       for (const item of maintenance.maintenanceItems) {
         const catalog = catalogMap.get(item.itemCatalogId);
 
@@ -383,6 +451,13 @@ export class MaintenanceService {
               createdByUserId: userId,
             },
           });
+
+          stockResults.push({
+            itemCatalogId: catalog.id,
+            itemName: catalog.name,
+            newQuantity,
+            minimumQuantity: stock.minimumQuantity,
+          });
         }
       }
 
@@ -399,5 +474,17 @@ export class MaintenanceService {
         },
       });
     });
+
+    /* CHECK ALERTS AFTER STOCK UPDATE */
+    for (const stock of stockResults) {
+      await this.checkStockAlerts(
+        stock.itemCatalogId,
+        stock.newQuantity,
+        stock.minimumQuantity,
+        stock.itemName,
+      );
+    }
+
+    return result;
   }
 }
