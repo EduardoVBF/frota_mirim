@@ -53,6 +53,15 @@ export function StockMovementsTable({
     return "Ajuste";
   };
 
+  const formatMoney = (value: string | number) => {
+    const numberValue = typeof value === "string" ? parseFloat(value) : value;
+
+    return numberValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       <div className="p-4 border-b border-border flex justify-between items-center">
@@ -160,7 +169,10 @@ export function StockMovementsTable({
               </tr>
             ) : (
               movements.map((movement) => (
-                <tr key={movement.id} className="border-b border-border text-sm">
+                <tr
+                  key={movement.id}
+                  className="border-b border-border text-sm"
+                >
                   <td className="px-6 py-4">
                     {new Date(movement.createdAt).toLocaleDateString()}
                   </td>
@@ -178,14 +190,16 @@ export function StockMovementsTable({
                     {movement.itemCatalog.name || "-"}
                   </td>
 
-                  <td className="px-6 py-4">{movement.itemCatalog.reference || "-"}</td>
+                  <td className="px-6 py-4">
+                    {movement.itemCatalog.reference || "-"}
+                  </td>
 
                   <td className="px-6 py-4 font-bold">{movement.quantity}</td>
 
                   <td className="px-6 py-4">{movement.reason || "-"}</td>
 
                   <td className="px-6 py-4">
-                    {movement.unitCost ? `R$ ${movement.unitCost}` : "-"}
+                    {movement.unitCost ? formatMoney(movement.unitCost || 0) : "-"}
                   </td>
                 </tr>
               ))
