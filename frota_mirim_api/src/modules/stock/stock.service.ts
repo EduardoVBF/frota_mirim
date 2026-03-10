@@ -1,8 +1,66 @@
 import { StockQueryDTO, StockMovementsQueryDTO } from "./stock.schema";
 import { prisma } from "../../shared/database/prisma";
 import { AppError } from "../../infra/errors/app-error";
+import { AlertsService } from "../alerts/alerts.service";
+
+const alertsService = new AlertsService();
 
 export class StockService {
+  /* INTERNAL: CHECK STOCK ALERTS */
+  private async checkStockAlerts(
+    itemCatalogId: string,
+    currentQuantity: number,
+    minimumQuantity: number | null,
+    itemName: string,
+  ) {
+    if (currentQuantity === 0) {
+      await alertsService.createAlertIfNotExists({
+        type: "ZERO_STOCK",
+        severity: "CRITICAL",
+        title: "Item sem estoque",
+        message: `${itemName} está sem estoque`,
+        entityType: "STOCK_ITEM",
+        entityId: itemCatalogId,
+        metadata: {
+          currentQuantity,
+          minimumQuantity,
+        },
+      });
+    } else {
+      await alertsService.resolveAlertsByEntity({
+        type: "ZERO_STOCK",
+        entityType: "STOCK_ITEM",
+        entityId: itemCatalogId,
+      });
+    }
+
+    if (
+      minimumQuantity !== null &&
+      currentQuantity < minimumQuantity &&
+      currentQuantity > 0
+    ) {
+      await alertsService.createAlertIfNotExists({
+        type: "LOW_STOCK",
+        severity: "WARNING",
+        title: "Estoque baixo",
+        message: `${itemName} está abaixo do estoque mínimo`,
+        entityType: "STOCK_ITEM",
+        entityId: itemCatalogId,
+        metadata: {
+          currentQuantity,
+          minimumQuantity,
+        },
+      });
+    } else {
+      await alertsService.resolveAlertsByEntity({
+        type: "LOW_STOCK",
+        entityType: "STOCK_ITEM",
+        entityId: itemCatalogId,
+      });
+    }
+  }
+
+  /* GET STOCK */
   async getStock(query: StockQueryDTO) {
     const {
       search,
@@ -99,6 +157,7 @@ export class StockService {
     };
   }
 
+  /* GET STOCK MOVEMENTS */
   async getStockMovements(query: StockMovementsQueryDTO) {
     const {
       search,
@@ -196,6 +255,7 @@ export class StockService {
     };
   }
 
+  /* STOCK IN */
   async stockIn(data: any, userId?: string) {
     const item = await prisma.itemCatalog.findUnique({
       where: { id: data.itemCatalogId },
@@ -209,7 +269,7 @@ export class StockService {
       throw new AppError("Este item não possui controle de estoque.", 400);
     }
 
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const stock = await tx.stockItem.findUnique({
         where: { itemCatalogId: item.id },
       });
@@ -220,7 +280,7 @@ export class StockService {
 
       const newQuantity = stock.currentQuantity + data.quantity;
 
-      await tx.stockItem.update({
+      const updatedStock = await tx.stockItem.update({
         where: { itemCatalogId: item.id },
         data: {
           currentQuantity: newQuantity,
@@ -240,10 +300,24 @@ export class StockService {
         },
       });
 
-      return { message: "Entrada de estoque registrada." };
+      return {
+        newQuantity,
+        minimumQuantity: stock.minimumQuantity,
+        name: item.name,
+      };
     });
+
+    await this.checkStockAlerts(
+      item.id,
+      result.newQuantity,
+      result.minimumQuantity,
+      result.name,
+    );
+
+    return { message: "Entrada de estoque registrada." };
   }
 
+  /* ADJUST STOCK */
   async adjustStock(data: any, userId?: string) {
     const stock = await prisma.stockItem.findUnique({
       where: { itemCatalogId: data.itemCatalogId },
@@ -259,7 +333,7 @@ export class StockService {
       throw new AppError("Estoque não pode ficar negativo.", 400);
     }
 
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       await tx.stockItem.update({
         where: { itemCatalogId: data.itemCatalogId },
         data: {
@@ -278,10 +352,27 @@ export class StockService {
         },
       });
 
-      return { message: "Ajuste de estoque realizado." };
+      return {
+        newQuantity,
+        minimumQuantity: stock.minimumQuantity,
+      };
     });
+
+    const item = await prisma.itemCatalog.findUnique({
+      where: { id: data.itemCatalogId },
+    });
+
+    await this.checkStockAlerts(
+      data.itemCatalogId,
+      result.newQuantity,
+      result.minimumQuantity,
+      item?.name || "Item",
+    );
+
+    return { message: "Ajuste de estoque realizado." };
   }
 
+  /* UPDATE STOCK CONFIG */
   async updateStockConfig(itemCatalogId: string, data: any) {
     const stock = await prisma.stockItem.findUnique({
       where: { itemCatalogId },
