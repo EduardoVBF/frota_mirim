@@ -154,11 +154,17 @@ export function StockTable({
                     item.minimumQuantity &&
                     item.currentQuantity < item.minimumQuantity;
 
+                  const isZeroStock = item.currentQuantity === 0;
+
                   return (
                     <tr
                       key={item.id}
                       className={`border-b border-border ${
-                        isLowStock ? "bg-warning/10" : ""
+                        isZeroStock
+                          ? "bg-error/10"
+                          : isLowStock
+                            ? "bg-warning/10"
+                            : ""
                       }`}
                     >
                       <td className="px-6 py-4 font-bold">

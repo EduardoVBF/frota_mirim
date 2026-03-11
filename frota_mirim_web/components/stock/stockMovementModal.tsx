@@ -54,6 +54,15 @@ export default function StockMovementModal({
     }
   };
 
+  const formatMoney = (value: string | number) => {
+    const numberValue = typeof value === "string" ? parseFloat(value) : value;
+
+    return numberValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
   return (
     <PrimaryModal
       isOpen={open}
@@ -69,15 +78,23 @@ export default function StockMovementModal({
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <p className="uppercase font-bold">{item?.itemCatalog?.name}</p>
-          {item?.itemCatalog?.reference && (
+        <div>
+          <div className="flex items-center gap-2">
+            <p className="uppercase font-bold">{item?.itemCatalog?.name}</p>
+            {item?.itemCatalog?.reference && (
+              <p className="text-sm text-muted">{item.itemCatalog.reference}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="font-bold">Preço padrão:</p>
             <p className="text-sm text-muted">
-              {item.itemCatalog.reference}
+              {item?.itemCatalog?.defaultPrice
+                ? `${formatMoney(item.itemCatalog.defaultPrice)}`
+                : "-"}
             </p>
-          )}
+          </div>
         </div>
-        
+
         <PrimarySelect
           label="Tipo de movimentação"
           value={type}
