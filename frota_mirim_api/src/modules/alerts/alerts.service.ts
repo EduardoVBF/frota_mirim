@@ -9,10 +9,8 @@ import {
 } from "./alerts.schema";
 
 export class AlertsService {
-
   /* GET ALERTS */
   async getAlerts(query: AlertsQueryDTO) {
-
     const {
       search,
       type,
@@ -71,29 +69,27 @@ export class AlertsService {
 
     const skip = (page - 1) * limit;
 
-    const [alerts, totalFiltered, totalCount, unreadCount] =
-      await Promise.all([
+    const [alerts, totalFiltered, totalCount, unreadCount] = await Promise.all([
+      prisma.alert.findMany({
+        where,
+        orderBy: {
+          [sortBy]: sortOrder,
+        },
+        skip,
+        take: limit,
+      }),
 
-        prisma.alert.findMany({
-          where,
-          orderBy: {
-            [sortBy]: sortOrder,
-          },
-          skip,
-          take: limit,
-        }),
+      prisma.alert.count({ where }),
 
-        prisma.alert.count({ where }),
+      prisma.alert.count(),
 
-        prisma.alert.count(),
-
-        prisma.alert.count({
-          where: {
-            isRead: false,
-            resolvedAt: null,
-          },
-        }),
-      ]);
+      prisma.alert.count({
+        where: {
+          isRead: false,
+          resolvedAt: null,
+        },
+      }),
+    ]);
 
     return {
       items: alerts,
@@ -114,7 +110,6 @@ export class AlertsService {
 
   /* MARK ALERT READ */
   async markAlertRead(id: string, data: MarkAlertReadDTO) {
-
     const alert = await prisma.alert.findUnique({
       where: { id },
     });
@@ -136,7 +131,6 @@ export class AlertsService {
 
   /* MARK ALL READ */
   async markAllRead() {
-
     await prisma.alert.updateMany({
       where: {
         isRead: false,
@@ -152,7 +146,6 @@ export class AlertsService {
 
   /* RESOLVE ALERT */
   async resolveAlert(id: string, data: ResolveAlertDTO) {
-
     const alert = await prisma.alert.findUnique({
       where: { id },
     });
@@ -179,7 +172,6 @@ export class AlertsService {
     entityId?: string;
     metadata?: Prisma.InputJsonValue;
   }) {
-
     return prisma.alert.create({
       data: {
         type: data.type,
@@ -203,14 +195,24 @@ export class AlertsService {
     entityId?: string;
     metadata?: Prisma.InputJsonValue;
   }) {
+    const document = (data.metadata as any)?.document;
+
+    const where: Prisma.AlertWhereInput = {
+      type: data.type,
+      entityType: data.entityType,
+      entityId: data.entityId,
+      resolvedAt: null,
+    };
+
+    if (document) {
+      where.metadata = {
+        path: ["document"],
+        equals: document,
+      };
+    }
 
     const existing = await prisma.alert.findFirst({
-      where: {
-        type: data.type,
-        entityType: data.entityType,
-        entityId: data.entityId,
-        resolvedAt: null,
-      },
+      where,
     });
 
     if (existing) {
@@ -236,7 +238,6 @@ export class AlertsService {
     entityType: Prisma.AlertCreateInput["entityType"];
     entityId?: string;
   }) {
-
     await prisma.alert.updateMany({
       where: {
         type: data.type,
@@ -249,5 +250,4 @@ export class AlertsService {
       },
     });
   }
-
 }

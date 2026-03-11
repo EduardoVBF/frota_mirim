@@ -3,120 +3,104 @@ import { prisma } from "../shared/database/prisma";
 
 const alertsService = new AlertsService();
 
-/* CALCULATE NEXT DUE DATE */
-function getNextDueDate(month: number) {
-
+/* CALCULATE DUE DATE FOR CURRENT YEAR */
+function getDueDate(month: number) {
   const now = new Date();
+  const year = now.getFullYear();
 
-  const currentYear = now.getFullYear();
-
-  const dueDate = new Date(currentYear, month - 1, 1);
-
-  if (dueDate < now) {
-    dueDate.setFullYear(currentYear + 1);
-  }
-
-  return dueDate;
+  return new Date(year, month - 1, 1);
 }
 
-/* VEHICLE DOCUMENT ALERTS */
-export async function vehicleDocumentsJob() {
-
-  const vehicles = await prisma.vehicle.findMany({
-    where: { isActive: true },
-  });
-
+/* CALCULATE DAY DIFFERENCE */
+function diffDays(date: Date) {
   const now = new Date();
 
-  for (const vehicle of vehicles) {
+  return Math.floor((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
 
-    /* IPVA */
-    const ipvaDueDate = getNextDueDate(vehicle.ipvaDueMonth);
+/* CREATE ALERT FOR DOCUMENT */
+async function processVehicleDocumentAlert({
+  vehicle,
+  document,
+  dueMonth,
+}: {
+  vehicle: any;
+  document: "IPVA" | "LICENSING";
+  dueMonth: number;
+}) {
+  const dueDate = getDueDate(dueMonth);
 
-    const ipvaDiffDays = Math.floor(
-      (ipvaDueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-    );
+  const days = diffDays(dueDate);
 
-    if (ipvaDiffDays <= 30 && ipvaDiffDays > 0) {
-
-      await alertsService.createAlertIfNotExists({
-        type: "VEHICLE_DOCUMENT_EXPIRING",
-        severity: "WARNING",
-        title: "IPVA próximo do vencimento",
-        message: `IPVA do veículo ${vehicle.placa} vence em ${ipvaDiffDays} dias`,
-        entityType: "VEHICLE",
-        entityId: vehicle.id,
-        metadata: {
-          document: "IPVA",
-          dueDate: ipvaDueDate,
-          vehiclePlate: vehicle.placa,
-        },
-      });
-
+  const handleDocumentName = (doc: string) => {
+    switch (doc) {
+      case "IPVA":
+        return "IPVA";
+      case "LICENSING":
+        return "Licenciamento";
+      default:
+        return doc;
     }
+  };
 
-    if (ipvaDiffDays <= 0) {
+  if (days <= 30 && days > 0) {
+    await alertsService.createAlertIfNotExists({
+      type: "VEHICLE_DOCUMENT_EXPIRING",
+      severity: "WARNING",
+      title: `${handleDocumentName(document)} próximo do vencimento`,
+      message: `${handleDocumentName(document)} do veículo ${vehicle.placa} vence em ${days} dias`,
+      entityType: "VEHICLE",
+      entityId: vehicle.id,
+      metadata: {
+        document,
+        dueDate,
+        vehiclePlate: vehicle.placa,
+      },
+    });
+  }
 
-      await alertsService.createAlertIfNotExists({
-        type: "VEHICLE_DOCUMENT_EXPIRED",
-        severity: "CRITICAL",
-        title: "IPVA vencido",
-        message: `IPVA do veículo ${vehicle.placa} está vencido`,
-        entityType: "VEHICLE",
-        entityId: vehicle.id,
-        metadata: {
-          document: "IPVA",
-          dueDate: ipvaDueDate,
-          vehiclePlate: vehicle.placa,
-        },
+  if (days <= 0) {
+    await alertsService.createAlertIfNotExists({
+      type: "VEHICLE_DOCUMENT_EXPIRED",
+      severity: "CRITICAL",
+      title: `${handleDocumentName(document)} vencido`,
+      message: `${handleDocumentName(document)} do veículo ${vehicle.placa} está vencido`,
+      entityType: "VEHICLE",
+      entityId: vehicle.id,
+      metadata: {
+        document,
+        dueDate,
+        vehiclePlate: vehicle.placa,
+      },
+    });
+  }
+}
+
+/* VEHICLE DOCUMENT ALERTS JOB */
+export async function vehicleDocumentsJob() {
+  const vehicles = await prisma.vehicle.findMany({
+    where: {
+      isActive: true,
+    },
+  });
+
+  for (const vehicle of vehicles) {
+    /* IPVA */
+    if (vehicle.ipvaDueMonth) {
+      await processVehicleDocumentAlert({
+        vehicle,
+        document: "IPVA",
+        dueMonth: vehicle.ipvaDueMonth,
       });
-
     }
 
     /* LICENSING */
-    const licensingDueDate = getNextDueDate(vehicle.licensingDueMonth);
-
-    const licensingDiffDays = Math.floor(
-      (licensingDueDate.getTime() - now.getTime()) /
-        (1000 * 60 * 60 * 24),
-    );
-
-    if (licensingDiffDays <= 30 && licensingDiffDays > 0) {
-
-      await alertsService.createAlertIfNotExists({
-        type: "VEHICLE_DOCUMENT_EXPIRING",
-        severity: "WARNING",
-        title: "Licenciamento próximo do vencimento",
-        message: `Licenciamento do veículo ${vehicle.placa} vence em ${licensingDiffDays} dias`,
-        entityType: "VEHICLE",
-        entityId: vehicle.id,
-        metadata: {
-          document: "LICENSING",
-          dueDate: licensingDueDate,
-          vehiclePlate: vehicle.placa,
-        },
+    if (vehicle.licensingDueMonth) {
+      await processVehicleDocumentAlert({
+        vehicle,
+        document: "LICENSING",
+        dueMonth: vehicle.licensingDueMonth,
       });
-
     }
-
-    if (licensingDiffDays <= 0) {
-
-      await alertsService.createAlertIfNotExists({
-        type: "VEHICLE_DOCUMENT_EXPIRED",
-        severity: "CRITICAL",
-        title: "Licenciamento vencido",
-        message: `Licenciamento do veículo ${vehicle.placa} está vencido`,
-        entityType: "VEHICLE",
-        entityId: vehicle.id,
-        metadata: {
-          document: "LICENSING",
-          dueDate: licensingDueDate,
-          vehiclePlate: vehicle.placa,
-        },
-      });
-
-    }
-
   }
-
 }

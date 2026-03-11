@@ -8,35 +8,35 @@ import cron from "node-cron";
 export function startScheduler() {
   console.log("🟢 Scheduler iniciado");
 
-  /* MAINTENANCE OVERDUE */
+  /* MAINTENANCE OVERDUE - A CADA 30 MINUTOS */
   cron.schedule("*/30 * * * *", async () => {
     console.log("🔧 Verificando manutenções atrasadas");
 
     await maintenanceAlertsJob();
   });
 
-  /* DOCUMENT ALERTS */
+  /* DOCUMENT ALERTS - A CADA DIA ÀS 2 DA MANHÃ */
   cron.schedule("0 2 * * *", async () => {
     console.log("📄 Verificando documentos de veículos");
 
     await vehicleDocumentsJob();
   });
 
-  /* MAINTENANCE DURATION */
+  /* MAINTENANCE DURATION - A CADA HORA */
   cron.schedule("0 * * * *", async () => {
     console.log("⏱ Verificando duração das manutenções");
 
     await maintenanceDurationJob();
   });
 
-  /* VEHICLE CHECKOUT */
+  /* VEHICLE CHECKOUT - A CADA 30 MINUTOS */
   cron.schedule("*/30 * * * *", async () => {
     console.log("🚗 Verificando veículos fora");
 
     await vehicleCheckoutJob();
   });
 
-  /* FUEL ANOMALY */
+  /* FUEL ANOMALY - A CADA HORA */
   cron.schedule("0 * * * *", async () => {
     console.log("⛽ Verificando consumo anormal");
 

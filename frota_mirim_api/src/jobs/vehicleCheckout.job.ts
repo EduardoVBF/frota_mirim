@@ -3,7 +3,7 @@ import { AlertsService } from "../modules/alerts/alerts.service";
 
 const alertsService = new AlertsService();
 
-const MAX_HOURS_OUT = 12;
+const MAX_HOURS_OUT = 12; // 12 horas
 
 function diffHours(date: Date) {
   const now = new Date();
