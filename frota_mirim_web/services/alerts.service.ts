@@ -109,6 +109,13 @@ export async function markAlertRead(id: string): Promise<Alert> {
   return data;
 }
 
+/* MARK ALERT UNREAD */
+export async function markAlertUnread(id: string): Promise<Alert> {
+  const { data } = await api.patch(`/alerts/${id}/read`, { read: false });
+
+  return data;
+}
+
 /* MARK ALL READ */
 export async function markAllAlertsRead() {
   const { data } = await api.patch("/alerts/read-all");

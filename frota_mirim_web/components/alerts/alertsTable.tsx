@@ -1,5 +1,9 @@
 "use client";
-import { Alert, AlertFilters } from "@/services/alerts.service";
+import {
+  Alert,
+  AlertFilters,
+  markAlertUnread,
+} from "@/services/alerts.service";
 import {
   Filter,
   FilterX,
@@ -7,6 +11,7 @@ import {
   Eye,
   Check,
   Bell,
+  EyeOff,
 } from "lucide-react";
 
 import FilterChips from "../fuel-supply/FilterChips";
@@ -52,10 +57,16 @@ export default function AlertsTable({
 
   async function handleRead(id: string) {
     try {
-      await markAlertRead(id);
+      if (alerts.find((a) => a.id === id)?.isRead) {
+        await markAlertUnread(id);
+        toast.success("Alerta marcado como não lido");
+      } else {
+        await markAlertRead(id);
+        toast.success("Alerta marcado como lido");
+      }
       onChange();
     } catch {
-      toast.error("Erro ao marcar alerta como lido");
+      toast.error("Erro ao atualizar status de leitura do alerta");
     }
   }
 
@@ -138,8 +149,8 @@ export default function AlertsTable({
               filters.isRead === undefined
                 ? ""
                 : filters.isRead
-                ? "true"
-                : "false"
+                  ? "true"
+                  : "false"
             }
             onChange={(value) =>
               setFilters({
@@ -158,8 +169,8 @@ export default function AlertsTable({
               filters.resolved === undefined
                 ? ""
                 : filters.resolved
-                ? "true"
-                : "false"
+                  ? "true"
+                  : "false"
             }
             onChange={(value) =>
               setFilters({
@@ -237,19 +248,25 @@ export default function AlertsTable({
 
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {!alert.isRead && (
+                        {!alert.resolved && !alert.resolvedAt && (
                           <button
                             onClick={() => handleRead(alert.id)}
                             className="p-2 hover:text-accent"
+                            title={`Marcar como ${alert.isRead ? "não lido" : "lido"}`}
                           >
-                            <Eye size={16} />
+                            {alert.isRead ? (
+                              <EyeOff size={16} />
+                            ) : (
+                              <Eye size={16} />
+                            )}
                           </button>
                         )}
 
-                        {!alert.resolvedAt && (
+                        {!alert.resolvedAt && !alert.resolved && (
                           <button
                             onClick={() => handleResolve(alert.id)}
                             className="p-2 hover:text-success"
+                            title="Marcar como resolvido"
                           >
                             <Check size={16} />
                           </button>
