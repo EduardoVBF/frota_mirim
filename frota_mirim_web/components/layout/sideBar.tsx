@@ -13,6 +13,7 @@ import {
   ArrowUpDown,
   Wrench,
   Bolt,
+  TriangleAlert,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -37,6 +38,11 @@ const menuItems: MenuItem[] = [
     name: "Dashboard",
     path: "/dashboard",
     icon: <LayoutDashboard size={20} />,
+  },
+  {
+    name: "Alertas",
+    path: "/alertas",
+    icon: <TriangleAlert size={20} />,
   },
   {
     name: "Veículos",
@@ -96,6 +102,11 @@ const menuItems: MenuItem[] = [
     path: "/usuarios",
     icon: <Users size={20} />,
     children: [
+      {
+        name: "Usuários",
+        path: "/usuarios",
+        icon: <Users size={20} />,
+      },
       {
         name: "Telefones",
         path: "/telefones",
