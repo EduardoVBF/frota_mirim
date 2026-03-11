@@ -58,15 +58,19 @@ export const alertsQuerySchema = z.object({
     return Array.isArray(val) ? val : [val];
   }, z.array(alertEntityTypeSchema).optional()),
 
-  isRead: z.preprocess(
-    (v) => v === "true" || v === true,
-    z.boolean().optional(),
-  ),
+  isRead: z.preprocess((v) => {
+    if (v === undefined) return undefined;
+    if (v === "true" || v === true) return true;
+    if (v === "false" || v === false) return false;
+    return undefined;
+  }, z.boolean().optional()),
 
-  resolved: z.preprocess(
-    (v) => v === "true" || v === true,
-    z.boolean().optional(),
-  ),
+  resolved: z.preprocess((v) => {
+    if (v === undefined) return undefined;
+    if (v === "true" || v === true) return true;
+    if (v === "false" || v === false) return false;
+    return undefined;
+  }, z.boolean().optional()),
 
   sortBy: z
     .enum(["createdAt", "severity", "type", "sequenceId"])

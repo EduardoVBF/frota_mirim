@@ -60,16 +60,19 @@ export class AlertsService {
     }
 
     if (typeof resolved === "boolean") {
-      if (resolved) {
-        where.resolvedAt = { not: null };
-      } else {
-        where.resolvedAt = null;
-      }
+      where.resolvedAt = resolved ? { not: null } : null;
     }
 
     const skip = (page - 1) * limit;
 
-    const [alerts, totalFiltered, totalCount, unreadCount] = await Promise.all([
+    const [
+      alerts,
+      totalFiltered,
+      totalCount,
+      unreadCount,
+      warningCount,
+      criticalCount,
+    ] = await Promise.all([
       prisma.alert.findMany({
         where,
         orderBy: {
@@ -89,10 +92,27 @@ export class AlertsService {
           resolvedAt: null,
         },
       }),
+
+      prisma.alert.count({
+        where: {
+          severity: "WARNING",
+          resolvedAt: null,
+        },
+      }),
+
+      prisma.alert.count({
+        where: {
+          severity: "CRITICAL",
+          resolvedAt: null,
+        },
+      }),
     ]);
 
     return {
-      items: alerts,
+      items: alerts.map((alert) => ({
+        ...alert,
+        resolved: alert.resolvedAt !== null,
+      })),
 
       meta: {
         total: totalCount,
@@ -104,6 +124,8 @@ export class AlertsService {
 
       stats: {
         unread: unreadCount,
+        warning: warningCount,
+        critical: criticalCount,
       },
     };
   }
