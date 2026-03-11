@@ -20,7 +20,7 @@ export default function AlertTypeBadge({ type }: { type: AlertType }) {
   };
 
   return (
-    <span className="text-xs px-2 py-1 bg-accent text-white rounded-md">
+    <span className="text-xs p-1 text-foreground rounded-md">
       {labels[type]}
     </span>
   );

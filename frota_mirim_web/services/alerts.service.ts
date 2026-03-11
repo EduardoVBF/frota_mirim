@@ -81,6 +81,12 @@ export type AlertsResponse = {
     limit: number;
     totalPages: number;
   };
+
+  stats: {
+    unread: number;
+    warning: number;
+    critical: number;
+  };
 };
 
 /* GET ALERTS */

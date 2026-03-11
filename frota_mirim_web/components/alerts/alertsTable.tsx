@@ -1,24 +1,54 @@
 "use client";
-import { Alert, markAlertRead, resolveAlert } from "@/services/alerts.service";
-import { Check, Eye, Bell, Filter, FilterX, Search } from "lucide-react";
-import AlertSeverityBadge from "./alertSeverityBadge";
+import { Alert, AlertFilters } from "@/services/alerts.service";
+import {
+  Filter,
+  FilterX,
+  Search,
+  Eye,
+  Check,
+  Bell,
+} from "lucide-react";
+
 import FilterChips from "../fuel-supply/FilterChips";
+import LoaderComp from "../loaderComp";
+
+import AlertSeverityBadge from "./alertSeverityBadge";
 import AlertTypeBadge from "./alertTypeBadge";
-import { useState, useMemo } from "react";
+
+import { markAlertRead, resolveAlert } from "@/services/alerts.service";
+
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
+import { useState } from "react";
 
 export default function AlertsTable({
   alerts,
+  isLoading,
+  filters,
+  setFilters,
   onChange,
 }: {
   alerts: Alert[];
+  isLoading: boolean;
+  filters: AlertFilters;
+  setFilters: (filters: Partial<AlertFilters>) => void;
   onChange: () => void;
 }) {
   const [showFilters, setShowFilters] = useState(false);
-  const [search, setSearch] = useState("");
-  const [severity, setSeverity] = useState("");
-  const [onlyUnread, setOnlyUnread] = useState(false);
+
+  const activeFiltersCount =
+    (filters.severity ? 1 : 0) +
+    (filters.isRead !== undefined ? 1 : 0) +
+    (filters.resolved !== undefined ? 1 : 0);
+
+  const clearFilters = () => {
+    setFilters({
+      search: "",
+      severity: undefined,
+      isRead: undefined,
+      resolved: undefined,
+    });
+  };
 
   async function handleRead(id: string) {
     try {
@@ -39,38 +69,16 @@ export default function AlertsTable({
     }
   }
 
-  const filtered = useMemo(() => {
-    return alerts.filter((alert) => {
-      if (search && !alert.message.toLowerCase().includes(search.toLowerCase()))
-        return false;
-
-      if (severity && alert.severity !== severity) return false;
-
-      if (onlyUnread && alert.isRead) return false;
-
-      return true;
-    });
-  }, [alerts, search, severity, onlyUnread]);
-
-  const activeFilters =
-    (search ? 1 : 0) + (severity ? 1 : 0) + (onlyUnread ? 1 : 0);
-
-  function clearFilters() {
-    setSearch("");
-    setSeverity("");
-    setOnlyUnread(false);
-  }
-
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       {/* HEADER */}
       <div className="p-4 border-b border-border flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-accent/10 rounded-lg text-accent">
-            <Bell size={22} />
+            <Bell size={26} />
           </div>
 
-          <h2 className="text-lg font-bold">Alertas do sistema</h2>
+          <h2 className="text-lg font-bold">Alertas</h2>
         </div>
 
         <div className="flex items-center gap-4">
@@ -82,9 +90,9 @@ export default function AlertsTable({
             Filtros
           </button>
 
-          {activeFilters > 0 && (
+          {activeFiltersCount > 0 && (
             <span className="text-xs bg-accent text-white px-2 py-1 rounded-full">
-              {activeFilters} filtro(s)
+              {activeFiltersCount} filtro(s)
             </span>
           )}
         </div>
@@ -92,42 +100,79 @@ export default function AlertsTable({
 
       {/* FILTERS */}
       {showFilters && (
-        <div className="px-6 py-4 border-b border-border flex gap-4 items-end">
-          {/* SEARCH */}
+        <div className="px-6 py-4 border-b border-border flex items-end gap-4">
           <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm">
             <Search size={18} className="text-muted" />
+
             <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent w-full text-sm focus:outline-none"
+              type="text"
+              value={filters.search || ""}
+              onChange={(e) =>
+                setFilters({
+                  search: e.target.value,
+                })
+              }
+              className="w-full bg-transparent text-sm focus:outline-none"
               placeholder="Buscar alerta..."
             />
           </div>
 
-          {/* SEVERITY */}
           <FilterChips
             label="Severidade"
+            value={filters.severity || ""}
+            onChange={(value) =>
+              setFilters({
+                severity: filters.severity === value ? undefined : value,
+              })
+            }
             options={[
-              { label: "Informativo", value: "INFO" },
+              { label: "Info", value: "INFO" },
               { label: "Aviso", value: "WARNING" },
               { label: "Crítico", value: "CRITICAL" },
             ]}
-            value={severity ? [severity] : []}
-            onChange={(values) => setSeverity(values[0] || "")}
           />
 
-          {/* UNREAD */}
           <FilterChips
-            label="Não lidos"
+            label="Leitura"
+            value={
+              filters.isRead === undefined
+                ? ""
+                : filters.isRead
+                ? "true"
+                : "false"
+            }
+            onChange={(value) =>
+              setFilters({
+                isRead: value === "" ? undefined : value === "true",
+              })
+            }
             options={[
-              { label: "Não lidos", value: "UNREAD" },
-              { label: "Lidos", value: "READ" },
+              { label: "Lidos", value: "true" },
+              { label: "Não lidos", value: "false" },
             ]}
-            value={onlyUnread ? ["UNREAD"] : []}
-            onChange={(values) => setOnlyUnread(values.includes("UNREAD"))}
           />
 
-          {activeFilters > 0 && (
+          <FilterChips
+            label="Status"
+            value={
+              filters.resolved === undefined
+                ? ""
+                : filters.resolved
+                ? "true"
+                : "false"
+            }
+            onChange={(value) =>
+              setFilters({
+                resolved: value === "" ? undefined : value === "true",
+              })
+            }
+            options={[
+              { label: "Resolvidos", value: "true" },
+              { label: "Em aberto", value: "false" },
+            ]}
+          />
+
+          {activeFiltersCount > 0 && (
             <button
               onClick={clearFilters}
               className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/40"
@@ -139,79 +184,85 @@ export default function AlertsTable({
       )}
 
       {/* TABLE */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="text-xs uppercase text-muted border-b border-border">
-              <th className="px-6 py-4">#</th>
-              <th className="px-6 py-4">Severidade</th>
-              <th className="px-6 py-4">Tipo</th>
-              <th className="px-6 py-4">Mensagem</th>
-              <th className="px-6 py-4">Data</th>
-              <th className="px-6 py-4 text-right">Ações</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
-                  Nenhum alerta encontrado
-                </td>
+      {isLoading ? (
+        <div className="p-6">
+          <LoaderComp />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
+                <th className="px-6 py-4">#</th>
+                <th className="px-6 py-4">Severidade</th>
+                <th className="px-6 py-4">Tipo</th>
+                <th className="px-6 py-4">Mensagem</th>
+                <th className="px-6 py-4">Data</th>
+                <th className="px-6 py-4 text-right">Ações</th>
               </tr>
-            ) : (
-              filtered.map((alert) => (
-                <tr
-                  key={alert.id}
-                  className={`border-b border-border ${
-                    !alert.isRead ? "bg-accent/5" : ""
-                  }`}
-                >
-                  <td className="px-6 py-4">
-                    {alert.sequenceId.toString().padStart(5, "0")}
-                  </td>
+            </thead>
 
-                  <td className="px-6 py-4">
-                    <AlertSeverityBadge severity={alert.severity} />
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <AlertTypeBadge type={alert.type} />
-                  </td>
-
-                  <td className="px-6 py-4">{alert.message}</td>
-
-                  <td className="px-6 py-4 text-muted">
-                    {dayjs(alert.createdAt).format("DD/MM/YYYY HH:mm")}
-                  </td>
-
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      {!alert.isRead && (
-                        <button
-                          onClick={() => handleRead(alert.id)}
-                          className="p-2 hover:text-accent"
-                        >
-                          <Eye size={16} />
-                        </button>
-                      )}
-
-                      {!alert.resolved && (
-                        <button
-                          onClick={() => handleResolve(alert.id)}
-                          className="p-2 hover:text-success"
-                        >
-                          <Check size={16} />
-                        </button>
-                      )}
-                    </div>
+            <tbody>
+              {alerts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    Nenhum alerta encontrado
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                alerts.map((alert) => (
+                  <tr
+                    key={alert.id}
+                    className={`border-b border-border ${
+                      !alert.isRead ? "bg-accent/5" : ""
+                    }`}
+                  >
+                    <td className="px-6 py-4">
+                      {alert.sequenceId.toString().padStart(5, "0")}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <AlertSeverityBadge severity={alert.severity} />
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <AlertTypeBadge type={alert.type} />
+                    </td>
+
+                    <td className="px-6 py-4">{alert.message}</td>
+
+                    <td className="px-6 py-4 text-muted">
+                      {dayjs(alert.createdAt).format("DD/MM/YYYY HH:mm")}
+                    </td>
+
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        {!alert.isRead && (
+                          <button
+                            onClick={() => handleRead(alert.id)}
+                            className="p-2 hover:text-accent"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        )}
+
+                        {!alert.resolvedAt && (
+                          <button
+                            onClick={() => handleResolve(alert.id)}
+                            className="p-2 hover:text-success"
+                          >
+                            <Check size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
