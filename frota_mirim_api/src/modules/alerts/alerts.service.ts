@@ -157,6 +157,8 @@ export class AlertsService {
     return prisma.alert.update({
       where: { id },
       data: {
+        isRead: true,
+        readAt: new Date(),
         resolvedAt: data.resolved ? new Date() : null,
       },
     });
@@ -246,6 +248,8 @@ export class AlertsService {
         resolvedAt: null,
       },
       data: {
+        isRead: true,
+        readAt: new Date(),
         resolvedAt: new Date(),
       },
     });
