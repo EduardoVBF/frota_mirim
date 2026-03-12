@@ -1,44 +1,74 @@
 "use client";
-import { useState } from "react";
+import {
+  Fuel,
+  ClockCheck,
+  Wrench,
+  TriangleAlert,
+} from "lucide-react";
+import VehicleMaintenanceTab from "./VehicleMaintenanceTab";
 import { Vehicle } from "@/services/vehicles.service";
-import VehicleFuelTab from "./VehicleFuelTab";
 import VehicleUsageTab from "./VehicleUsageTab";
+import VehicleFuelTab from "./VehicleFuelTab";
+import { useState } from "react";
 
 type Props = {
   vehicle: Vehicle;
 };
 
+type VehicleTab = "FUEL" | "USAGE" | "MAINTENANCE" | "ALERTS";
+
+const TABS = [
+  {
+    key: "FUEL" as VehicleTab,
+    label: "Abastecimentos",
+    icon: Fuel,
+  },
+  {
+    key: "USAGE" as VehicleTab,
+    label: "Entradas / Saídas",
+    icon: ClockCheck,
+  },
+  {
+    key: "MAINTENANCE" as VehicleTab,
+    label: "Manutenções",
+    icon: Wrench,
+  },
+  {
+    key: "ALERTS" as VehicleTab,
+    label: "Alertas",
+    icon: TriangleAlert,
+  },
+];
+
 export default function VehicleTabs({ vehicle }: Props) {
-  const [activeTab, setActiveTab] = useState<"fuel" | "usage">("fuel");
+  const [activeTab, setActiveTab] = useState<VehicleTab>("FUEL");
 
   return (
     <div className="space-y-6">
       <div className="flex gap-6 border-b">
-        <button
-          onClick={() => setActiveTab("fuel")}
-          className={`pb-2 transition ${
-            activeTab === "fuel"
-              ? "border-b-2 border-accent text-accent font-medium"
-              : "text-muted hover:text-foreground"
-          }`}
-        >
-          Abastecimentos
-        </button>
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
 
-        <button
-          onClick={() => setActiveTab("usage")}
-          className={`pb-2 transition ${
-            activeTab === "usage"
-              ? "border-b-2 border-accent text-accent font-medium"
-              : "text-muted hover:text-foreground"
-          }`}
-        >
-          Entradas / Saídas
-        </button>
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 pb-2 transition
+                ${activeTab === tab.key
+                  ? "border-b-2 border-accent text-accent font-medium"
+                  : "text-muted hover:text-foreground"
+                }`}
+            >
+              <Icon size={16} />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      {activeTab === "fuel" && <VehicleFuelTab vehicle={vehicle} />}
-      {activeTab === "usage" && <VehicleUsageTab vehicle={vehicle} />}
+      {activeTab === "FUEL" && <VehicleFuelTab vehicle={vehicle} />}
+      {activeTab === "USAGE" && <VehicleUsageTab vehicle={vehicle} />}
+      {activeTab === "MAINTENANCE" && <VehicleMaintenanceTab vehicle={vehicle} />}
     </div>
   );
 }

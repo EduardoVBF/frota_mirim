@@ -51,6 +51,8 @@ export type Maintenance = {
 
   createdAt: string;
 
+  performerType: "INTERNAL" | "EXTERNAL";
+
   vehicle: {
     id: string;
     modelo: string;

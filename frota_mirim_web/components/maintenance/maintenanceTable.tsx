@@ -4,13 +4,13 @@ import {
   MaintenanceFilters,
   MaintenanceStatus,
 } from "@/services/maintenance.service";
-import { Filter, FilterX, Wrench, Plus, Eye, Pencil } from "lucide-react";
+import { Filter, FilterX, Wrench, Plus, Eye, Pencil, Car } from "lucide-react";
 import MaintenanceFormModal from "./maintenanceFormModal";
 import { Vehicle } from "@/services/vehicles.service";
 import FilterChips from "../fuel-supply/FilterChips";
 import PrimarySelect from "../form/primarySelect";
+import { useState, useMemo } from "react";
 import LoaderComp from "../loaderComp";
-import { useState } from "react";
 import Link from "next/link";
 
 export function MaintenanceTable({
@@ -20,30 +20,36 @@ export function MaintenanceTable({
   setFilters,
   vehicles,
   onChange,
+  isVehiclePage = false,
+  vehicle,
 }: {
   maintenances: Maintenance[];
   isLoading: boolean;
-  filters: MaintenanceFilters & { search?: string };
+  filters: MaintenanceFilters;
   setFilters: (filters: Partial<MaintenanceFilters>) => void;
   vehicles: Vehicle[];
   onChange: () => void;
+  isVehiclePage?: boolean;
+  vehicle?: Vehicle;
 }) {
   const [selectedMaintenance, setSelectedMaintenance] =
     useState<Maintenance | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const vehicleMap = useMemo(() => {
+    return Object.fromEntries(vehicles.map((v) => [v.id, v]));
+  }, [vehicles]);
+
   const activeFiltersCount =
     (filters.type ? 1 : 0) +
     (filters.status ? 1 : 0) +
-    (filters.vehicleId ? 1 : 0);
+    (filters.vehicleId && !isVehiclePage ? 1 : 0);
 
   const handleClearFilters = () => {
     setFilters({
-      search: "",
       type: undefined,
       status: undefined,
-      vehicleId: undefined,
     });
   };
 
@@ -74,11 +80,7 @@ export function MaintenanceTable({
           </span>
         );
       default:
-        return (
-          <span className="text-xs bg-gray-500/20 text-gray-500 px-2 py-1 rounded-full">
-            Desconecido
-          </span>
-        );
+        return null;
     }
   };
 
@@ -87,12 +89,14 @@ export function MaintenanceTable({
       <MaintenanceFormModal
         open={isModalOpen}
         maintenance={selectedMaintenance}
+        vehicle={vehicle}
         onClose={() => {
           setSelectedMaintenance(null);
           setIsModalOpen(false);
           onChange();
         }}
       />
+
       {/* HEADER */}
       <div className="p-4 border-b border-border flex justify-between items-center">
         <div className="flex items-center gap-3">
@@ -100,7 +104,18 @@ export function MaintenanceTable({
             <Wrench size={26} />
           </div>
 
-          <h2 className="text-lg font-bold">Manutenções</h2>
+          <div>
+            <h2 className="text-lg font-bold">Manutenções</h2>
+
+            {isVehiclePage && vehicle && (
+              <div className="flex items-center gap-1">
+                <Car size={18} />
+                <span className="text-sm font-bold">
+                  {vehicle.placa} - {vehicle.modelo}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -131,14 +146,12 @@ export function MaintenanceTable({
       {/* FILTERS */}
       {showFilters && (
         <div className="px-6 py-4 border-b border-border flex items-end gap-4">
-          <div className="flex items-center gap-4 w-full">
-            {/* VEICULO */}
+          {!isVehiclePage && (
             <PrimarySelect
               label="Veículo"
               value={filters.vehicleId || ""}
               onChange={(val) =>
                 setFilters({
-                  ...filters,
                   vehicleId: (val as string) || undefined,
                 })
               }
@@ -151,72 +164,52 @@ export function MaintenanceTable({
               ]}
               className="max-w-72"
             />
+          )}
 
-            {/* TIPO */}
-            <FilterChips
-              label="Tipo"
-              value={filters.type || ""}
-              onChange={(value) =>
-                setFilters({
-                  type:
-                    filters.type === value
-                      ? undefined
-                      : (value as "PREVENTIVE" | "CORRECTIVE"),
-                })
-              }
-              options={[
-                {
-                  label: "Preventiva",
-                  value: "PREVENTIVE",
-                },
-                {
-                  label: "Corretiva",
-                  value: "CORRECTIVE",
-                },
-              ]}
-            />
+          <FilterChips
+            label="Tipo"
+            value={filters.type || ""}
+            onChange={(value) =>
+              setFilters({
+                type:
+                  filters.type === value
+                    ? undefined
+                    : (value as "PREVENTIVE" | "CORRECTIVE"),
+              })
+            }
+            options={[
+              { label: "Preventiva", value: "PREVENTIVE" },
+              { label: "Corretiva", value: "CORRECTIVE" },
+            ]}
+          />
 
-            {/* STATUS */}
-            <FilterChips
-              label="Status"
-              value={filters.status || ""}
-              onChange={(value) =>
-                setFilters({
-                  status:
-                    filters.status === value
-                      ? undefined
-                      : (value as MaintenanceStatus),
-                })
-              }
-              options={[
-                {
-                  label: "Aberta",
-                  value: "OPEN",
-                },
-                {
-                  label: "Em andamento",
-                  value: "IN_PROGRESS",
-                },
-                {
-                  label: "Concluída",
-                  value: "COMPLETED",
-                },
-                {
-                  label: "Cancelada",
-                  value: "CANCELLED",
-                },
-              ]}
-            />
+          <FilterChips
+            label="Status"
+            value={filters.status || ""}
+            onChange={(value) =>
+              setFilters({
+                status:
+                  filters.status === value
+                    ? undefined
+                    : (value as MaintenanceStatus),
+              })
+            }
+            options={[
+              { label: "Aberta", value: "OPEN" },
+              { label: "Em andamento", value: "IN_PROGRESS" },
+              { label: "Concluída", value: "DONE" },
+              { label: "Cancelada", value: "CANCELED" },
+            ]}
+          />
 
-            {activeFiltersCount > 0 && (
-              <button
-                onClick={handleClearFilters}
-                className="ml-auto px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/40"
-              >
-                Limpar
-              </button>
-            )}
-          </div>
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={handleClearFilters}
+              className="ml-auto px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/40"
+            >
+              Limpar
+            </button>
+          )}
         </div>
       )}
 
@@ -244,84 +237,88 @@ export function MaintenanceTable({
             <tbody>
               {maintenances.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={8} className="px-6 py-12 text-center">
                     Nenhuma manutenção encontrada
                   </td>
                 </tr>
               ) : (
-                maintenances.map((maintenance) => (
-                  <tr key={maintenance.id} className="border-b border-border">
-                    <td className="px-6 py-4 font-bold">
-                      {maintenance.sequenceId
-                        ? maintenance.sequenceId.toString().padStart(5, "0")
-                        : "-"}
-                    </td>
+                maintenances.map((maintenance) => {
+                  const vehicle = vehicleMap[maintenance.vehicleId];
 
-                    <td className="px-6 py-4">
-                      {new Date(maintenance.createdAt).toLocaleDateString()}
-                    </td>
-
-                    {vehicles ? (
-                      <td className="px-6 py-4 capitalize">
-                        <Link
-                          className="flex flex-col"
-                          href={`/veiculos/${
-                            vehicles.find((v) => v.id === maintenance.vehicleId)
-                              ?.placa
-                          }`}
-                        >
-                          <span className="text-sm font-bold text-muted">
-                            {vehicles.find(
-                              (v) => v.id === maintenance.vehicleId,
-                            )?.modelo || "Veículo Desconhecido"}
-                          </span>
-                          <span className="text-xs font-bold uppercase px-2 py-1 rounded bg-background border border-border w-fit">
-                            {vehicles.find(
-                              (v) => v.id === maintenance.vehicleId,
-                            )?.placa || "-"}
-                          </span>
-                        </Link>
+                  return (
+                    <tr key={maintenance.id} className="border-b border-border">
+                      <td className="px-6 py-4 font-bold">
+                        {maintenance.sequenceId
+                          ?.toString()
+                          .padStart(5, "0")}
                       </td>
-                    ) : (
-                      <td className="px-6 py-4">-</td>
-                    )}
 
-                    <td className="px-6 py-4">
-                      {maintenance.type === "PREVENTIVE"
-                        ? "Preventiva"
-                        : "Corretiva"}
-                    </td>
+                      <td className="px-6 py-4">
+                        {new Date(
+                          maintenance.createdAt,
+                        ).toLocaleDateString()}
+                      </td>
 
-                    <td className="px-6 py-4">
-                      {handleStatusBadge(maintenance.status)}
-                    </td>
+                      <td className="px-6 py-4">
+                        {vehicle ? (
+                          <Link
+                            href={`/veiculos/${vehicle.placa}`}
+                            className="flex flex-col"
+                          >
+                            <span className="text-sm font-bold text-muted">
+                              {vehicle.modelo}
+                            </span>
 
-                    <td className="px-6 py-4">{maintenance.odometer} km</td>
+                            <span className="text-xs font-bold uppercase px-2 py-1 rounded bg-background border border-border w-fit">
+                              {vehicle.placa}
+                            </span>
+                          </Link>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
 
-                    <td className="px-6 py-4">R$ {maintenance.totalCost}</td>
+                      <td className="px-6 py-4">
+                        {maintenance.type === "PREVENTIVE"
+                          ? "Preventiva"
+                          : "Corretiva"}
+                      </td>
 
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedMaintenance(maintenance);
-                            setIsModalOpen(true);
-                          }}
-                          className="p-2 hover:text-accent"
-                        >
-                          <Pencil size={16} />
-                        </button>
+                      <td className="px-6 py-4">
+                        {handleStatusBadge(maintenance.status)}
+                      </td>
 
-                        <Link
-                          href={`/manutencoes/${maintenance.id}`}
-                          className="p-2 hover:text-accent"
-                        >
-                          <Eye size={16} />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      <td className="px-6 py-4">
+                        {maintenance.odometer} km
+                      </td>
+
+                      <td className="px-6 py-4">
+                        R$ {maintenance.totalCost}
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedMaintenance(maintenance);
+                              setIsModalOpen(true);
+                            }}
+                            className="p-2 hover:text-accent"
+                          >
+                            <Pencil size={16} />
+                          </button>
+
+                          <Link
+                            href={`/manutencoes/${maintenance.id}`}
+                            className="p-2 hover:text-accent"
+                          >
+                            <Eye size={16} />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

@@ -42,9 +42,9 @@ export function VehicleUsageTable({
     if (filters.type) count++;
     if (filters.userId) count++;
     if (filters.assistantId) count++;
-    if (filters.vehicleId) count++;
+    if (filters.vehicleId && !isVehiclePage) count++;
     return count;
-  }, [filters]);
+  }, [filters, isVehiclePage]);
 
   const vehicleMap = useMemo(() => {
     return Object.fromEntries(vehicles.map((v) => [v.id, v]));
