@@ -23,6 +23,7 @@ import { FadeIn } from "@/components/motion/fadeIn";
 import LoaderComp from "@/components/loaderComp";
 import toast, { Toaster } from "react-hot-toast";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import dayjs from "dayjs";
 
 export default function MaintenanceDetailsPage() {
@@ -225,7 +226,9 @@ export default function MaintenanceDetailsPage() {
                         {maintenance.vehicle.modelo}
                       </p>
                       <p>-</p>
-                      <p className="text-muted">{maintenance.vehicle.placa}</p>
+                      <Link href={`/veiculos/${maintenance.vehicle.placa}`} className="text-muted">
+                        {maintenance.vehicle.placa}
+                      </Link>
                     </div>
                   </div>
                 </div>
