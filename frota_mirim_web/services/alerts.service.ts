@@ -129,3 +129,18 @@ export async function resolveAlert(id: string): Promise<Alert> {
 
   return data;
 }
+
+/* GET HEADER ALERTS */
+export async function getHeaderAlerts(): Promise<AlertsResponse> {
+  const { data } = await api.get("/alerts", {
+    params: {
+      resolved: false,
+      isRead: false,
+      limit: 10,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    },
+  });
+
+  return data;
+}

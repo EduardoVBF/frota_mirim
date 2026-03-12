@@ -1,5 +1,5 @@
 "use client";
-import { Search, Bell, ChevronDown } from "lucide-react";
+import AlertsDropdown from "@/components/alerts/alertsDropdown";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ThemeToggle } from "./themeToggle";
@@ -20,7 +20,7 @@ export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
       >
         {/* LADO ESQUERDO */}
         <div className="flex items-center gap-4">
-          {isPublicPage ? (
+          {isPublicPage && (
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-accent rounded-lg rotate-12 flex items-center justify-center shadow-lg shadow-accent/20">
                 <span className="text-white text-xs font-bold -rotate-12">
@@ -31,18 +31,6 @@ export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
                 Frota Mirim
               </span>
             </Link>
-          ) : (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-alternative-bg border border-border group focus-within:border-accent/50 transition-all">
-              <Search
-                size={16}
-                className="text-muted group-focus-within:text-accent"
-              />
-              <input
-                type="text"
-                placeholder="Pesquisar..."
-                className="bg-transparent text-sm outline-none w-48 placeholder:text-muted/50"
-              />
-            </div>
           )}
         </div>
 
@@ -62,14 +50,10 @@ export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
           ) : (
             // Interface do Usuário Logado
             <div className="flex items-center gap-4">
-              <button className="p-2 text-muted hover:text-foreground relative">
-                <Bell size={20} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-background"></span>
-              </button>
-
+              <AlertsDropdown />
               <div className="h-8 w-px bg-border/60 mx-1"></div>
 
-              <button className="flex items-center gap-2 p-1 pl-2 rounded-full hover:bg-alternative-bg transition-all border border-transparent hover:border-border">
+              <button className="flex items-center gap-2 p-1 px-2">
                 <div className="flex flex-col items-end">
                   <span className="text-xs font-bold leading-none">
                     {session?.user?.firstName || "Usuário"}
@@ -90,12 +74,11 @@ export default function HeaderBar({ isPublicPage }: { isPublicPage: boolean }) {
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold">
                     {session?.user?.firstName?.[0] &&
-                    session?.user?.lastName?.[0]
+                      session?.user?.lastName?.[0]
                       ? `${session.user.firstName[0]}${session.user.lastName[0]}`
                       : ""}
                   </div>
                 )}
-                <ChevronDown size={14} className="text-muted" />
               </button>
             </div>
           )}
