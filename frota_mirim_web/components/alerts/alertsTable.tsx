@@ -147,106 +147,105 @@ export default function AlertsTable({
 
       {/* FILTERS */}
       {showFilters && (
-        <div className="px-6 py-4 border-b border-border flex gap-4 flex-col">
-          {/* SEARCH */}
-          <div className="flex items-end gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm">
-            <Search size={18} className="text-muted" />
-            <input
-              type="text"
-              value={filters.search || ""}
-              onChange={(e) =>
-                setFilters({
-                  search: e.target.value,
-                })
-              }
-              className="w-full bg-transparent text-sm focus:outline-none"
-              placeholder="Buscar alerta..."
-            />
-          </div>
-
-          <div className="flex items-center gap-4">
-            {!isVehiclePage && (
-              <PrimarySelect
-                label="Veículo"
-                value={filters.vehiclePlate || ""}
-                onChange={(val) =>
+        <div className="px-6 py-4 border-b border-border grid grid-cols-[9fr_1fr] w-full gap-4 justify-between border">
+          <div className="space-y-4">
+            {/* SEARCH */}
+            <div className="flex items-end gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm">
+              <Search size={18} className="text-muted" />
+              <input
+                type="text"
+                value={filters.search || ""}
+                onChange={(e) =>
                   setFilters({
-                    ...filters,
-                    vehiclePlate: val as string || undefined,
+                    search: e.target.value,
+                  })
+                }
+                className="w-full bg-transparent text-sm focus:outline-none"
+                placeholder="Buscar alerta..."
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              {!isVehiclePage && (
+                <PrimarySelect
+                  label="Veículo"
+                  value={filters.vehiclePlate || ""}
+                  onChange={(val) =>
+                    setFilters({
+                      ...filters,
+                      vehiclePlate: val as string || undefined,
+                    })
+                  }
+                  options={[
+                    { label: "Todos os veículos", value: "" },
+                    ...vehicles.map((v) => ({
+                      label: `${v.modelo} - ${v.placa}`,
+                      value: v.placa,
+                    })),
+                  ]}
+                  className="max-w-xs"
+                />
+              )}
+              {/* SEVERITY */}
+              <FilterChips
+                label="Severidade"
+                value={filters.severity || ""}
+                onChange={(value) =>
+                  setFilters({
+                    severity: filters.severity === value ? undefined : value,
                   })
                 }
                 options={[
-                  { label: "Todos os veículos", value: "" },
-                  ...vehicles.map((v) => ({
-                    label: `${v.modelo} - ${v.placa}`,
-                    value: v.placa,
-                  })),
+                  { label: "Info", value: "INFO" },
+                  { label: "Aviso", value: "WARNING" },
+                  { label: "Crítico", value: "CRITICAL" },
                 ]}
-                className="max-w-xs"
               />
-            )}
-
-            {/* SEVERITY */}
-            <FilterChips
-              label="Severidade"
-              value={filters.severity || ""}
-              onChange={(value) =>
-                setFilters({
-                  severity: filters.severity === value ? undefined : value,
-                })
-              }
-              options={[
-                { label: "Info", value: "INFO" },
-                { label: "Aviso", value: "WARNING" },
-                { label: "Crítico", value: "CRITICAL" },
-              ]}
-            />
-            {/* READ */}
-            <FilterChips
-              label="Leitura"
-              value={
-                filters.isRead === undefined
-                  ? ""
-                  : filters.isRead
-                    ? "true"
-                    : "false"
-              }
-              onChange={(value) =>
-                setFilters({
-                  isRead: value === "" ? undefined : value === "true",
-                })
-              }
-              options={[
-                { label: "Lidos", value: "true" },
-                { label: "Não lidos", value: "false" },
-              ]}
-            />
-            {/* STATUS */}
-            <FilterChips
-              label="Status"
-              value={
-                filters.resolved === undefined
-                  ? ""
-                  : filters.resolved
-                    ? "true"
-                    : "false"
-              }
-              onChange={(value) =>
-                setFilters({
-                  resolved: value === "" ? undefined : value === "true",
-                })
-              }
-              options={[
-                { label: "Resolvidos", value: "true" },
-                { label: "Em aberto", value: "false" },
-              ]}
-            />
+              {/* READ */}
+              <FilterChips
+                label="Leitura"
+                value={
+                  filters.isRead === undefined
+                    ? ""
+                    : filters.isRead
+                      ? "true"
+                      : "false"
+                }
+                onChange={(value) =>
+                  setFilters({
+                    isRead: value === "" ? undefined : value === "true",
+                  })
+                }
+                options={[
+                  { label: "Lidos", value: "true" },
+                  { label: "Não lidos", value: "false" },
+                ]}
+              />
+              {/* STATUS */}
+              <FilterChips
+                label="Status"
+                value={
+                  filters.resolved === undefined
+                    ? ""
+                    : filters.resolved
+                      ? "true"
+                      : "false"
+                }
+                onChange={(value) =>
+                  setFilters({
+                    resolved: value === "" ? undefined : value === "true",
+                  })
+                }
+                options={[
+                  { label: "Resolvidos", value: "true" },
+                  { label: "Em aberto", value: "false" },
+                ]}
+              />
+            </div>
           </div>
-
           {activeFiltersCount > 0 && (
             <button
               onClick={clearFilters}
-              className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/40"
+              className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/40 w-fit self-end"
             >
               Limpar
             </button>
