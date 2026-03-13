@@ -342,8 +342,8 @@ model StockMovement {
 
 // ORDEM DE MANUTENÇÃO
 model MaintenanceOrder {
-  id String @id @default(uuid())
-  sequenceId Int @unique
+  id         String @id @default(uuid())
+  sequenceId Int    @unique
 
   vehicleId String
   vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
@@ -439,7 +439,7 @@ model Alert {
   // dados adicionais do alerta (flexível)
   metadata Json?
 
-  isRead Boolean @default(false)
+  isRead Boolean   @default(false)
   readAt DateTime?
 
   // quando o problema foi resolvido
@@ -452,4 +452,14 @@ model Alert {
   @@index([entityType, entityId])
   @@index([isRead])
   @@index([createdAt])
+}
+
+// JOBS DE SISTEMA (para tarefas agendadas, como envio de notificações, cálculos periódicos, etc)
+model SystemJob {
+  id      String    @id @default(cuid())
+  job     String    @unique
+  lastRun DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
