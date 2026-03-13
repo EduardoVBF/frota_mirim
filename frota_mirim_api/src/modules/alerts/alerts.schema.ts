@@ -43,6 +43,11 @@ export const alertParamsSchema = z.object({
 export const alertsQuerySchema = z.object({
   search: z.string().optional(),
 
+  vehiclePlate: z.preprocess((val) => {
+    if (!val) return undefined;
+    return String(val);
+  }, z.string().optional()),
+
   type: z.preprocess((val) => {
     if (!val) return undefined;
     return Array.isArray(val) ? val : [val];

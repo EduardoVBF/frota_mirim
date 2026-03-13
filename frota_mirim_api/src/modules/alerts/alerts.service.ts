@@ -22,6 +22,7 @@ export class AlertsService {
       limit = 10,
       sortBy = "createdAt",
       sortOrder = "desc",
+      vehiclePlate,
     } = query;
 
     const where: Prisma.AlertWhereInput = {};
@@ -41,6 +42,13 @@ export class AlertsService {
           },
         },
       ];
+    }
+
+    if (vehiclePlate) {
+      where.metadata = {
+        path: ["vehiclePlate"],
+        equals: vehiclePlate,
+      };
     }
 
     if (type?.length) {
