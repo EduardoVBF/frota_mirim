@@ -5,6 +5,7 @@ import {
   resolveAlertSchema,
 } from "./alerts.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
+import { runLazyChecks } from "../lazy/runLazyChecks";
 import { AlertsService } from "./alerts.service";
 
 const service = new AlertsService();
@@ -15,6 +16,8 @@ export async function getAlertsController(
   reply: FastifyReply
 ) {
   const query = alertsQuerySchema.parse(request.query);
+
+  await runLazyChecks();
 
   const alerts = await service.getAlerts(query);
 

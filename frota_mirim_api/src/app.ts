@@ -11,7 +11,6 @@ import { stockRoutes } from "./modules/stock/stock.routes";
 import { errorHandler } from "./infra/http/error-handler";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { registerPlugins } from "./config/fastify";
-import { startScheduler } from "./jobs/scheduler";
 import Fastify from "fastify";
 
 const app = Fastify({
@@ -23,8 +22,6 @@ app.register(async (app) => {
   app.setErrorHandler(errorHandler);
 
   await registerPlugins(app);
-
-  startScheduler();
 
   await app.register(maintenanceItemRoutes);
   await app.register(vehicleUsageRoutes);
