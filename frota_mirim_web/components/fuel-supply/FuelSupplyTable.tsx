@@ -87,6 +87,7 @@ export function FuelSupplyTable({
 
       setModalOpen(false);
       setEditingItem(null);
+      setErrors({});
       await onChange();
     } catch (err) {
       if (!(err instanceof AxiosError)) {

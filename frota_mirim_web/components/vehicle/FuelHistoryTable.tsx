@@ -93,6 +93,7 @@ export function FuelHistoryTable({
       }
       setModalOpen(false);
       setEditingItem(null);
+      setErrors({});
       onChange();
     } catch (err) {
       if (!(err instanceof AxiosError)) {
