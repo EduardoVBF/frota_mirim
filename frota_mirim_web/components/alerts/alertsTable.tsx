@@ -3,6 +3,8 @@ import {
   Alert,
   AlertFilters,
   markAlertUnread,
+  markAlertRead,
+  resolveAlert,
 } from "@/services/alerts.service";
 import {
   Filter,
@@ -12,19 +14,17 @@ import {
   Check,
   Bell,
   EyeOff,
+  Car,
 } from "lucide-react";
-
-import FilterChips from "../fuel-supply/FilterChips";
-import LoaderComp from "../loaderComp";
-
 import AlertSeverityBadge from "./alertSeverityBadge";
+import FilterChips from "../fuel-supply/FilterChips";
 import AlertTypeBadge from "./alertTypeBadge";
-
-import { markAlertRead, resolveAlert } from "@/services/alerts.service";
-
+import LoaderComp from "../loaderComp";
 import toast from "react-hot-toast";
+import { useState, useEffect } from "react";
 import dayjs from "dayjs";
-import { useState } from "react";
+import PrimarySelect from "../form/primarySelect";
+import { getVehicles, Vehicle } from "@/services/vehicles.service";
 
 export default function AlertsTable({
   alerts,
@@ -32,14 +32,19 @@ export default function AlertsTable({
   filters,
   setFilters,
   onChange,
+  isVehiclePage = false,
+  vehicle,
 }: {
   alerts: Alert[];
   isLoading: boolean;
   filters: AlertFilters;
   setFilters: (filters: Partial<AlertFilters>) => void;
   onChange: () => void;
+  isVehiclePage?: boolean;
+  vehicle?: Vehicle;
 }) {
   const [showFilters, setShowFilters] = useState(false);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   const activeFiltersCount =
     (filters.severity ? 1 : 0) +
@@ -57,13 +62,16 @@ export default function AlertsTable({
 
   async function handleRead(id: string) {
     try {
-      if (alerts.find((a) => a.id === id)?.isRead) {
+      const alert = alerts.find((a) => a.id === id);
+
+      if (alert?.isRead) {
         await markAlertUnread(id);
         toast.success("Alerta marcado como não lido");
       } else {
         await markAlertRead(id);
         toast.success("Alerta marcado como lido");
       }
+
       onChange();
     } catch {
       toast.error("Erro ao atualizar status de leitura do alerta");
@@ -80,6 +88,23 @@ export default function AlertsTable({
     }
   }
 
+  useEffect(() => {
+    async function fetchVehicles() {
+      try {
+        const data = await getVehicles({
+          page: 1,
+          limit: 1000,
+        });
+
+        setVehicles(data.vehicles);
+      } catch {
+        toast.error("Erro ao carregar veículos");
+      }
+    }
+
+    fetchVehicles();
+  }, []);
+
   return (
     <div className="my-3 rounded-2xl border border-border bg-alternative-bg overflow-hidden">
       {/* HEADER */}
@@ -89,7 +114,18 @@ export default function AlertsTable({
             <Bell size={26} />
           </div>
 
-          <h2 className="text-lg font-bold">Alertas</h2>
+          <div>
+            <h2 className="text-lg font-bold">Alertas</h2>
+
+            {isVehiclePage && vehicle && (
+              <div className="flex items-center gap-1 text-sm text-muted">
+                <Car size={18} />
+                <span className="font-bold">
+                  {vehicle.placa} - {vehicle.modelo}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -111,10 +147,10 @@ export default function AlertsTable({
 
       {/* FILTERS */}
       {showFilters && (
-        <div className="px-6 py-4 border-b border-border flex items-end gap-4">
-          <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm">
+        <div className="px-6 py-4 border-b border-border flex gap-4 flex-col">
+          {/* SEARCH */}
+          <div className="flex items-end gap-2 px-3 py-2 bg-background border border-border rounded-lg w-full max-w-sm">
             <Search size={18} className="text-muted" />
-
             <input
               type="text"
               value={filters.search || ""}
@@ -128,60 +164,84 @@ export default function AlertsTable({
             />
           </div>
 
-          <FilterChips
-            label="Severidade"
-            value={filters.severity || ""}
-            onChange={(value) =>
-              setFilters({
-                severity: filters.severity === value ? undefined : value,
-              })
-            }
-            options={[
-              { label: "Info", value: "INFO" },
-              { label: "Aviso", value: "WARNING" },
-              { label: "Crítico", value: "CRITICAL" },
-            ]}
-          />
+          <div className="flex items-center gap-4">
+            {!isVehiclePage && (
+              <PrimarySelect
+                label="Veículo"
+                value={filters.vehiclePlate || ""}
+                onChange={(val) =>
+                  setFilters({
+                    ...filters,
+                    vehiclePlate: val as string || undefined,
+                  })
+                }
+                options={[
+                  { label: "Todos os veículos", value: "" },
+                  ...vehicles.map((v) => ({
+                    label: `${v.modelo} - ${v.placa}`,
+                    value: v.placa,
+                  })),
+                ]}
+                className="max-w-xs"
+              />
+            )}
 
-          <FilterChips
-            label="Leitura"
-            value={
-              filters.isRead === undefined
-                ? ""
-                : filters.isRead
-                  ? "true"
-                  : "false"
-            }
-            onChange={(value) =>
-              setFilters({
-                isRead: value === "" ? undefined : value === "true",
-              })
-            }
-            options={[
-              { label: "Lidos", value: "true" },
-              { label: "Não lidos", value: "false" },
-            ]}
-          />
-
-          <FilterChips
-            label="Status"
-            value={
-              filters.resolved === undefined
-                ? ""
-                : filters.resolved
-                  ? "true"
-                  : "false"
-            }
-            onChange={(value) =>
-              setFilters({
-                resolved: value === "" ? undefined : value === "true",
-              })
-            }
-            options={[
-              { label: "Resolvidos", value: "true" },
-              { label: "Em aberto", value: "false" },
-            ]}
-          />
+            {/* SEVERITY */}
+            <FilterChips
+              label="Severidade"
+              value={filters.severity || ""}
+              onChange={(value) =>
+                setFilters({
+                  severity: filters.severity === value ? undefined : value,
+                })
+              }
+              options={[
+                { label: "Info", value: "INFO" },
+                { label: "Aviso", value: "WARNING" },
+                { label: "Crítico", value: "CRITICAL" },
+              ]}
+            />
+            {/* READ */}
+            <FilterChips
+              label="Leitura"
+              value={
+                filters.isRead === undefined
+                  ? ""
+                  : filters.isRead
+                    ? "true"
+                    : "false"
+              }
+              onChange={(value) =>
+                setFilters({
+                  isRead: value === "" ? undefined : value === "true",
+                })
+              }
+              options={[
+                { label: "Lidos", value: "true" },
+                { label: "Não lidos", value: "false" },
+              ]}
+            />
+            {/* STATUS */}
+            <FilterChips
+              label="Status"
+              value={
+                filters.resolved === undefined
+                  ? ""
+                  : filters.resolved
+                    ? "true"
+                    : "false"
+              }
+              onChange={(value) =>
+                setFilters({
+                  resolved: value === "" ? undefined : value === "true",
+                })
+              }
+              options={[
+                { label: "Resolvidos", value: "true" },
+                { label: "Em aberto", value: "false" },
+              ]}
+            />
+          </div>
 
           {activeFiltersCount > 0 && (
             <button
@@ -224,9 +284,8 @@ export default function AlertsTable({
                 alerts.map((alert) => (
                   <tr
                     key={alert.id}
-                    className={`border-b border-border ${
-                      !alert.isRead ? "bg-accent/5" : ""
-                    }`}
+                    className={`border-b border-border ${!alert.isRead ? "bg-accent/5" : ""
+                      }`}
                   >
                     <td className="px-6 py-4">
                       {alert.sequenceId.toString().padStart(5, "0")}
@@ -252,7 +311,6 @@ export default function AlertsTable({
                           <button
                             onClick={() => handleRead(alert.id)}
                             className="p-2 hover:text-accent"
-                            title={`Marcar como ${alert.isRead ? "não lido" : "lido"}`}
                           >
                             {alert.isRead ? (
                               <EyeOff size={16} />
@@ -262,11 +320,10 @@ export default function AlertsTable({
                           </button>
                         )}
 
-                        {!alert.resolvedAt && !alert.resolved && (
+                        {!alert.resolved && !alert.resolvedAt && (
                           <button
                             onClick={() => handleResolve(alert.id)}
                             className="p-2 hover:text-success"
-                            title="Marcar como resolvido"
                           >
                             <Check size={16} />
                           </button>

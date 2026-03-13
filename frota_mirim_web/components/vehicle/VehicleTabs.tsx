@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import VehicleMaintenanceTab from "./VehicleMaintenanceTab";
 import { Vehicle } from "@/services/vehicles.service";
+import VehicleAlertsTab from "./VehicleAlertsTab";
 import VehicleUsageTab from "./VehicleUsageTab";
 import VehicleFuelTab from "./VehicleFuelTab";
 import { useState } from "react";
@@ -69,6 +70,7 @@ export default function VehicleTabs({ vehicle }: Props) {
       {activeTab === "FUEL" && <VehicleFuelTab vehicle={vehicle} />}
       {activeTab === "USAGE" && <VehicleUsageTab vehicle={vehicle} />}
       {activeTab === "MAINTENANCE" && <VehicleMaintenanceTab vehicle={vehicle} />}
+      {activeTab === "ALERTS" && <VehicleAlertsTab vehicle={vehicle} />}
     </div>
   );
 }

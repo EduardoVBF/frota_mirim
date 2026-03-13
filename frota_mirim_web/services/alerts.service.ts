@@ -55,6 +55,8 @@ export type Alert = {
 export type AlertFilters = {
   search?: string;
 
+  vehiclePlate?: string;
+
   type?: AlertType;
 
   severity?: AlertSeverity;
