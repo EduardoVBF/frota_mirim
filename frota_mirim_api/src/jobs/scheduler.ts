@@ -2,7 +2,6 @@ import { maintenanceDurationJob } from "./maintenanceDuration.job";
 import { maintenanceAlertsJob } from "./maintenanceAlerts.job";
 import { vehicleDocumentsJob } from "./vehicleDocuments.job";
 import { vehicleCheckoutJob } from "./vehicleCheckout.job";
-import { fuelAnomalyJob } from "./fuelAnomaly.job";
 import cron from "node-cron";
 
 export function startScheduler() {
@@ -34,12 +33,5 @@ export function startScheduler() {
     console.log("🚗 Verificando veículos fora");
 
     await vehicleCheckoutJob();
-  });
-
-  /* FUEL ANOMALY - A CADA HORA */
-  cron.schedule("0 * * * *", async () => {
-    console.log("⛽ Verificando consumo anormal");
-
-    await fuelAnomalyJob();
   });
 }
