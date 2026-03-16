@@ -3,7 +3,9 @@ import { prisma } from "../shared/database/prisma";
 
 const alertsService = new AlertsService();
 
-/* CALCULATE DUE DATE FOR CURRENT YEAR */
+type VehicleDocumentType = "IPVA" | "LICENSING";
+
+/* CALCULATE DUE DATE FOR CURRENT YEAR (FIRST DAY OF MONTH) */
 function getDueDate(month: number) {
   const now = new Date();
   const year = now.getFullYear();
@@ -15,7 +17,36 @@ function getDueDate(month: number) {
 function diffDays(date: Date) {
   const now = new Date();
 
-  return Math.floor((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const diff = date.getTime() - now.getTime();
+
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+/* CHECK IF DOCUMENT WAS PAID THIS YEAR */
+function isDocumentPaid(vehicle: any, document: VehicleDocumentType) {
+  const currentYear = new Date().getFullYear();
+
+  if (document === "IPVA") {
+    return vehicle.ipvaPaidYear === currentYear;
+  }
+
+  if (document === "LICENSING") {
+    return vehicle.licensingPaidYear === currentYear;
+  }
+
+  return false;
+}
+
+/* HUMAN DOCUMENT NAME */
+function getDocumentName(document: VehicleDocumentType) {
+  switch (document) {
+    case "IPVA":
+      return "IPVA";
+    case "LICENSING":
+      return "Licenciamento";
+    default:
+      return document;
+  }
 }
 
 /* CREATE ALERT FOR DOCUMENT */
@@ -25,30 +56,27 @@ async function processVehicleDocumentAlert({
   dueMonth,
 }: {
   vehicle: any;
-  document: "IPVA" | "LICENSING";
+  document: VehicleDocumentType;
   dueMonth: number;
 }) {
+  /* SKIP IF DOCUMENT WAS ALREADY PAID */
+  if (isDocumentPaid(vehicle, document)) {
+    return;
+  }
+
   const dueDate = getDueDate(dueMonth);
 
   const days = diffDays(dueDate);
 
-  const handleDocumentName = (doc: string) => {
-    switch (doc) {
-      case "IPVA":
-        return "IPVA";
-      case "LICENSING":
-        return "Licenciamento";
-      default:
-        return doc;
-    }
-  };
+  const documentName = getDocumentName(document);
 
+  /* DOCUMENT EXPIRING */
   if (days <= 30 && days > 0) {
     await alertsService.createAlertIfNotExists({
       type: "VEHICLE_DOCUMENT_EXPIRING",
       severity: "WARNING",
-      title: `${handleDocumentName(document)} próximo do vencimento`,
-      message: `${handleDocumentName(document)} do veículo ${vehicle.placa} vence em ${days} dias`,
+      title: `${documentName} próximo do vencimento`,
+      message: `${documentName} do veículo ${vehicle.placa} vence em ${days} dias`,
       entityType: "VEHICLE",
       entityId: vehicle.id,
       metadata: {
@@ -57,14 +85,17 @@ async function processVehicleDocumentAlert({
         vehiclePlate: vehicle.placa,
       },
     });
+
+    return;
   }
 
+  /* DOCUMENT EXPIRED */
   if (days <= 0) {
     await alertsService.createAlertIfNotExists({
       type: "VEHICLE_DOCUMENT_EXPIRED",
       severity: "CRITICAL",
-      title: `${handleDocumentName(document)} vencido`,
-      message: `${handleDocumentName(document)} do veículo ${vehicle.placa} está vencido`,
+      title: `${documentName} vencido`,
+      message: `${documentName} do veículo ${vehicle.placa} está vencido`,
       entityType: "VEHICLE",
       entityId: vehicle.id,
       metadata: {
@@ -85,21 +116,27 @@ export async function vehicleDocumentsJob() {
   });
 
   for (const vehicle of vehicles) {
-    /* IPVA */
-    if (vehicle.ipvaDueMonth) {
-      await processVehicleDocumentAlert({
-        vehicle,
-        document: "IPVA",
+    const documents: {
+      type: VehicleDocumentType;
+      dueMonth: number;
+    }[] = [
+      {
+        type: "IPVA",
         dueMonth: vehicle.ipvaDueMonth,
-      });
-    }
+      },
+      {
+        type: "LICENSING",
+        dueMonth: vehicle.licensingDueMonth,
+      },
+    ];
 
-    /* LICENSING */
-    if (vehicle.licensingDueMonth) {
+    for (const doc of documents) {
+      if (!doc.dueMonth) continue;
+
       await processVehicleDocumentAlert({
         vehicle,
-        document: "LICENSING",
-        dueMonth: vehicle.licensingDueMonth,
+        document: doc.type,
+        dueMonth: doc.dueMonth,
       });
     }
   }
