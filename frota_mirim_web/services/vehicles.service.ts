@@ -3,6 +3,8 @@ import qs from "qs";
 
 export type VehicleType = "CARRO" | "CAMINHAO" | "MOTO" | "ONIBUS";
 
+export type VehicleDocumentType = "IPVA" | "LICENSING";
+
 export type Vehicle = {
   id: string;
   placa: string;
@@ -12,8 +14,13 @@ export type Vehicle = {
   tipo: VehicleType;
   kmAtual: number;
   kmUltimoAbastecimento?: number | null;
+
   licensingDueMonth: number;
   ipvaDueMonth: number;
+
+  licensingPaidYear?: number | null;
+  ipvaPaidYear?: number | null;
+
   isActive: boolean;
 };
 
@@ -97,4 +104,15 @@ export async function updateVehicle(
 ): Promise<Vehicle> {
   const { data } = await api.put(`/vehicles/${id}`, payload);
   return data;
+}
+
+export async function payVehicleDocument(
+  vehicleId: string,
+  type: VehicleDocumentType
+): Promise<Vehicle> {
+  const { data } = await api.patch(`/vehicles/${vehicleId}/pay-document`, {
+    type,
+  });
+
+  return data.vehicle;
 }
