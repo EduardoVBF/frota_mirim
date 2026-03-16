@@ -4,6 +4,7 @@ import {
   createVehicleController,
   updateVehicleController,
   getVehicleByPlacaController,
+  payVehicleDocumentController,
 } from "./vehicles.controller";
 
 import {
@@ -12,6 +13,7 @@ import {
   createVehicleSchema,
   updateVehicleSchema,
   vehiclePlacaParamSchema,
+  payVehicleDocumentSchema,
 } from "./vehicles.schema";
 
 import { authMiddleware } from "../../shared/middlewares/auth";
@@ -75,6 +77,22 @@ export async function vehiclesRoutes(app: FastifyInstance) {
 
       return updateVehicleController(
         { ...request, body, params } as any,
+        reply,
+      );
+    },
+  );
+
+  app.patch(
+    "/vehicles/:id/pay-document",
+    { preHandler: [authMiddleware] },
+    async (request, reply) => {
+      const { params, body } = await validateRequest(request, {
+        params: vehicleParamsSchema,
+        body: payVehicleDocumentSchema,
+      });
+
+      return payVehicleDocumentController(
+        { ...request, params, body } as any,
         reply,
       );
     },

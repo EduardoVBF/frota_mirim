@@ -1,6 +1,6 @@
+import { vehicleQuerySchema, payVehicleDocumentSchema } from "./vehicles.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { VehiclesService } from "./vehicles.service";
-import { vehicleQuerySchema } from "./vehicles.schema";
 
 const service = new VehiclesService();
 
@@ -44,4 +44,19 @@ export async function updateVehicleController(
   const { id } = request.params as { id: string };
   const vehicle = await service.updateVehicle(id, request.body);
   return reply.send(vehicle);
+}
+
+export async function payVehicleDocumentController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { id } = request.params as { id: string };
+  const { type } = request.body as { type: "IPVA" | "LICENSING" };
+
+  const vehicle = await service.payVehicleDocument(id, { type });
+
+  return reply.send({
+    message: "Documento marcado como pago com sucesso.",
+    vehicle,
+  });
 }

@@ -18,6 +18,8 @@ export const vehicleResponseSchema = z.object({
   kmAtual: z.number(),
   kmUltimoAbastecimento: z.number().nullable().optional(),
   licensingDueMonth: z.number(),
+  ipvaPaidYear: z.number().nullable().optional(),
+  licensingPaidYear: z.number().nullable().optional(),
   ipvaDueMonth: z.number(),
   isActive: z.boolean(),
 });
@@ -54,6 +56,16 @@ export const createVehicleSchema = z.object({
 });
 
 export const updateVehicleSchema = createVehicleSchema.partial();
+
+export const VEHICLE_DOCUMENT_TYPES = ["IPVA", "LICENSING"] as const;
+
+export const vehicleDocumentTypeSchema = z.enum(VEHICLE_DOCUMENT_TYPES);
+
+export const payVehicleDocumentSchema = z.object({
+  type: vehicleDocumentTypeSchema,
+});
+
+export type PayVehicleDocumentDTO = z.infer<typeof payVehicleDocumentSchema>;
 
 export const vehicleQuerySchema = z.object({
   search: z.string().optional(),

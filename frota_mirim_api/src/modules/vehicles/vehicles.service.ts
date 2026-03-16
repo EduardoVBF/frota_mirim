@@ -1,6 +1,7 @@
-import { prisma } from "../../shared/database/prisma";
+import { VehicleQueryDTO, PayVehicleDocumentDTO } from "./vehicles.schema";
 import { AppError } from "../../infra/errors/app-error";
-import { VehicleQueryDTO } from "./vehicles.schema";
+import { prisma } from "../../shared/database/prisma";
+import { Prisma } from "@prisma/client";
 
 function normalizePlaca(placa: string) {
   return placa.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
@@ -120,5 +121,66 @@ export class VehiclesService {
       where: { id },
       data,
     });
+  }
+
+  async payVehicleDocument(id: string, data: PayVehicleDocumentDTO) {
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id },
+    });
+
+    if (!vehicle) {
+      throw new AppError("Veículo não encontrado.", 404);
+    }
+
+    const currentYear = new Date().getFullYear();
+
+    let updateData: Prisma.VehicleUpdateInput = {};
+
+    if (data.type === "IPVA") {
+      if (vehicle.ipvaPaidYear === currentYear) {
+        throw new AppError("IPVA já foi marcado como pago este ano.", 400);
+      }
+
+      updateData = {
+        ipvaPaidYear: currentYear,
+      };
+    }
+
+    if (data.type === "LICENSING") {
+      if (vehicle.licensingPaidYear === currentYear) {
+        throw new AppError(
+          "Licenciamento já foi marcado como pago este ano.",
+          400,
+        );
+      }
+
+      updateData = {
+        licensingPaidYear: currentYear,
+      };
+    }
+
+    const [updatedVehicle] = await prisma.$transaction([
+      prisma.vehicle.update({
+        where: { id },
+        data: updateData,
+      }),
+
+      prisma.alert.updateMany({
+        where: {
+          entityType: "VEHICLE",
+          entityId: id,
+          resolvedAt: null,
+          metadata: {
+            path: ["document"],
+            equals: data.type,
+          },
+        },
+        data: {
+          resolvedAt: new Date(),
+        },
+      }),
+    ]);
+
+    return updatedVehicle;
   }
 }
