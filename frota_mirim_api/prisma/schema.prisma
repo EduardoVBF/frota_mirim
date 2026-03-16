@@ -182,6 +182,8 @@ model Vehicle {
 
   ipvaDueMonth      Int @default(1)
   licensingDueMonth Int @default(1)
+  ipvaPaidYear      Int?
+  licensingPaidYear Int?
 
   isActive Boolean @default(true)
 
