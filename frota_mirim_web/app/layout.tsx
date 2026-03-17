@@ -1,4 +1,5 @@
 import ConditionalLayout from "@/components/layout/conditionalLayout";
+import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
@@ -24,12 +25,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ConditionalLayout>
-          {children}
-        </ConditionalLayout>
-      </body>
-    </html>
+    <ReactQueryProvider>
+      <html lang="pt-BR">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
+        </body>
+      </html>
+    </ReactQueryProvider>
   );
 }
