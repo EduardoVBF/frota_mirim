@@ -4,6 +4,7 @@ import { vehicleUsageRoutes } from "./modules/vehicleUsage/vehicleUsage.routes";
 import { itemCatalogRoutes } from "./modules/itemCatalog/itemCatalog.routes";
 import { maintenanceRoutes } from "./modules/maintenance/maintenance.routes";
 import { fuelSupplyRoutes } from "./modules/fuelSupply/fuel-supply.routes";
+import { dashboardRoutes } from "./modules/dashboard/dashboard.routes";
 import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes";
 import { alertsRoutes } from "./modules/alerts/alerts.routes";
 import { usersRoutes } from "./modules/users/users.routes";
@@ -29,6 +30,7 @@ app.register(async (app) => {
   await app.register(maintenanceRoutes);
   await app.register(userPhonesRoutes);
   await app.register(fuelSupplyRoutes);
+  await app.register(dashboardRoutes);
   await app.register(vehiclesRoutes);
   await app.register(alertsRoutes);
   await app.register(usersRoutes);
