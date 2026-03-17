@@ -62,13 +62,14 @@ export async function getDashboardFinancial(
 
 /* CHARTS */
 export type ChartItem = {
-  month: string;
+  label: string;
   value: number;
 };
 
 export type DashboardCharts = {
-  fuelMonthly: ChartItem[];
-  maintenanceMonthly: ChartItem[];
+  fuel: ChartItem[];
+  maintenance: ChartItem[];
+  granularity: "hour" | "day" | "month";
 };
 
 export async function getDashboardCharts(

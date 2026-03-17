@@ -28,7 +28,7 @@ import { useState } from "react";
 import dayjs from "dayjs";
 
 export default function DashboardPage() {
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<DashboardFilters>({
     preset: "THIS_MONTH",
   });
@@ -133,7 +133,6 @@ export default function DashboardPage() {
 
             {/* CUSTOM RANGE */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-muted">Data inicial</label>
                 <input
@@ -163,7 +162,6 @@ export default function DashboardPage() {
                   }
                 />
               </div>
-
             </div>
 
           </div>
@@ -227,13 +225,13 @@ export default function DashboardPage() {
             <>
               <FinanceCard
                 icon={Fuel}
-                title="Combustível no mês"
+                title="Combustível no período"
                 value={fetchingFinancial ? "..." : formatMoney(financial?.fuelCostMonth)}
               />
 
               <FinanceCard
                 icon={Wrench}
-                title="Manutenção no mês"
+                title="Manutenção no período"
                 value={fetchingFinancial ? "..." : formatMoney(financial?.maintenanceCostMonth)}
               />
 
@@ -255,15 +253,19 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <DashboardChart
               title="Gasto com combustível"
-              data={charts?.fuelMonthly}
+              data={charts?.fuel}
+              type="currency"
+              granularity={charts?.granularity}
             />
 
             <DashboardChart
               title="Gasto com manutenção"
-              data={charts?.maintenanceMonthly}
+              data={charts?.maintenance}
+              type="currency"
+              granularity={charts?.granularity}
             />
           </div>
         )}
