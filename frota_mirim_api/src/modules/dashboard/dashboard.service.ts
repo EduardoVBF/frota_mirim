@@ -1,6 +1,7 @@
 import { DashboardQueryDTO } from "./dashboard.schema";
 import { resolveDateRange } from "./dashboard.schema";
 import { prisma } from "../../shared/database/prisma";
+import dayjs from "dayjs";
 
 export class DashboardService {
   /* OVERVIEW (KPIs) */
@@ -109,37 +110,132 @@ export class DashboardService {
   }
 
   /* GRÁFICOS */
+  private resolveGranularity(query: DashboardQueryDTO) {
+    switch (query.preset) {
+      case "TODAY":
+        return "hour";
+
+      case "LAST_7_DAYS":
+      case "LAST_30_DAYS":
+      case "THIS_MONTH":
+      case "LAST_MONTH":
+        return "day";
+
+      case "LAST_12_MONTHS":
+        return "month";
+
+      case "CUSTOM":
+        return "day";
+
+      default:
+        return "day";
+    }
+  }
+
+  private formatLabel(date: dayjs.Dayjs, granularity: string) {
+    if (granularity === "hour") return date.format("HH:00");
+    if (granularity === "day") return date.format("DD/MM");
+    return date.format("MM/YY");
+  }
+
+  private generateEmptySeries(
+    startDate: Date,
+    endDate: Date,
+    granularity: string,
+  ) {
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+
+    const result: { label: string; value: number }[] = [];
+
+    let cursor = start;
+
+    while (cursor.isBefore(end) || cursor.isSame(end)) {
+      result.push({
+        label: this.formatLabel(cursor, granularity),
+        value: 0,
+      });
+
+      if (granularity === "hour") cursor = cursor.add(1, "hour");
+      else if (granularity === "day") cursor = cursor.add(1, "day");
+      else cursor = cursor.add(1, "month");
+    }
+
+    return result;
+  }
+
+  private groupByPeriod(
+    data: any[],
+    dateField: string,
+    valueField: string,
+    startDate: Date,
+    endDate: Date,
+    granularity: "hour" | "day" | "month",
+  ) {
+    const map = new Map<string, number>();
+
+    data.forEach((item) => {
+      const date = dayjs(item[dateField]);
+      const key = this.formatLabel(date, granularity);
+
+      const current = map.get(key) || 0;
+      map.set(key, current + Number(item[valueField]));
+    });
+
+    // 🔥 gera base completa (sem buracos)
+    const base = this.generateEmptySeries(startDate, endDate, granularity);
+
+    return base.map((item) => ({
+      label: item.label,
+      value: map.get(item.label) || 0,
+    }));
+  }
+
   async getCharts(query: DashboardQueryDTO) {
     const { startDate, endDate } = resolveDateRange(query);
+    const granularity = this.resolveGranularity(query);
 
-    const fuelData = await prisma.fuelSupply.findMany({
-      where: {
-        data: { gte: startDate, lte: endDate },
-      },
-      select: {
-        data: true,
-        valorTotal: true,
-      },
-    });
+    const [fuelData, maintenanceData] = await Promise.all([
+      prisma.fuelSupply.findMany({
+        where: {
+          data: { gte: startDate, lte: endDate },
+        },
+        select: {
+          data: true,
+          valorTotal: true,
+        },
+      }),
 
-    const maintenanceData = await prisma.maintenanceOrder.findMany({
-      where: {
-        createdAt: { gte: startDate, lte: endDate },
-        status: "DONE",
-      },
-      select: {
-        createdAt: true,
-        totalCost: true,
-      },
-    });
+      prisma.maintenanceOrder.findMany({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          status: "DONE",
+        },
+        select: {
+          createdAt: true,
+          totalCost: true,
+        },
+      }),
+    ]);
 
     return {
-      fuelMonthly: this.groupByMonth(fuelData, "data", "valorTotal"),
-      maintenanceMonthly: this.groupByMonth(
+      fuel: this.groupByPeriod(
+        fuelData,
+        "data",
+        "valorTotal",
+        startDate,
+        endDate,
+        granularity,
+      ),
+      maintenance: this.groupByPeriod(
         maintenanceData,
         "createdAt",
         "totalCost",
+        startDate,
+        endDate,
+        granularity,
       ),
+      granularity,
     };
   }
 
