@@ -19,13 +19,21 @@ export type DashboardFilters = {
 };
 
 /* OVERVIEW */
-export type DashboardOverview = {
+export type DashboardRealtime = {
   totalVehicles: number;
   activeVehicles: number;
   vehiclesInMaintenance: number;
   vehiclesCheckedOut: number;
   alertsActive: number;
   availability: number;
+};
+
+export async function getDashboardRealtime(): Promise<DashboardRealtime> {
+  const { data } = await api.get("/dashboard/realtime");
+  return data;
+}
+
+export type DashboardOverview = {
   avgFuelConsumption: number;
 };
 

@@ -89,10 +89,10 @@ export default function DashboardChart({
     return (
         <div className="rounded-2xl border border-border bg-alternative-bg p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm text-muted">
+                <h3 className="text-sm font-bold uppercase tracking-wide">
                     {title}{" "}
                     {granularity && (
-                        <span className="text-xs opacity-60">
+                        <span className="text-xs">
                             ({granularity === "hour"
                                 ? "por hora"
                                 : granularity === "day"

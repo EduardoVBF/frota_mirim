@@ -7,11 +7,21 @@ import {
   DashboardOverview,
   DashboardFinancial,
   getDashboardCharts,
+  DashboardRealtime,
+  getDashboardRealtime,
 } from "./dashboard.service";
 
 import { useQuery } from "@tanstack/react-query";
 
 /* OVERVIEW */
+export function useDashboardRealtime() {
+  return useQuery<DashboardRealtime>({
+    queryKey: ["dashboard-realtime"],
+    queryFn: getDashboardRealtime,
+    staleTime: 1000 * 30, // 30s
+  });
+}
+
 export function useDashboardOverview(filters: DashboardFilters) {
   return useQuery<DashboardOverview>({
     queryKey: ["dashboard-overview", filters],

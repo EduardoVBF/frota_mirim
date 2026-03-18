@@ -28,7 +28,7 @@ export default function InsightCardFuel({
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Fuel size={20} className="text-accent" />
-          <h2 className="font-semibold text-muted">{title}</h2>
+          <h2 className="font-semibold">{title}</h2>
         </div>
         <span className="text-xs text-muted">km/l</span>
       </div>

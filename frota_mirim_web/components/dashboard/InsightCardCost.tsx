@@ -27,7 +27,7 @@ export default function InsightCardCost({
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DollarSign size={20} className="text-accent" />
-          <h2 className="font-semibold text-muted">{title}</h2>
+          <h2 className="font-semibold">{title}</h2>
         </div>
         <span className="text-xs text-muted">Top 3</span>
       </div>

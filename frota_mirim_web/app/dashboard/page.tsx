@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import {
   useDashboardOverview,
+  useDashboardRealtime,
   useDashboardFinancial,
   useDashboardInsights,
   useDashboardAlerts,
@@ -41,6 +42,7 @@ export default function DashboardPage() {
   const chartsQuery = useDashboardCharts(filters);
   const { data: charts, isLoading: loadingCharts } = chartsQuery;
 
+  const realtimeQuery = useDashboardRealtime();
   const overviewQuery = useDashboardOverview(filters);
   const financialQuery = useDashboardFinancial(filters);
   const insightsQuery = useDashboardInsights(filters);
@@ -48,9 +50,13 @@ export default function DashboardPage() {
 
   const {
     data: overview,
-    isLoading: loadingOverview,
     isFetching: fetchingOverview,
   } = overviewQuery;
+  const {
+    data: realtime,
+    isLoading: loadingRealtime,
+    isFetching: fetchingRealtime,
+  } = realtimeQuery;
   const {
     data: financial,
     isLoading: loadingFinancial,
@@ -81,253 +87,285 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg"
-            >
-              {showFilters ? <FilterX size={16} /> : <Filter size={16} />}
-              Filtros
-            </button>
-          </div>
         </header>
 
-        {/* FILTROS */}
-        {showFilters && (
-          <div className="rounded-2xl border border-border bg-alternative-bg p-5 space-y-4">
-            {/* HEADER */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">
-                Filtros
+        {/* TEMPO REAL */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide">
+              Tempo real
+            </h2>
+            <span className="text-xs text-muted">Atualização automática</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {loadingRealtime ? (
+              Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
+            ) : (
+              <>
+                <DashboardCard
+                  icon={Car}
+                  label="Veículos ativos"
+                  value={fetchingRealtime ? "..." : realtime?.activeVehicles}
+                />
+
+                <DashboardCard
+                  icon={Wrench}
+                  label="Em manutenção"
+                  value={
+                    fetchingRealtime ? "..." : realtime?.vehiclesInMaintenance
+                  }
+                />
+
+                <DashboardCard
+                  icon={AlertTriangle}
+                  label="Alertas ativos"
+                  value={fetchingRealtime ? "..." : realtime?.alertsActive}
+                />
+
+                <DashboardCard
+                  icon={Gauge}
+                  label="Disponibilidade"
+                  value={
+                    fetchingRealtime
+                      ? "..."
+                      : `${
+                          realtime?.availability
+                            ? (realtime.availability * 100).toFixed(0)
+                            : 0
+                        }%`
+                  }
+                />
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ANÁLISE POR PERÍODO */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wide">
+                Análise por período
               </h2>
-
-              {activeFiltersCount > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="text-xs px-3 py-1 rounded-lg border border-border hover:bg-muted/40 transition"
-                >
-                  Limpar filtros
-                </button>
-              )}
+              <span className="text-xs text-muted">
+                Baseado nos filtros selecionados
+              </span>
             </div>
 
-            {/* PRESETS */}
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: "Hoje", value: "TODAY" },
-                { label: "7 dias", value: "LAST_7_DAYS" },
-                { label: "30 dias", value: "LAST_30_DAYS" },
-                { label: "Mês atual", value: "THIS_MONTH" },
-                { label: "Último mês", value: "LAST_MONTH" },
-              ].map((p) => {
-                const active = filters.preset === p.value;
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg"
+              >
+                {showFilters ? <FilterX size={16} /> : <Filter size={16} />}
+                Filtros
+              </button>
+            </div>
+          </div>
 
-                return (
+          {/* FILTROS */}
+          {showFilters && (
+            <div className="rounded-2xl border border-border bg-alternative-bg p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-wide">
+                  Filtros
+                </h2>
+
+                {activeFiltersCount > 0 && (
                   <button
-                    key={p.value}
-                    onClick={() =>
-                      setFilters({ preset: p.value as DashboardPreset })
-                    }
-                    className={`
-              px-3 py-1.5 rounded-full text-sm border transition
-              ${
-                active
-                  ? "bg-accent text-white border-accent shadow-sm"
-                  : "text-muted border-border hover:bg-muted/40"
-              }
-            `}
+                    onClick={clearFilters}
+                    className="text-xs px-3 py-1 rounded-lg border border-border hover:bg-muted/40 transition"
                   >
-                    {p.label}
+                    Limpar filtros
                   </button>
-                );
-              })}
-            </div>
-
-            {/* CUSTOM RANGE */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted">Data inicial</label>
-                <input
-                  type="date"
-                  className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-accent"
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      preset: "CUSTOM",
-                      startDate: dayjs(e.target.value).toISOString(),
-                    }))
-                  }
-                />
+                )}
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted">Data final</label>
-                <input
-                  type="date"
-                  className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-accent"
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      preset: "CUSTOM",
-                      endDate: dayjs(e.target.value).toISOString(),
-                    }))
-                  }
-                />
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: "Hoje", value: "TODAY" },
+                  { label: "7 dias", value: "LAST_7_DAYS" },
+                  { label: "30 dias", value: "LAST_30_DAYS" },
+                  { label: "Mês atual", value: "THIS_MONTH" },
+                  { label: "Último mês", value: "LAST_MONTH" },
+                ].map((p) => {
+                  const active = filters.preset === p.value;
+
+                  return (
+                    <button
+                      key={p.value}
+                      onClick={() =>
+                        setFilters({ preset: p.value as DashboardPreset })
+                      }
+                      className={`
+                      px-3 py-1.5 rounded-full text-sm border transition
+                      ${
+                        active
+                          ? "bg-accent text-white border-accent shadow-sm"
+                          : "text-muted border-border hover:bg-muted/40"
+                      }
+                    `}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted">Data inicial</label>
+                  <input
+                    type="date"
+                    className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-accent"
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        preset: "CUSTOM",
+                        startDate: dayjs(e.target.value).toISOString(),
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted">Data final</label>
+                  <input
+                    type="date"
+                    className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-accent"
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        preset: "CUSTOM",
+                        endDate: dayjs(e.target.value).toISOString(),
+                      }))
+                    }
+                  />
+                </div>
               </div>
             </div>
+          )}
+
+          {/* FINANCEIRO */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {loadingFinancial ? (
+              Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+            ) : (
+              <>
+                <FinanceCard
+                  icon={Fuel}
+                  title="Consumo médio"
+                  value={
+                    fetchingOverview
+                      ? "..."
+                      : `${overview?.avgFuelConsumption?.toFixed(1)} km/l`
+                  }
+                />
+
+                <FinanceCard
+                  icon={Fuel}
+                  title="Combustível no período"
+                  value={
+                    fetchingFinancial
+                      ? "..."
+                      : formatMoney(financial?.fuelCostMonth)
+                  }
+                />
+
+                <FinanceCard
+                  icon={Wrench}
+                  title="Manutenção no período"
+                  value={
+                    fetchingFinancial
+                      ? "..."
+                      : formatMoney(financial?.maintenanceCostMonth)
+                  }
+                />
+
+                <FinanceCard
+                  icon={DollarSign}
+                  title="Custo por km"
+                  value={
+                    fetchingFinancial
+                      ? "..."
+                      : `R$ ${financial?.costPerKm?.toFixed(2)}`
+                  }
+                />
+              </>
+            )}
           </div>
-        )}
 
-        {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {loadingOverview ? (
-            Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
+          {/* GRÁFICOS */}
+          {loadingCharts ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
           ) : (
-            <>
-              <DashboardCard
-                icon={Car}
-                label="Veículos ativos"
-                value={fetchingOverview ? "..." : overview?.activeVehicles}
+            <div className="grid grid-cols-1 gap-6">
+              <DashboardChart
+                title="Gasto com combustível"
+                data={charts?.fuel}
+                type="currency"
+                granularity={charts?.granularity}
               />
 
-              <DashboardCard
-                icon={Wrench}
-                label="Em manutenção"
-                value={
-                  fetchingOverview ? "..." : overview?.vehiclesInMaintenance
-                }
+              <DashboardChart
+                title="Gasto com manutenção"
+                data={charts?.maintenance}
+                type="currency"
+                granularity={charts?.granularity}
               />
-
-              <DashboardCard
-                icon={Fuel}
-                label="Consumo médio"
-                value={
-                  fetchingOverview
-                    ? "..."
-                    : `${overview?.avgFuelConsumption?.toFixed(1)} km/l`
-                }
-              />
-
-              <DashboardCard
-                icon={AlertTriangle}
-                label="Alertas ativos"
-                value={fetchingOverview ? "..." : overview?.alertsActive}
-              />
-
-              <DashboardCard
-                icon={Gauge}
-                label="Disponibilidade"
-                value={
-                  fetchingOverview
-                    ? "..."
-                    : `${overview?.availability ? (overview?.availability * 100).toFixed(0) : 0}%`
-                }
-              />
-            </>
+            </div>
           )}
-        </div>
 
-        {/* FINANCEIRO */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {loadingFinancial ? (
-            Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
-          ) : (
-            <>
-              <FinanceCard
-                icon={Fuel}
-                title="Combustível no período"
-                value={
-                  fetchingFinancial
-                    ? "..."
-                    : formatMoney(financial?.fuelCostMonth)
-                }
-              />
-
-              <FinanceCard
-                icon={Wrench}
-                title="Manutenção no período"
-                value={
-                  fetchingFinancial
-                    ? "..."
-                    : formatMoney(financial?.maintenanceCostMonth)
-                }
-              />
-
-              <FinanceCard
-                icon={DollarSign}
-                title="Custo por km"
-                value={
-                  fetchingFinancial
-                    ? "..."
-                    : `R$ ${financial?.costPerKm?.toFixed(2)}`
-                }
-              />
-            </>
-          )}
-        </div>
-
-        {/* GRÁFICOS */}
-        {loadingCharts ? (
+          {/* INSIGHTS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-            <DashboardChart
-              title="Gasto com combustível"
-              data={charts?.fuel}
-              type="currency"
-              granularity={charts?.granularity}
+            <InsightCardCost
+              title="Veículos com maior custo"
+              loading={loadingInsights}
+              data={insights?.topMaintenanceCost}
             />
 
-            <DashboardChart
-              title="Gasto com manutenção"
-              data={charts?.maintenance}
-              type="currency"
-              granularity={charts?.granularity}
+            <InsightCardFuel
+              title="Picos de consumo"
+              loading={loadingInsights}
+              fuelEfficiency={insights?.fuelEfficiency}
             />
           </div>
-        )}
-
-        {/* INSIGHTS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <InsightCardCost
-            title="Veículos com maior custo"
-            loading={loadingInsights}
-            data={insights?.topMaintenanceCost}
-          />
-
-          <InsightCardFuel
-            title="Consumo"
-            loading={loadingInsights}
-            fuelEfficiency={insights?.fuelEfficiency}
-          />
         </div>
 
         {/* ALERTAS */}
-        <div className="rounded-2xl border border-border bg-alternative-bg overflow-hidden">
-          <div className="p-4 border-b border-border font-semibold text-muted">
-            <AlertTriangle
-              size={20}
-              className="inline-block mr-2 text-warning"
-            />
-            Alertas recentes
-          </div>
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide">
+            Alertas
+          </h2>
 
-          <div className="divide-y divide-border">
-            {loadingAlerts
-              ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-              : alerts?.map((alert) => (
-                  <AlertRow
-                    key={alert.id}
-                    message={alert.message}
-                    severity={mapSeverity(alert.severity)}
-                    sequenceId={alert.sequenceId}
-                  />
-                ))}
+          <div className="rounded-2xl border border-border bg-alternative-bg overflow-hidden">
+            <div className="p-4 border-b border-border font-semibold">
+              <AlertTriangle
+                size={20}
+                className="inline-block mr-2 text-warning"
+              />
+              Alertas recentes
+            </div>
+
+            <div className="divide-y divide-border">
+              {loadingAlerts
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <SkeletonRow key={i} />
+                  ))
+                : alerts?.map((alert) => (
+                    <AlertRow
+                      key={alert.id}
+                      message={alert.message}
+                      severity={mapSeverity(alert.severity)}
+                      sequenceId={alert.sequenceId}
+                    />
+                  ))}
+            </div>
           </div>
         </div>
       </div>
