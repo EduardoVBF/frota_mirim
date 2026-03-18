@@ -98,7 +98,7 @@ export default function DashboardPage() {
             <span className="text-xs text-muted">Atualização automática</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {loadingRealtime ? (
               Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
             ) : (
@@ -107,6 +107,12 @@ export default function DashboardPage() {
                   icon={Car}
                   label="Veículos ativos"
                   value={fetchingRealtime ? "..." : realtime?.activeVehicles}
+                />
+
+                <DashboardCard
+                  icon={Car}
+                  label="Veículos em uso"
+                  value={fetchingRealtime ? "..." : realtime?.vehiclesCheckedOut}
                 />
 
                 <DashboardCard
