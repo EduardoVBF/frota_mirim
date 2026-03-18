@@ -45,12 +45,7 @@ export default function InsightCardCost({
                 <div className="flex items-center gap-3">
                   {/* RANK */}
                   <div
-                    className={`
-                      w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold
-                      ${i === 0 && "bg-yellow-500/20 text-yellow-500"}
-                      ${i === 1 && "bg-gray-400/20 text-gray-400"}
-                      ${i === 2 && "bg-amber-700/20 text-amber-700"}
-                    `}
+                    className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold bg-accent/10 text-accent`}
                   >
                     {i + 1}
                   </div>
@@ -64,7 +59,7 @@ export default function InsightCardCost({
 
                 {/* VALUE */}
                 <div className="text-right">
-                  <span className="font-semibold text-red-500">
+                  <span className="font-semibold text-muted">
                     {formatMoney(item.value)}
                   </span>
                 </div>
