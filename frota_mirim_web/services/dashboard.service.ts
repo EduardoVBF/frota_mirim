@@ -93,7 +93,11 @@ export type InsightItem = {
 
 export type DashboardInsights = {
   topMaintenanceCost: InsightItem[];
-  worstFuelEfficiency: InsightItem[];
+  fuelEfficiency: {
+    average: number;
+    best: InsightItem;
+    worst: InsightItem;
+  };
 };
 
 export async function getDashboardInsights(

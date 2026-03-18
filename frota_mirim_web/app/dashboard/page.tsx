@@ -19,10 +19,15 @@ import {
 import type {
   DashboardFilters,
   DashboardPreset,
-  InsightItem,
 } from "@/services/dashboard.service";
+import { SkeletonCard, SkeletonRow } from "@/components/dashboard/Skeleton";
+import InsightCardCost from "@/components/dashboard/InsightCardCost";
+import InsightCardFuel from "@/components/dashboard/InsightCardFuel";
 import DashboardChart from "@/components/dashboard/DashboardCharts";
+import DashboardCard from "@/components/dashboard/DashboardCard";
 import { useDashboardCharts } from "@/services/dashboard.hooks";
+import FinanceCard from "@/components/dashboard/FinanceCard";
+import AlertRow from "@/components/dashboard/AlertRow";
 import { FadeIn } from "@/components/motion/fadeIn";
 import { useState } from "react";
 import dayjs from "dayjs";
@@ -41,8 +46,16 @@ export default function DashboardPage() {
   const insightsQuery = useDashboardInsights(filters);
   const alertsQuery = useDashboardAlerts();
 
-  const { data: overview, isLoading: loadingOverview, isFetching: fetchingOverview } = overviewQuery;
-  const { data: financial, isLoading: loadingFinancial, isFetching: fetchingFinancial } = financialQuery;
+  const {
+    data: overview,
+    isLoading: loadingOverview,
+    isFetching: fetchingOverview,
+  } = overviewQuery;
+  const {
+    data: financial,
+    isLoading: loadingFinancial,
+    isFetching: fetchingFinancial,
+  } = financialQuery;
   const { data: insights, isLoading: loadingInsights } = insightsQuery;
   const { data: alerts, isLoading: loadingAlerts } = alertsQuery;
 
@@ -55,7 +68,6 @@ export default function DashboardPage() {
   return (
     <FadeIn>
       <div className="max-w-7xl mx-auto space-y-6">
-
         {/* HEADER */}
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -84,7 +96,6 @@ export default function DashboardPage() {
         {/* FILTROS */}
         {showFilters && (
           <div className="rounded-2xl border border-border bg-alternative-bg p-5 space-y-4">
-
             {/* HEADER */}
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">
@@ -120,9 +131,11 @@ export default function DashboardPage() {
                     }
                     className={`
               px-3 py-1.5 rounded-full text-sm border transition
-              ${active
-                        ? "bg-accent text-white border-accent shadow-sm"
-                        : "text-muted border-border hover:bg-muted/40"}
+              ${
+                active
+                  ? "bg-accent text-white border-accent shadow-sm"
+                  : "text-muted border-border hover:bg-muted/40"
+              }
             `}
                   >
                     {p.label}
@@ -163,13 +176,11 @@ export default function DashboardPage() {
                 />
               </div>
             </div>
-
           </div>
         )}
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-
           {loadingOverview ? (
             Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
           ) : (
@@ -183,7 +194,9 @@ export default function DashboardPage() {
               <DashboardCard
                 icon={Wrench}
                 label="Em manutenção"
-                value={fetchingOverview ? "..." : overview?.vehiclesInMaintenance}
+                value={
+                  fetchingOverview ? "..." : overview?.vehiclesInMaintenance
+                }
               />
 
               <DashboardCard
@@ -213,12 +226,10 @@ export default function DashboardPage() {
               />
             </>
           )}
-
         </div>
 
         {/* FINANCEIRO */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
           {loadingFinancial ? (
             Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
           ) : (
@@ -226,23 +237,34 @@ export default function DashboardPage() {
               <FinanceCard
                 icon={Fuel}
                 title="Combustível no período"
-                value={fetchingFinancial ? "..." : formatMoney(financial?.fuelCostMonth)}
+                value={
+                  fetchingFinancial
+                    ? "..."
+                    : formatMoney(financial?.fuelCostMonth)
+                }
               />
 
               <FinanceCard
                 icon={Wrench}
                 title="Manutenção no período"
-                value={fetchingFinancial ? "..." : formatMoney(financial?.maintenanceCostMonth)}
+                value={
+                  fetchingFinancial
+                    ? "..."
+                    : formatMoney(financial?.maintenanceCostMonth)
+                }
               />
 
               <FinanceCard
                 icon={DollarSign}
                 title="Custo por km"
-                value={fetchingFinancial ? "..." : `R$ ${financial?.costPerKm?.toFixed(2)}`}
+                value={
+                  fetchingFinancial
+                    ? "..."
+                    : `R$ ${financial?.costPerKm?.toFixed(2)}`
+                }
               />
             </>
           )}
-
         </div>
 
         {/* GRÁFICOS */}
@@ -272,210 +294,44 @@ export default function DashboardPage() {
 
         {/* INSIGHTS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          <InsightCard
+          <InsightCardCost
             title="Veículos com maior custo"
             loading={loadingInsights}
             data={insights?.topMaintenanceCost}
-            type="money"
           />
 
-          <InsightCard
-            title="Pior consumo"
+          <InsightCardFuel
+            title="Consumo"
             loading={loadingInsights}
-            data={insights?.worstFuelEfficiency}
-            type="fuel"
+            fuelEfficiency={insights?.fuelEfficiency}
           />
-
         </div>
 
         {/* ALERTAS */}
         <div className="rounded-2xl border border-border bg-alternative-bg overflow-hidden">
           <div className="p-4 border-b border-border font-semibold text-muted">
-            <AlertTriangle size={20} className="inline-block mr-2 text-warning" />
+            <AlertTriangle
+              size={20}
+              className="inline-block mr-2 text-warning"
+            />
             Alertas recentes
           </div>
 
           <div className="divide-y divide-border">
             {loadingAlerts
-              ? Array.from({ length: 5 }).map((_, i) => (
-                <SkeletonRow key={i} />
-              ))
+              ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               : alerts?.map((alert) => (
-                <AlertRow
-                  key={alert.id}
-                  message={alert.message}
-                  severity={mapSeverity(alert.severity)}
-                  sequenceId={alert.sequenceId}
-                />
-              ))}
+                  <AlertRow
+                    key={alert.id}
+                    message={alert.message}
+                    severity={mapSeverity(alert.severity)}
+                    sequenceId={alert.sequenceId}
+                  />
+                ))}
           </div>
         </div>
-
       </div>
     </FadeIn>
-  );
-}
-
-/* COMPONENTS */
-function DashboardCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string | number | undefined;
-}) {
-  return (
-    <div className="
-      rounded-2xl border border-border 
-      bg-linear-to-br from-alternative-bg to-background
-      p-3 flex gap-4 items-center
-      hover:shadow-md hover:scale-[1.01]
-      transition-all duration-200
-    ">
-      <div className="
-        p-3 rounded-xl 
-        bg-accent/10 text-accent
-        shadow-inner
-      ">
-        <Icon size={20} />
-      </div>
-
-      <div>
-        <p className="text-[11px] text-muted uppercase tracking-wide">
-          {label}
-        </p>
-        <p className="text-2xl font-bold mt-1">
-          {value ?? "-"}
-        </p>
-      </div>
-
-    </div>
-  );
-}
-
-function FinanceCard({
-  icon: Icon,
-  title,
-  value,
-}: {
-  icon: React.ElementType;
-  title: string;
-  value: string | number | undefined;
-}) {
-  return (
-    <div className="
-      rounded-2xl border border-border 
-      bg-linear-to-br from-alternative-bg to-background
-      p-4
-      hover:shadow-md transition
-    ">
-      <div className="flex items-center gap-2 text-sm text-muted mb-3">
-        <div className="p-2 bg-accent/10 rounded-lg text-accent">
-          <Icon size={16} />
-        </div>
-        {title}
-      </div>
-
-      <p className="text-3xl font-semibold tracking-tight">
-        {value ?? "-"}
-      </p>
-    </div>
-  );
-}
-
-function InsightCard({
-  title,
-  data,
-  type,
-  loading,
-}: {
-  title: string;
-  data: InsightItem[] | undefined;
-  type: string;
-  loading: boolean;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-alternative-bg overflow-hidden">
-      <div className="p-4 border-b border-border font-semibold text-muted flex items-center justify-between">
-        {title}
-      </div>
-
-      <div className="divide-y divide-border text-sm">
-        {loading
-          ? Array.from({ length: 3 }).map((_, i) => (
-            <SkeletonRow key={i} />
-          ))
-          : data?.map((item: InsightItem, i: number) => (
-            <div
-              key={item.vehicle}
-              className="flex justify-between px-4 py-3 hover:bg-muted/30 transition"
-            >
-              <span className="flex items-center gap-2">
-                <span className="text-xs text-muted">#{i + 1}</span>
-                {item.vehicle}
-              </span>
-
-              <span className="font-semibold text-accent">
-                {type === "money"
-                  ? formatMoney(item.value)
-                  : `${item.kmPerLiter?.toFixed(1)} km/l`}
-              </span>
-            </div>
-          ))}
-      </div>
-    </div>
-  );
-}
-
-function AlertRow({
-  message,
-  severity,
-  sequenceId,
-}: {
-  message: string;
-  severity: string;
-  sequenceId: number;
-}) {
-  const color =
-    severity === "CRÍTICO"
-      ? "text-red-500"
-      : severity === "AVISO"
-        ? "text-yellow-500"
-        : "text-muted";
-
-  return (
-    <div className="flex justify-between px-4 py-3 text-sm hover:bg-muted/30 transition">
-      <div className="space-x-2">
-        <span>#{sequenceId}</span>
-        <span>{message}</span>
-      </div>
-      <span className={`text-xs font-semibold ${color}`}>
-        {severity}
-      </span>
-    </div>
-  );
-}
-
-/* SKELETON */
-function SkeletonCard() {
-  return (
-    <div className="rounded-2xl border border-border bg-alternative-bg p-5 animate-pulse">
-      <div className="space-y-2">
-        <div className="h-3 w-24 bg-background rounded" />
-        <div className="h-5 w-16 bg-background rounded" />
-      </div>
-    </div>
-  );
-}
-
-function SkeletonRow() {
-  return (
-    <div className="px-4 py-3 animate-pulse">
-      <div className="h-3 w-full bg-background rounded" />
-    </div>
   );
 }
 
