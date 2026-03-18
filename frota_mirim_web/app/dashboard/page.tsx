@@ -48,10 +48,7 @@ export default function DashboardPage() {
   const insightsQuery = useDashboardInsights(filters);
   const alertsQuery = useDashboardAlerts();
 
-  const {
-    data: overview,
-    isFetching: fetchingOverview,
-  } = overviewQuery;
+  const { data: overview, isFetching: fetchingOverview } = overviewQuery;
   const {
     data: realtime,
     isLoading: loadingRealtime,
@@ -112,7 +109,9 @@ export default function DashboardPage() {
                 <DashboardCard
                   icon={Car}
                   label="Veículos em uso"
-                  value={fetchingRealtime ? "..." : realtime?.vehiclesCheckedOut}
+                  value={
+                    fetchingRealtime ? "..." : realtime?.vehiclesCheckedOut
+                  }
                 />
 
                 <DashboardCard
@@ -225,13 +224,17 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-accent"
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const value = e.target.value;
+
                       setFilters((prev) => ({
                         ...prev,
                         preset: "CUSTOM",
-                        startDate: dayjs(e.target.value).toISOString(),
-                      }))
-                    }
+                        startDate: value
+                          ? dayjs(value).toISOString()
+                          : undefined,
+                      }));
+                    }}
                   />
                 </div>
 
@@ -240,13 +243,15 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-accent"
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const value = e.target.value;
+
                       setFilters((prev) => ({
                         ...prev,
                         preset: "CUSTOM",
-                        endDate: dayjs(e.target.value).toISOString(),
-                      }))
-                    }
+                        endDate: value ? dayjs(value).toISOString() : undefined,
+                      }));
+                    }}
                   />
                 </div>
               </div>
