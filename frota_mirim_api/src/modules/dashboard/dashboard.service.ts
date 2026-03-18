@@ -5,42 +5,16 @@ import dayjs from "dayjs";
 
 export class DashboardService {
   /* OVERVIEW (KPIs) */
-  async getOverview(query: DashboardQueryDTO) {
-    const { startDate, endDate } = resolveDateRange(query);
-
-    const [
-      totalVehicles,
-      activeVehicles,
-      vehiclesInMaintenance,
-      alertsActive,
-      avgFuel,
-    ] = await Promise.all([
-      prisma.vehicle.count(),
-
-      prisma.vehicle.count({
-        where: { isActive: true },
-      }),
-
-      prisma.maintenanceOrder.count({
-        where: {
-          status: {
-            in: ["OPEN", "IN_PROGRESS"],
-          },
-        },
-      }),
-
-      prisma.alert.count({
-        where: { resolvedAt: null },
-      }),
-
-      prisma.fuelSupply.aggregate({
-        _avg: { media: true },
-        where: {
-          media: { not: null },
-          data: { gte: startDate, lte: endDate },
-        },
-      }),
-    ]);
+  async getRealtimeOverview() {
+    const [totalVehicles, activeVehicles, vehiclesInMaintenance, alertsActive] =
+      await Promise.all([
+        prisma.vehicle.count(),
+        prisma.vehicle.count({ where: { isActive: true } }),
+        prisma.maintenanceOrder.count({
+          where: { status: { in: ["OPEN", "IN_PROGRESS"] } },
+        }),
+        prisma.alert.count({ where: { resolvedAt: null } }),
+      ]);
 
     const vehiclesCheckedOut = await this.getVehiclesCheckedOut();
 
@@ -53,6 +27,21 @@ export class DashboardService {
       vehiclesCheckedOut,
       alertsActive,
       availability,
+    };
+  }
+
+  async getOverviewByPeriod(query: DashboardQueryDTO) {
+    const { startDate, endDate } = resolveDateRange(query);
+
+    const avgFuel = await prisma.fuelSupply.aggregate({
+      _avg: { media: true },
+      where: {
+        media: { not: null },
+        data: { gte: startDate, lte: endDate },
+      },
+    });
+
+    return {
       avgFuelConsumption: Number(avgFuel._avg.media || 0),
     };
   }
@@ -363,7 +352,7 @@ export class DashboardService {
       orderBy: {
         createdAt: "desc",
       },
-      take: 10,
+      take: 5,
     });
 
     return alerts;

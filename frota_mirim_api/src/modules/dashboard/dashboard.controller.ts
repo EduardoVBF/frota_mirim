@@ -3,11 +3,19 @@ import { DashboardService } from "./dashboard.service";
 
 const service = new DashboardService();
 
+export async function getRealtimeController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const data = await service.getRealtimeOverview();
+  return reply.send(data);
+}
+
 export async function getOverviewController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const data = await service.getOverview((request as any).query);
+  const data = await service.getOverviewByPeriod((request as any).query);
   return reply.send(data);
 }
 

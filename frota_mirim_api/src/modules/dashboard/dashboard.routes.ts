@@ -1,4 +1,5 @@
 import {
+  getRealtimeController,
   getOverviewController,
   getFinancialController,
   getChartsController,
@@ -11,6 +12,15 @@ import { dashboardQuerySchema } from "./dashboard.schema";
 import { FastifyInstance } from "fastify";
 
 export async function dashboardRoutes(app: FastifyInstance) {
+  /* REALTIME */
+  app.get(
+    "/dashboard/realtime",
+    { preHandler: [authMiddleware] },
+    async (request, reply) => {
+      return getRealtimeController(request, reply);
+    },
+  );
+
   /* OVERVIEW */
   app.get(
     "/dashboard/overview",
