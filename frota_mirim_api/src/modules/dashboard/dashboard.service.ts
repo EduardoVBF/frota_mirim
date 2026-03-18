@@ -243,7 +243,7 @@ export class DashboardService {
   async getInsights(query: DashboardQueryDTO) {
     const { startDate, endDate } = resolveDateRange(query);
 
-    /* VEÍCULOS COM MAIOR CUSTO DE MANUTENÇÃO */
+    /* CUSTO DE MANUTENÇÃO */
     const maintenance = await prisma.maintenanceOrder.findMany({
       where: {
         createdAt: { gte: startDate, lte: endDate },
@@ -261,28 +261,36 @@ export class DashboardService {
       },
     });
 
-    const costMap = new Map<string, number>();
+    const costMap = new Map<string, { total: number; vehicle: string }>();
 
     maintenance.forEach((m) => {
-      const current = costMap.get(m.vehicleId) || 0;
-      costMap.set(m.vehicleId, current + Number(m.totalCost));
+      const key = m.vehicleId;
+      const current = costMap.get(key);
+
+      const vehicleName = `${m.vehicle.modelo} - ${m.vehicle.placa}`;
+
+      if (current) {
+        costMap.set(key, {
+          total: current.total + Number(m.totalCost),
+          vehicle: current.vehicle,
+        });
+      } else {
+        costMap.set(key, {
+          total: Number(m.totalCost),
+          vehicle: vehicleName,
+        });
+      }
     });
 
-    const topMaintenanceCost = Array.from(costMap.entries())
-      .map(([vehicleId, value]) => {
-        const vehicle = maintenance.find(
-          (m) => m.vehicleId === vehicleId,
-        )?.vehicle;
-
-        return {
-          vehicle: `${vehicle?.modelo} - ${vehicle?.placa}`,
-          value,
-        };
-      })
+    const topMaintenanceCost = Array.from(costMap.values())
+      .map((v) => ({
+        vehicle: v.vehicle,
+        value: v.total,
+      }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
 
-    /* PIOR CONSUMO */
+    /* CONSUMO */
     const fuel = await prisma.fuelSupply.findMany({
       where: {
         media: { not: null },
@@ -300,32 +308,49 @@ export class DashboardService {
       },
     });
 
-    const fuelMap = new Map<string, number[]>();
+    const fuelMap = new Map<string, { values: number[]; vehicle: string }>();
 
     fuel.forEach((f) => {
-      if (!fuelMap.has(f.vehicleId)) {
-        fuelMap.set(f.vehicleId, []);
+      const key = f.vehicleId;
+      const vehicleName = `${f.vehicle.modelo} - ${f.vehicle.placa}`;
+
+      if (!fuelMap.has(key)) {
+        fuelMap.set(key, {
+          values: [],
+          vehicle: vehicleName,
+        });
       }
-      fuelMap.get(f.vehicleId)!.push(Number(f.media));
+
+      fuelMap.get(key)!.values.push(Number(f.media));
     });
 
-    const worstFuelEfficiency = Array.from(fuelMap.entries())
-      .map(([vehicleId, medias]) => {
-        const avg = medias.reduce((acc, val) => acc + val, 0) / medias.length;
+    const fuelAverages = Array.from(fuelMap.values()).map((v) => {
+      const avg = v.values.reduce((acc, val) => acc + val, 0) / v.values.length;
 
-        const vehicle = fuel.find((f) => f.vehicleId === vehicleId)?.vehicle;
+      return {
+        vehicle: v.vehicle,
+        kmPerLiter: avg,
+      };
+    });
 
-        return {
-          vehicle: `${vehicle?.modelo} - ${vehicle?.placa}`,
-          kmPerLiter: avg,
-        };
-      })
-      .sort((a, b) => a.kmPerLiter - b.kmPerLiter)
-      .slice(0, 5);
+    const sortedFuel = [...fuelAverages].sort(
+      (a, b) => b.kmPerLiter - a.kmPerLiter,
+    );
+
+    const best = sortedFuel[0] || null;
+    const worst = sortedFuel[sortedFuel.length - 1] || null;
+
+    const average =
+      fuelAverages.reduce((acc, v) => acc + v.kmPerLiter, 0) /
+        fuelAverages.length || 0;
 
     return {
       topMaintenanceCost,
-      worstFuelEfficiency,
+      fuelEfficiency: {
+        best,
+        worst,
+        average,
+      },
     };
   }
 
