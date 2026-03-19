@@ -29,12 +29,6 @@ export default function VehicleAlertsTab({ vehicle }: Props) {
     totalPages: 1,
   });
 
-  const [stats, setStats] = useState({
-    unread: 0,
-    warning: 0,
-    critical: 0,
-  });
-
   const [filters, setFilters] = useState<AlertFilters>({
     search: "",
     severity: undefined,
@@ -58,7 +52,6 @@ export default function VehicleAlertsTab({ vehicle }: Props) {
 
       setAlerts(data.items);
       setMeta(data.meta);
-      setStats(data.stats);
     } catch {
       setAlerts([]);
     } finally {
@@ -83,21 +76,21 @@ export default function VehicleAlertsTab({ vehicle }: Props) {
       <div className="grid grid-cols-3 gap-6">
         <StatsCard
           label="Não lidos"
-          value={stats.unread.toString()}
+          value={alerts.filter((a) => !a.isRead).length.toString()}
           icon={<Bell />}
           iconColor="text-accent"
         />
 
         <StatsCard
           label="Avisos"
-          value={stats.warning.toString()}
+          value={alerts.filter((a) => a.severity === "WARNING").length.toString()}
           icon={<AlertTriangle />}
           iconColor="text-warning"
         />
 
         <StatsCard
           label="Críticos"
-          value={stats.critical.toString()}
+          value={alerts.filter((a) => a.severity === "CRITICAL").length.toString()}
           icon={<ShieldAlert />}
           iconColor="text-red-500"
         />
