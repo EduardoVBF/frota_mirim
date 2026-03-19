@@ -1,24 +1,30 @@
 "use client";
 import {
   getVehicleUsages,
+  getLastTripByVehicle,
   VehicleUsage,
+  VehicleTrip,
   VehicleUsageFilters,
 } from "@/services/vehicleUsage.service";
 import { VehicleUsageTable } from "@/components/vehicleUsage/vehicleUsageTable";
-import { useEffect, useState } from "react";
+import VehicleLastTripCard from "../vehicleUsage/vehicleLastTripCard";
+import { User, getAdminUsers } from "@/services/users.service";
 import { ClockCheck, LogIn, LogOut } from "lucide-react";
 import { Vehicle } from "@/services/vehicles.service";
 import Pagination from "@/components/paginationComp";
 import { StatsCard } from "@/components/statsCard";
 import LoaderComp from "@/components/loaderComp";
+import { useEffect, useState } from "react";
 
 type Props = {
   vehicle: Vehicle;
 };
 
 export default function VehicleUsageTab({ vehicle }: Props) {
+  const [lastTrip, setLastTrip] = useState<VehicleTrip | null>(null);
   const [usages, setUsages] = useState<VehicleUsage[]>([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [filters, setFilters] = useState<VehicleUsageFilters>({
@@ -43,9 +49,35 @@ export default function VehicleUsageTab({ vehicle }: Props) {
     }
   };
 
+  const fetchLastTrip = async () => {
+    try {
+      const data = await getLastTripByVehicle(vehicle.id);
+      setLastTrip(data);
+    } catch {
+      setLastTrip(null);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const data = await getAdminUsers({
+        limit: 1000,
+        page: 1,
+      });
+      setUsers(data.users);
+    } catch {
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsages();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchLastTrip();
+    fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const handleSetFilters = (newFilters: Partial<VehicleUsageFilters>) => {
@@ -81,6 +113,8 @@ export default function VehicleUsageTab({ vehicle }: Props) {
         />
       </div>
 
+      {lastTrip && <VehicleLastTripCard lastTrip={lastTrip} users={users} />}
+
       <VehicleUsageTable
         usages={usages}
         isLoading={loading}
@@ -92,7 +126,7 @@ export default function VehicleUsageTab({ vehicle }: Props) {
       />
 
       <Pagination
-        page={filters.page  || 1}
+        page={filters.page || 1}
         totalPages={totalPages}
         onPageChange={(newPage) =>
           setFilters((prev) => ({

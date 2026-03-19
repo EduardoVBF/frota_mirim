@@ -52,19 +52,20 @@ export type VehicleUsageFilters = {
   dataFim?: string;
   page?: number;
   limit?: number;
-
 };
 
 // EXTRA TYPES (INTELIGÊNCIA)
 export type VehicleTrip = {
-  vehicleId: string;
-  startedAt: string;
-  finishedAt: string;
-  kmStart: number;
-  kmEnd: number;
-  kmDriven: number;
-  userId: string;
-  assistantId?: string;
+  trip: {
+    vehicleId: string;
+    startedAt: string;
+    finishedAt: string;
+    kmStart: number;
+    kmEnd: number;
+    kmDriven: number;
+    userId: string;
+    assistantId?: string;
+  };
 };
 
 export type VehicleInUse = {
@@ -101,9 +102,7 @@ export async function getVehicleUsages(
 }
 
 // GET BY ID
-export async function getVehicleUsageById(
-  id: string,
-): Promise<VehicleUsage> {
+export async function getVehicleUsageById(id: string): Promise<VehicleUsage> {
   const { data } = await api.get(`/vehicle-usages/${id}`);
   return data;
 }
@@ -142,18 +141,14 @@ export async function getLastTripByVehicle(
 export async function getTripsByVehicle(
   vehicleId: string,
 ): Promise<VehicleTrip[]> {
-  const { data } = await api.get(
-    `/vehicle-usages/vehicle/${vehicleId}/trips`,
-  );
+  const { data } = await api.get(`/vehicle-usages/vehicle/${vehicleId}/trips`);
 
   return data;
 }
 
 // Veículos em uso agora
 export async function getVehiclesInUse(): Promise<VehicleInUse[]> {
-  const { data } = await api.get(
-    `/vehicle-usages/in-use`,
-  );
+  const { data } = await api.get(`/vehicle-usages/in-use`);
 
   return data;
 }
@@ -162,9 +157,7 @@ export async function getVehiclesInUse(): Promise<VehicleInUse[]> {
 export async function getCurrentVehicleByUser(
   userId: string,
 ): Promise<CurrentUserVehicle> {
-  const { data } = await api.get(
-    `/vehicle-usages/user/${userId}/current`,
-  );
+  const { data } = await api.get(`/vehicle-usages/user/${userId}/current`);
 
   return data;
 }
