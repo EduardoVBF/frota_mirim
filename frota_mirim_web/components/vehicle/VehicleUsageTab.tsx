@@ -8,6 +8,7 @@ import {
 } from "@/services/vehicleUsage.service";
 import { VehicleUsageTable } from "@/components/vehicleUsage/vehicleUsageTable";
 import VehicleLastTripCard from "../vehicleUsage/vehicleLastTripCard";
+import VehicleOpenTripCard from "../vehicleUsage/vahicleOpenTripCard";
 import { User, getAdminUsers } from "@/services/users.service";
 import { ClockCheck, LogIn, LogOut } from "lucide-react";
 import { Vehicle } from "@/services/vehicles.service";
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export default function VehicleUsageTab({ vehicle }: Props) {
+  const [openTrip, setOpenTrip] = useState<VehicleUsage | null>(null);
   const [lastTrip, setLastTrip] = useState<VehicleTrip | null>(null);
   const [usages, setUsages] = useState<VehicleUsage[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -80,6 +82,21 @@ export default function VehicleUsageTab({ vehicle }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
+  useEffect(() => {
+    if (!usages.length) {
+      setOpenTrip(null);
+      return;
+    }
+
+    const latestUsage = usages[0];
+
+    if (latestUsage.type === "ENTRY") {
+      setOpenTrip(latestUsage);
+    } else {
+      setOpenTrip(null);
+    }
+  }, [usages]);
+
   const handleSetFilters = (newFilters: Partial<VehicleUsageFilters>) => {
     setFilters((prev) => ({
       ...prev,
@@ -113,6 +130,8 @@ export default function VehicleUsageTab({ vehicle }: Props) {
         />
       </div>
 
+      {openTrip && <VehicleOpenTripCard openTrip={openTrip} users={users} />}
+      
       {lastTrip && <VehicleLastTripCard lastTrip={lastTrip} users={users} />}
 
       <VehicleUsageTable

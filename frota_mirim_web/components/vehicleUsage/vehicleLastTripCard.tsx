@@ -9,6 +9,8 @@ type Props = {
 };
 
 export default function VehicleLastTripCard({ lastTrip, users }: Props) {
+  if (!lastTrip?.trip) return null;
+  
   const driver = users.find((u) => u.id === lastTrip.trip.userId);
   const assistant = users.find((u) => u.id === lastTrip.trip.assistantId);
 
