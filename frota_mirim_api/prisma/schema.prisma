@@ -16,6 +16,13 @@ enum VehicleType {
   ONIBUS
 }
 
+enum VehicleStatus {
+  AVAILABLE
+  IN_USE
+  UNDER_MAINTENANCE
+  UNAVAILABLE
+}
+
 enum FuelType {
   GASOLINA
   ETANOL
@@ -185,6 +192,9 @@ model Vehicle {
   ipvaPaidYear      Int?
   licensingPaidYear Int?
 
+  status VehicleStatus @default(AVAILABLE)
+  unavailabilityReason String?
+
   isActive Boolean @default(true)
 
   fuelSupplies  FuelSupply[]
@@ -197,6 +207,7 @@ model Vehicle {
 
   @@index([tipo])
   @@index([isActive])
+  @@index([status])
   @@index([ipvaDueMonth])
   @@index([licensingDueMonth])
 }
@@ -363,6 +374,8 @@ model MaintenanceOrder {
 
   performerType PerformerType
 
+  blocksVehicle Boolean @default(false)
+
   performedByUserId String?
   performedByUser   User?   @relation("MaintenancePerformedByUser", fields: [performedByUserId], references: [id], onDelete: SetNull)
 
@@ -395,6 +408,7 @@ model MaintenanceOrder {
   @@index([completedAt])
   @@index([vehicleId, status])
   @@index([vehicleId, completedAt])
+  @@index([blocksVehicle])
 }
 
 // ITENS DE MANUTENÇÃO (PEÇAS E SERVIÇOS UTILIZADOS NAS ORDENS DE MANUTENÇÃO)
