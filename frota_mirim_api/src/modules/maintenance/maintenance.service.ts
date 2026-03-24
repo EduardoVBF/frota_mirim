@@ -121,6 +121,38 @@ export class MaintenanceService {
     });
   }
 
+  // Atualiza o status do veículo com base nas manutenções que bloqueiam o veículo
+  private async updateVehicleStatus(
+    tx: Prisma.TransactionClient,
+    vehicleId: string,
+  ) {
+    const blockingMaintenance = await tx.maintenanceOrder.findFirst({
+      where: {
+        vehicleId,
+        status: { in: ["OPEN", "IN_PROGRESS"] },
+        blocksVehicle: true,
+      },
+    });
+
+    if (blockingMaintenance) {
+      await tx.vehicle.update({
+        where: { id: vehicleId },
+        data: {
+          status: "UNDER_MAINTENANCE",
+          unavailabilityReason: "Em manutenção",
+        },
+      });
+    } else {
+      await tx.vehicle.update({
+        where: { id: vehicleId },
+        data: {
+          status: "AVAILABLE",
+          unavailabilityReason: null,
+        },
+      });
+    }
+  }
+
   /* GET ALL MAINTENANCE */
   async getAllMaintenance(query: MaintenanceQueryDTO) {
     const {
@@ -302,46 +334,64 @@ export class MaintenanceService {
 
     return prisma.$transaction(async (tx) => {
       const last = await tx.maintenanceOrder.aggregate({
-        _max: {
-          sequenceId: true,
-        },
+        _max: { sequenceId: true },
       });
 
       const nextSequence = (last._max.sequenceId ?? 0) + 1;
 
-      return tx.maintenanceOrder.create({
+      const maintenance = await tx.maintenanceOrder.create({
         data: {
           ...data,
           sequenceId: nextSequence,
           createdByUserId: userId,
         },
       });
+
+      if (data.blocksVehicle) {
+        await this.updateVehicleStatus(tx, data.vehicleId);
+      }
+
+      return maintenance;
     });
   }
 
   /* UPDATE */
   async updateMaintenance(id: string, data: any, userId?: string) {
-    await this.ensureMaintenanceEditable(id);
+    const maintenance = await this.ensureMaintenanceEditable(id);
 
-    return prisma.maintenanceOrder.update({
-      where: { id },
-      data: {
-        ...data,
-        updatedByUserId: userId,
-      },
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.maintenanceOrder.update({
+        where: { id },
+        data: {
+          ...data,
+          updatedByUserId: userId,
+        },
+      });
+
+      if (data.blocksVehicle !== undefined) {
+        await this.updateVehicleStatus(tx, maintenance.vehicleId);
+      }
+
+      return updated;
     });
   }
 
   /* UPDATE STATUS */
   async updateMaintenanceStatus(id: string, status: string) {
-    await this.ensureMaintenanceExists(id);
+    const maintenance = await this.ensureMaintenanceExists(id);
 
-    return prisma.maintenanceOrder.update({
-      where: { id },
-      data: {
-        status: status as (typeof MAINTENANCE_STATUS)[number],
-        completedAt: status === "DONE" ? new Date() : null,
-      },
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.maintenanceOrder.update({
+        where: { id },
+        data: {
+          status: status as (typeof MAINTENANCE_STATUS)[number],
+          completedAt: status === "DONE" ? new Date() : null,
+        },
+      });
+
+      await this.updateVehicleStatus(tx, maintenance.vehicleId);
+
+      return updated;
     });
   }
 
@@ -463,7 +513,7 @@ export class MaintenanceService {
 
       const totalCost = partsCost + servicesCost;
 
-      return tx.maintenanceOrder.update({
+      const updated = await tx.maintenanceOrder.update({
         where: { id },
         data: {
           status: "DONE",
@@ -473,6 +523,10 @@ export class MaintenanceService {
           totalCost,
         },
       });
+
+      await this.updateVehicleStatus(tx, maintenance.vehicleId);
+
+      return updated;
     });
 
     /* CHECK ALERTS AFTER STOCK UPDATE */

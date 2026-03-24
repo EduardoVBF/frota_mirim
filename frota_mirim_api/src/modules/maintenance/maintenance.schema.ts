@@ -27,6 +27,8 @@ export const createMaintenanceSchema = z.object({
   performedByExternal: z.string().optional(),
 
   scheduledAt: z.date().optional(),
+
+  blocksVehicle: z.boolean().optional().default(false),
 });
 
 export const updateMaintenanceSchema = createMaintenanceSchema.partial();
