@@ -53,6 +53,8 @@ export type Maintenance = {
 
   performerType: "INTERNAL" | "EXTERNAL";
 
+  blocksVehicle: boolean;
+
   vehicle: {
     id: string;
     modelo: string;
@@ -122,6 +124,8 @@ export type CreateMaintenancePayload = {
   performerType?: "INTERNAL" | "EXTERNAL";
 
   odometer: number;
+
+  blocksVehicle?: boolean;
 };
 
 export async function getMaintenances(

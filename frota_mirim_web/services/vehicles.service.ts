@@ -3,6 +3,8 @@ import qs from "qs";
 
 export type VehicleType = "CARRO" | "CAMINHAO" | "MOTO" | "ONIBUS";
 
+export type VehicleStatus = "AVAILABLE" | "IN_USE" | "UNDER_MAINTENANCE" | "UNAVAILABLE";
+
 export type VehicleDocumentType = "IPVA" | "LICENSING";
 
 export type Vehicle = {
@@ -22,6 +24,8 @@ export type Vehicle = {
   ipvaPaidYear?: number | null;
 
   isActive: boolean;
+
+  status: VehicleStatus;
 };
 
 export type VehiclePayload = {
