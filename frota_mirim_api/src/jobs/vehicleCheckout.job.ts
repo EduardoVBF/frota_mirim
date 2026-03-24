@@ -14,7 +14,7 @@ function diffHours(date: Date) {
 export async function vehicleCheckoutJob() {
   const exits = await prisma.vehicleUsage.findMany({
     where: {
-      type: "EXIT",
+      type: "ENTRY",
     },
 
     include: {

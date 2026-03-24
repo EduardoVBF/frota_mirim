@@ -228,6 +228,7 @@ export class AlertsService {
     metadata?: Prisma.InputJsonValue;
   }) {
     const document = (data.metadata as any)?.document;
+    const entityType = data.entityType;
 
     const where: Prisma.AlertWhereInput = {
       type: data.type,
@@ -241,6 +242,16 @@ export class AlertsService {
         path: ["document"],
         equals: document,
       };
+    }
+
+    if (entityType === "VEHICLE" && data.metadata) {
+      const vehiclePlate = (data.metadata as any)?.vehiclePlate;
+      if (vehiclePlate) {
+        where.metadata = {
+          path: ["vehiclePlate"],
+          equals: vehiclePlate,
+        };
+      }
     }
 
     const existing = await prisma.alert.findFirst({
