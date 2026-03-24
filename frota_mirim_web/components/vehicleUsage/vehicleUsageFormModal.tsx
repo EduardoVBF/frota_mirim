@@ -241,8 +241,8 @@ export default function VehicleUsageFormModal({
           value={type}
           onChange={(val) => setType(val as VehicleUsageType)}
           options={[
-            { label: "Entrada - Check-in", value: "ENTRY" },
-            { label: "Saída - Check-out", value: "EXIT" },
+            { label: "Entrada - Início de uso", value: "ENTRY" },
+            { label: "Saída - Fim de uso", value: "EXIT" },
           ]}
           error={errors.type || ""}
         />
