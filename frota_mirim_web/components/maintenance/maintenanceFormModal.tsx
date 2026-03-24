@@ -37,6 +37,8 @@ export default function MaintenanceFormModal({
   const [odometer, setOdometer] = useState("");
   const [description, setDescription] = useState("");
 
+  const [blocksVehicle, setBlocksVehicle] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
   const isEdit = !!maintenance;
@@ -80,12 +82,14 @@ export default function MaintenanceFormModal({
       setPerformerType(maintenance.performerType);
       setOdometer(String(maintenance.odometer));
       setDescription(maintenance.description || "");
+      setBlocksVehicle(maintenance.blocksVehicle ?? false);
     } else {
       setVehicleId(vehicle?.id || "");
       setType("PREVENTIVE");
       setPerformerType("INTERNAL");
       setOdometer("");
       setDescription("");
+      setBlocksVehicle(false);
     }
   }, [maintenance, open, vehicle]);
 
@@ -119,6 +123,7 @@ export default function MaintenanceFormModal({
           performerType,
           odometer: Number(odometer),
           description,
+          blocksVehicle,
         });
 
         toast.success("Manutenção atualizada");
@@ -129,6 +134,7 @@ export default function MaintenanceFormModal({
           performerType,
           odometer: Number(odometer),
           description,
+          blocksVehicle,
         });
 
         toast.success("Manutenção criada");
@@ -162,8 +168,8 @@ export default function MaintenanceFormModal({
               ? "Salvando..."
               : "Criando..."
             : isEdit
-            ? "Salvar alterações"
-            : "Criar manutenção"}
+              ? "Salvar alterações"
+              : "Criar manutenção"}
         </button>
       }
     >
@@ -207,6 +213,28 @@ export default function MaintenanceFormModal({
             { label: "Corretiva", value: "CORRECTIVE" },
           ]}
         />
+
+        <PrimarySelect
+          label="Disponibilidade do veículo"
+          value={blocksVehicle ? "YES" : "NO"}
+          onChange={(val) => setBlocksVehicle(val === "YES")}
+          options={[
+            {
+              label: "Veículo continua disponível",
+              value: "NO",
+            },
+            {
+              label: "Veículo ficará indisponível",
+              value: "YES",
+            },
+          ]}
+        />
+
+        {blocksVehicle && (
+          <div className="text-xs text-red-500">
+            ⚠️ O veículo ficará indisponível até a conclusão da manutenção
+          </div>
+        )}
 
         {/* LOCAL */}
         <PrimarySelect

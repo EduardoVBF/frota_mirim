@@ -226,6 +226,7 @@ export function MaintenanceTable({
                 <th className="px-6 py-4">#</th>
                 <th className="px-6 py-4">Data</th>
                 <th className="px-6 py-4">Veículo</th>
+                <th className="px-6 py-4">Disponibilidade</th>
                 <th className="px-6 py-4">Tipo</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">KM</th>
@@ -248,15 +249,11 @@ export function MaintenanceTable({
                   return (
                     <tr key={maintenance.id} className="border-b border-border">
                       <td className="px-6 py-4 font-bold">
-                        {maintenance.sequenceId
-                          ?.toString()
-                          .padStart(5, "0")}
+                        {maintenance.sequenceId?.toString().padStart(5, "0")}
                       </td>
 
                       <td className="px-6 py-4">
-                        {new Date(
-                          maintenance.createdAt,
-                        ).toLocaleDateString()}
+                        {new Date(maintenance.createdAt).toLocaleDateString()}
                       </td>
 
                       <td className="px-6 py-4">
@@ -279,6 +276,24 @@ export function MaintenanceTable({
                       </td>
 
                       <td className="px-6 py-4">
+                        {vehicle ? (
+                          <span
+                            className={
+                              maintenance.blocksVehicle
+                                ? "text-error"
+                                : "text-success"
+                            }
+                          >
+                            {maintenance.blocksVehicle
+                              ? "Indisponível"
+                              : "Disponível"}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4">
                         {maintenance.type === "PREVENTIVE"
                           ? "Preventiva"
                           : "Corretiva"}
@@ -288,13 +303,9 @@ export function MaintenanceTable({
                         {handleStatusBadge(maintenance.status)}
                       </td>
 
-                      <td className="px-6 py-4">
-                        {maintenance.odometer} km
-                      </td>
+                      <td className="px-6 py-4">{maintenance.odometer} km</td>
 
-                      <td className="px-6 py-4">
-                        R$ {maintenance.totalCost}
-                      </td>
+                      <td className="px-6 py-4">R$ {maintenance.totalCost}</td>
 
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">

@@ -224,6 +224,7 @@ export function VehicleTable({
             <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
               <th className="px-6 py-4 font-bold">Placa</th>
               <th className="px-6 py-4 font-bold">Modelo</th>
+              <th className="px-6 py-4 font-bold">Disponibilidade</th>
               <th className="px-6 py-4 font-bold">Ano</th>
               <th className="px-6 py-4 font-bold">Tipo</th>
               <th className="px-6 py-4 font-bold">KM Atual</th>
@@ -271,6 +272,45 @@ export function VehicleTable({
                       <span className="text-xs text-muted">
                         {vehicle.marca}
                       </span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div
+                      className={`flex items-center gap-2 text-xs font-bold ${
+                        vehicle.status === "AVAILABLE"
+                          ? "text-success"
+                          : vehicle.status === "IN_USE"
+                            ? "text-info"
+                            : vehicle.status === "UNDER_MAINTENANCE"
+                              ? "text-warning"
+                              : vehicle.status === "UNAVAILABLE"
+                                ? "text-error"
+                                : "text-muted"
+                      }`}
+                    >
+                      <StatusDot
+                        color={
+                          vehicle.status === "AVAILABLE"
+                            ? "var(--success)"
+                            : vehicle.status === "IN_USE"
+                              ? "var(--info)"
+                              : vehicle.status === "UNDER_MAINTENANCE"
+                                ? "var(--warning)"
+                                : vehicle.status === "UNAVAILABLE"
+                                  ? "var(--error)"
+                                  : "var(--muted)"
+                        }
+                      />
+                      {vehicle.status === "AVAILABLE"
+                        ? "Disponível"
+                        : vehicle.status === "IN_USE"
+                          ? "Em uso"
+                          : vehicle.status === "UNDER_MAINTENANCE"
+                            ? "Em manutenção"
+                            : vehicle.status === "UNAVAILABLE"
+                              ? "Indisponível"
+                              : "Desconhecido"}
                     </div>
                   </td>
 

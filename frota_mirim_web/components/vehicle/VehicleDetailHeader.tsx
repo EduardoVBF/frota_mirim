@@ -1,7 +1,6 @@
 "use client";
 import {
   Edit3,
-  AlertTriangle,
   ArrowLeft,
   Fuel,
   Calendar,
@@ -119,10 +118,6 @@ export function VehicleDetailHeader({
     paidYear: vehicle.ipvaPaidYear,
   });
 
-  const alertCount =
-    (docStatus.status === "EXPIRED" ? 1 : 0) +
-    (ipvaStatus.status === "EXPIRED" ? 1 : 0);
-
   const handleEdit = () => {
     setIsModalOpen(true);
   };
@@ -149,7 +144,7 @@ export function VehicleDetailHeader({
       }
 
       const { fieldErrors, toastMessage } = translateApiErrors(
-        err.response.data
+        err.response.data,
       );
 
       setErrors(fieldErrors);
@@ -168,7 +163,7 @@ export function VehicleDetailHeader({
       toast.success(
         type === "IPVA"
           ? "IPVA marcado como pago"
-          : "Licenciamento marcado como pago"
+          : "Licenciamento marcado como pago",
       );
 
       await onVehicleChange();
@@ -216,12 +211,6 @@ export function VehicleDetailHeader({
 
         {/* Title */}
         <div>
-          {alertCount > 0 && (
-            <div className="w-fit flex items-center gap-2 px-3 py-1.5 bg-warning/10 border border-warning/20 text-warning rounded-full text-xs font-bold">
-              <AlertTriangle size={14} /> {alertCount} alerta(s)
-            </div>
-          )}
-
           <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase">
             {vehicle.modelo} -{" "}
             <span className="text-accent">{vehicle.placa}</span>
@@ -230,7 +219,19 @@ export function VehicleDetailHeader({
           <p className="text-muted font-medium">
             {vehicle.marca}, {vehicle.ano} •{" "}
             <span className={vehicle.isActive ? "text-success" : "text-error"}>
-              {vehicle.isActive ? "Em operação" : "Inativo"}
+              {vehicle.isActive ? "Ativo" : "Inativo"}
+            </span>{" "}
+            •{" "}
+            <span>
+              {vehicle.status === "AVAILABLE"
+                ? "Disponível"
+                : vehicle.status === "IN_USE"
+                  ? "Em uso"
+                  : vehicle.status === "UNDER_MAINTENANCE"
+                    ? "Indisponível por manutenção"
+                    : vehicle.status === "UNAVAILABLE"
+                      ? "Indisponível"
+                      : "Desconhecido"}
             </span>
           </p>
         </div>
@@ -257,7 +258,11 @@ export function VehicleDetailHeader({
                   disabled={payingDoc === "LICENSING"}
                   title="Marcar pago"
                 >
-                  {payingDoc === "LICENSING" ? "..." : <BanknoteArrowUp size={20} />}
+                  {payingDoc === "LICENSING" ? (
+                    "..."
+                  ) : (
+                    <BanknoteArrowUp size={20} />
+                  )}
                 </button>
               )
             }
@@ -336,14 +341,17 @@ function TelemetriaCard({
       </div>
 
       {expireDate && (
-        <div className={`text-sm ${status === "EXPIRED" ? "text-white" : "text-muted"}`}>
+        <div
+          className={`text-sm ${status === "EXPIRED" ? "text-white" : "text-muted"}`}
+        >
           Vencimento: {expireDate}
         </div>
       )}
 
       <div
-        className={`text-xl font-bold ${status === "EXPIRED" ? "text-white" : ""
-          }`}
+        className={`text-xl font-bold ${
+          status === "EXPIRED" ? "text-white" : ""
+        }`}
       >
         {value}
       </div>
