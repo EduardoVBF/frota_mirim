@@ -117,13 +117,13 @@ export default function VehicleUsageTab({ vehicle }: Props) {
           iconColor="text-accent"
         />
         <StatsCard
-          label="Entradas"
+          label="Início de uso"
           value={usages.filter((u) => u.type === "ENTRY").length.toString()}
           icon={<LogIn />}
           iconColor="text-success"
         />
         <StatsCard
-          label="Saídas"
+          label="Fim de uso"
           value={usages.filter((u) => u.type === "EXIT").length.toString()}
           icon={<LogOut />}
           iconColor="text-error"

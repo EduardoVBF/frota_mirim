@@ -284,7 +284,11 @@ export function VehicleUsageTable({
                           usage.type === "ENTRY" ? "text-success" : "text-error"
                         }`}
                       >
-                        {usage.type === "ENTRY" ? "Entrada" : "Saída"}
+                        {usage.type === "ENTRY" ? (
+                          <div>Início de uso</div>
+                        ) : (
+                          <div>Fim de uso</div>
+                        )}
                       </span>
                     </td>
 

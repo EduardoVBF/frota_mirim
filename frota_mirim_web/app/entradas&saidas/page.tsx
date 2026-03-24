@@ -79,7 +79,7 @@ export default function VehicleUsagesPage() {
         <header>
           <h1 className="text-3xl font-bold">
             Controle de{" "}
-            <span className="text-accent">Check-in / Check-out</span>
+            <span className="text-accent">Entradas e Saídas</span>
           </h1>
         </header>
 
@@ -94,13 +94,13 @@ export default function VehicleUsagesPage() {
               iconColor="text-accent"
             />
             <StatsCard
-              label="Entradas"
+              label="Início de uso"
               value={usages.filter((u) => u.type === "ENTRY").length.toString()}
               icon={<LogIn />}
               iconColor="text-success"
             />
             <StatsCard
-              label="Saídas"
+              label="Fim de uso"
               value={usages.filter((u) => u.type === "EXIT").length.toString()}
               icon={<LogOut />}
               iconColor="text-error"
