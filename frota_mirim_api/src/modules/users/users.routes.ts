@@ -20,7 +20,7 @@ export async function usersRoutes(app: FastifyInstance) {
   app.get(
     "/users",
     {
-      preHandler: [authMiddleware, adminOnly],
+      preHandler: [authMiddleware],
     },
     async (request, reply) => {
       const { query } = await validateRequest(request, {
@@ -34,7 +34,7 @@ export async function usersRoutes(app: FastifyInstance) {
   app.get(
     "/users/:id",
     {
-      preHandler: [authMiddleware, adminOnly],
+      preHandler: [authMiddleware],
     },
     async (request, reply) => {
       const { params } = await validateRequest(request, {
@@ -48,7 +48,7 @@ export async function usersRoutes(app: FastifyInstance) {
   app.put(
     "/users/:id",
     {
-      preHandler: [authMiddleware, adminOnly],
+      preHandler: [authMiddleware],
     },
     async (request, reply) => {
       const { body, params } = await validateRequest(request, {

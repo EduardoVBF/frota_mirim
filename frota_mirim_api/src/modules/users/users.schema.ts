@@ -36,6 +36,7 @@ export const updateUserBodySchema = z.object({
   imageUrl: z.string().url().nullable().optional(),
   imageBase64: z.string().optional(),
   cnhExpiresAt: z.coerce.date().optional(),
+  email: z.email().optional(),
 });
 
 export type UpdateUserBodyDTO = z.infer<typeof updateUserBodySchema>;

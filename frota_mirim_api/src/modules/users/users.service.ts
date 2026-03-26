@@ -149,6 +149,20 @@ export class UsersService {
       throw new AppError("Você não pode alterar sua própria função.", 403);
     }
 
+    if (data.email && requesterRole !== "ADMIN") {
+      throw new AppError("Sem permissão para alterar email.", 403);
+    }
+
+    if (data.email && data.email !== user.email) {
+      const existing = await prisma.user.findUnique({
+        where: { email: data.email },
+      });
+
+      if (existing && existing.id !== id) {
+        throw new AppError("Email já está em uso.", 400);
+      }
+    }
+
     let imageUrl: string | undefined;
 
     if (data.imageBase64) {
@@ -167,6 +181,7 @@ export class UsersService {
         role: data.role ?? user.role,
         isActive: data.isActive ?? user.isActive,
         cpf: data.cpf ?? user.cpf,
+        email: data.email ?? user.email,
         ...(imageUrl && { imageUrl }),
         ...(data.cnhExpiresAt && { cnhExpiresAt: data.cnhExpiresAt }),
       },
