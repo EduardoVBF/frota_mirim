@@ -69,6 +69,7 @@ export type UpdateUserPayload = {
   imageBase64?: string | null;
   imageUrl?: string | null;
   cnhExpiresAt?: string | null;
+  email?: string;
 };
 
 export type UserFilters = {

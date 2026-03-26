@@ -19,6 +19,7 @@ type Props = {
   onClose: () => void;
   onSubmit: (data: UserPayload) => void;
   errors: Record<string, string>;
+  currentUserRole?: string;
 };
 
 export default function UserFormModal({
@@ -28,6 +29,7 @@ export default function UserFormModal({
   onClose,
   onSubmit,
   errors,
+  currentUserRole,
 }: Props) {
   const [infoVisible, setInfoVisible] = useState(false);
 
@@ -191,15 +193,18 @@ export default function UserFormModal({
             />
 
             <PrimaryInput
-              type="text"
-              name="new-email"
-              autoComplete="new-email"
               label="E-mail"
               value={email}
-              disabled={!!initialData}
+              disabled={!!initialData && currentUserRole !== "ADMIN"}
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
             />
+
+            {initialData && currentUserRole !== "ADMIN" && (
+              <p className="text-xs text-muted">
+                Apenas administradores podem alterar o e-mail.
+              </p>
+            )}
 
             {!initialData && (
               <PrimaryInput

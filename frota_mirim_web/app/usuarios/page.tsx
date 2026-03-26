@@ -8,8 +8,12 @@ import { FadeIn } from "@/components/motion/fadeIn";
 import { StatsCard } from "@/components/statsCard";
 import LoaderComp from "@/components/loaderComp";
 import dayjs from "dayjs";
+import { useSession } from "next-auth/react";
 
 export default function UsuariosPage() {
+  const { data: session } = useSession();
+  const currentUserRole = session?.user?.role;
+
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
 
@@ -131,6 +135,7 @@ export default function UsuariosPage() {
           filters={filters}
           setFilters={setFilters}
           onUserChange={fetchUsers}
+          currentUserRole={currentUserRole}
         />
 
         <Pagination

@@ -35,12 +35,14 @@ export function UserTable({
   filters,
   setFilters,
   onUserChange,
+  currentUserRole,
 }: {
   users: User[];
   filters: UserFilters;
   setFilters: React.Dispatch<React.SetStateAction<UserFilters>>;
   onUserChange: () => void;
   isLoading: boolean;
+  currentUserRole?: string;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -147,6 +149,7 @@ export function UserTable({
           setErrors({});
         }}
         errors={errors}
+        currentUserRole={currentUserRole}
       />
 
       <ResetPasswordModal
@@ -381,15 +384,17 @@ export function UserTable({
 
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingUser(user);
-                          setIsModalOpen(true);
-                        }}
-                        className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg"
-                      >
-                        <Edit2 size={16} />
-                      </button>
+                      {currentUserRole === "ADMIN" && (
+                        <button
+                          onClick={() => {
+                            setEditingUser(user);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                      )}
 
                       <button
                         onClick={() => {
@@ -401,15 +406,17 @@ export function UserTable({
                         <Phone size={16} />
                       </button>
 
-                      <button
-                        onClick={() => {
-                          setResetUser(user);
-                          setResetOpen(true);
-                        }}
-                        className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg"
-                      >
-                        <Key size={18} />
-                      </button>
+                      {currentUserRole === "ADMIN" && (
+                        <button
+                          onClick={() => {
+                            setResetUser(user);
+                            setResetOpen(true);
+                          }}
+                          className="p-2 text-muted hover:text-accent hover:bg-accent/10 rounded-lg"
+                        >
+                          <Key size={18} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
