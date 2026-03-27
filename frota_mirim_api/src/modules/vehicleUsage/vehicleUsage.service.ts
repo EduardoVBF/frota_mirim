@@ -3,6 +3,7 @@ import {
   UpdateVehicleUsageDTO,
   VehicleUsageQueryDTO,
 } from "./vehicleUsage.schema";
+import { VehicleTimelineService } from "../vehicles/vehicleTimeline.service";
 import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
 
@@ -86,13 +87,6 @@ export class VehicleUsageService {
       if (!user) throw new AppError("Usuário não encontrado.", 404);
       if (!user.isActive) throw new AppError("Usuário inativo.", 400);
 
-      if (data.km < vehicle.kmAtual) {
-        throw new AppError(
-          "KM não pode ser menor que o atual do veículo.",
-          400,
-        );
-      }
-
       const lastVehicleEvent = await tx.vehicleUsage.findFirst({
         where: { vehicleId: data.vehicleId },
         orderBy: { eventAt: "desc" },
@@ -160,14 +154,27 @@ export class VehicleUsageService {
         }
       }
 
+      const timelineService = new VehicleTimelineService();
+
+      await timelineService.validateKm(
+        data.vehicleId,
+        data.eventAt,
+        data.km,
+        tx,
+      );
+
+      const lastKm = await timelineService.getLastKm(data.vehicleId, tx);
+
       const usage = await tx.vehicleUsage.create({
         data,
       });
 
-      await tx.vehicle.update({
-        where: { id: data.vehicleId },
-        data: { kmAtual: data.km },
-      });
+      if (lastKm !== null) {
+        await tx.vehicle.update({
+          where: { id: data.vehicleId },
+          data: { kmAtual: lastKm },
+        });
+      }
 
       return usage;
     });
@@ -204,73 +211,30 @@ export class VehicleUsageService {
       const newEventAt = data.eventAt ?? usage.eventAt;
       const newType = data.type ?? usage.type;
 
-      // Validar KM nunca menor que km anterior
-      const previousEvent = await tx.vehicleUsage.findFirst({
-        where: {
-          vehicleId: usage.vehicleId,
-          eventAt: { lt: usage.eventAt },
-        },
-        orderBy: { eventAt: "desc" },
-      });
-
-      if (previousEvent && newKm < previousEvent.km) {
-        throw new AppError(
-          "KM não pode ser menor que o KM do evento anterior.",
-          400,
-        );
+      if (newKm < 0) {
+        throw new AppError("KM inválido.", 400);
       }
-
-      // Validar KM nunca maior que próximo evento
-      const nextEvent = await tx.vehicleUsage.findFirst({
-        where: {
-          vehicleId: usage.vehicleId,
-          eventAt: { gt: usage.eventAt },
-        },
-        orderBy: { eventAt: "asc" },
-      });
-
-      if (nextEvent && newKm > nextEvent.km) {
-        throw new AppError(
-          "KM não pode ser maior que o KM do próximo evento.",
-          400,
-        );
-      }
-
-      // Validar ordem cronológica
-      if (previousEvent && newEventAt <= previousEvent.eventAt) {
-        throw new AppError(
-          "Horário inválido. Não pode ser menor que o evento anterior.",
-          400,
-        );
-      }
-
-      if (nextEvent && newEventAt >= nextEvent.eventAt) {
-        throw new AppError(
-          "Horário inválido. Não pode ser maior que o próximo evento.",
-          400,
-        );
-      }
-
-      // Impedir mudar tipo quebrando sequência
       if (newType !== usage.type) {
         throw new AppError("Não é permitido alterar o tipo do evento.", 400);
       }
+
+      const timelineService = new VehicleTimelineService();
+
+      // validação com fuel + usage
+      await timelineService.validateKm(usage.vehicleId, newEventAt, newKm, tx);
 
       const updated = await tx.vehicleUsage.update({
         where: { id },
         data,
       });
 
-      // Se for o último evento do veículo, atualizar kmAtual
-      const lastEvent = await tx.vehicleUsage.findFirst({
-        where: { vehicleId: usage.vehicleId },
-        orderBy: { eventAt: "desc" },
-      });
+      // recalcular kmAtual
+      const lastKm = await timelineService.getLastKm(usage.vehicleId, tx);
 
-      if (lastEvent?.id === id) {
+      if (lastKm !== null) {
         await tx.vehicle.update({
           where: { id: usage.vehicleId },
-          data: { kmAtual: newKm },
+          data: { kmAtual: lastKm },
         });
       }
 

@@ -1,4 +1,5 @@
 import { CreateFuelSupplyDTO, FuelSupplyQueryDTO } from "./fuel-supply.schema";
+import { VehicleTimelineService } from "../vehicles/vehicleTimeline.service";
 import { AppError } from "../../infra/errors/app-error";
 import { checkFuelAnomaly } from "./fuelAnomaly.check";
 import { prisma } from "../../shared/database/prisma";
@@ -71,26 +72,26 @@ export class FuelSupplyService {
 
       if (!vehicle) throw new AppError("Veículo não encontrado.", 404);
 
-      if (data.kmAtual < vehicle.kmAtual) {
-        throw new AppError(
-          "KM não pode ser menor que o atual do veículo.",
-          400,
-        );
-      }
+      const timelineService = new VehicleTimelineService();
+
+      await timelineService.validateKm(
+        data.vehicleId,
+        data.data,
+        data.kmAtual,
+        tx,
+      );
 
       const valorTotal = Number(data.litros) * Number(data.valorLitro);
 
-      const fuel = await tx.fuelSupply.create({
+      return tx.fuelSupply.create({
         data: {
           ...data,
           valorTotal,
         },
       });
-
-      await this.recalcularMedias(tx, data.vehicleId);
-
-      return fuel;
     });
+
+    await this.recalcularMedias(prisma, data.vehicleId);
 
     await checkFuelAnomaly(data.vehicleId);
 
@@ -103,38 +104,30 @@ export class FuelSupplyService {
       const fuel = await tx.fuelSupply.findUnique({ where: { id } });
       if (!fuel) throw new AppError("Abastecimento não encontrado.", 404);
 
-      const vehicle = await tx.vehicle.findUnique({
-        where: { id: fuel.vehicleId },
-      });
+      const newKm = data.kmAtual ?? fuel.kmAtual;
+      const newDate = data.data ?? fuel.data;
 
-      if (!vehicle) throw new AppError("Veículo não encontrado.", 404);
+      const timelineService = new VehicleTimelineService();
 
-      if (data.kmAtual !== undefined && data.kmAtual < 0) {
-        throw new AppError("KM inválido.", 400);
-      }
+      await timelineService.validateKm(fuel.vehicleId, newDate, newKm, tx);
 
       const valorTotal =
         data.litros !== undefined && data.valorLitro !== undefined
           ? Number(data.litros) * Number(data.valorLitro)
           : fuel.valorTotal;
 
-      await tx.fuelSupply.update({
+      return tx.fuelSupply.update({
         where: { id },
         data: {
           ...data,
           valorTotal,
         },
       });
-
-      await this.recalcularMedias(tx, fuel.vehicleId);
-
-      return tx.fuelSupply.findUnique({ where: { id } });
     });
 
-    // 🔎 Verifica anomalia após atualizar médias
-    if (updatedFuel) {
-      await checkFuelAnomaly(updatedFuel.vehicleId);
-    }
+    await this.recalcularMedias(prisma, updatedFuel.vehicleId);
+
+    await checkFuelAnomaly(updatedFuel.vehicleId);
 
     return updatedFuel;
   }
@@ -185,14 +178,16 @@ export class FuelSupplyService {
 
     await Promise.all(updates);
 
-    const ultimoAbastecimento = abastecimentos[abastecimentos.length - 1];
+    const timelineService = new VehicleTimelineService();
 
-    if (ultimoAbastecimento) {
+    const lastKm = await timelineService.getLastKm(vehicleId, tx);
+
+    if (lastKm !== null) {
       await tx.vehicle.update({
         where: { id: vehicleId },
         data: {
-          kmAtual: ultimoAbastecimento.kmAtual,
-          kmUltimoAbastecimento: ultimoAbastecimento.kmAtual,
+          kmAtual: lastKm,
+          kmUltimoAbastecimento: lastKm,
         },
       });
     }
@@ -220,7 +215,7 @@ export class FuelSupplyService {
       return vehicleId;
     });
 
-    // 🔎 verifica anomalia após recalcular médias
+    // verifica anomalia após recalcular médias
     await checkFuelAnomaly(vehicleId);
   }
 }
