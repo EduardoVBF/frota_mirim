@@ -1,63 +1,126 @@
 import { AppError } from "../../infra/errors/app-error";
 
-type TimelineEvent = {
+type NeighborEvent = {
   date: Date;
   km: number;
 };
 
 export class VehicleTimelineService {
-  // Busca eventos ordenados (Fuel + Usage)
-  async getTimeline(vehicleId: string, tx: any) {
-    const [usages, fuels] = await Promise.all([
-      tx.vehicleUsage.findMany({
-        where: { vehicleId },
-        select: { eventAt: true, km: true },
+  // Busca somente o evento anterior mais próximo
+  private async getPreviousEvent(
+    vehicleId: string,
+    date: Date,
+    tx: any,
+  ): Promise<NeighborEvent | null> {
+    const [prevUsage, prevFuel, vehicle] = await Promise.all([
+      tx.vehicleUsage.findFirst({
+        where: {
+          vehicleId,
+          eventAt: { lt: date },
+        },
+        orderBy: { eventAt: "desc" },
       }),
-      tx.fuelSupply.findMany({
-        where: { vehicleId },
-        select: { data: true, kmAtual: true },
+
+      tx.fuelSupply.findFirst({
+        where: {
+          vehicleId,
+          data: { lt: date },
+        },
+        orderBy: { data: "desc" },
+      }),
+
+      tx.vehicle.findUnique({
+        where: { id: vehicleId },
+        select: { kmAtual: true, createdAt: true },
       }),
     ]);
 
-    const events: TimelineEvent[] = [
-      ...usages.map((u: { eventAt: Date; km: number }) => ({
-        date: u.eventAt,
-        km: u.km,
-      })),
-      ...fuels.map((f: { data: Date; kmAtual: number }) => ({
-        date: f.data,
-        km: f.kmAtual,
-      })),
-    ];
+    const candidates: NeighborEvent[] = [];
 
-    return events.sort((a, b) => {
-      if (a.date.getTime() === b.date.getTime()) {
-        return a.km - b.km; // fallback simples
-      }
-      return a.date.getTime() - b.date.getTime();
-    });
-  }
-
-  // Validação principal
-  async validateKm(vehicleId: string, newDate: Date, newKm: number, tx: any) {
-    const timeline = await this.getTimeline(vehicleId, tx);
-
-    let prev: TimelineEvent | null = null;
-    let next: TimelineEvent | null = null;
-
-    for (const event of timeline) {
-      if (event.date < newDate) {
-        prev = event;
-        continue;
-      }
-
-      if (event.date > newDate) {
-        next = event;
-        break;
-      }
+    if (prevUsage) {
+      candidates.push({
+        date: prevUsage.eventAt,
+        km: prevUsage.km,
+      });
     }
 
-    // 🔒 validações
+    if (prevFuel) {
+      candidates.push({
+        date: prevFuel.data,
+        km: prevFuel.kmAtual,
+      });
+    }
+
+    // KM inicial do veículo entra como fallback
+    if (vehicle?.kmAtual !== null) {
+      candidates.push({
+        date: vehicle.createdAt,
+        km: vehicle.kmAtual,
+      });
+    }
+
+    if (!candidates.length) return null;
+
+    return candidates.sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+  }
+
+  // Busca somente o próximo evento mais próximo
+  private async getNextEvent(
+    vehicleId: string,
+    date: Date,
+    tx: any,
+  ): Promise<NeighborEvent | null> {
+    const [nextUsage, nextFuel] = await Promise.all([
+      tx.vehicleUsage.findFirst({
+        where: {
+          vehicleId,
+          eventAt: { gt: date },
+        },
+        orderBy: { eventAt: "asc" },
+      }),
+
+      tx.fuelSupply.findFirst({
+        where: {
+          vehicleId,
+          data: { gt: date },
+        },
+        orderBy: { data: "asc" },
+      }),
+    ]);
+
+    const candidates: NeighborEvent[] = [];
+
+    if (nextUsage) {
+      candidates.push({
+        date: nextUsage.eventAt,
+        km: nextUsage.km,
+      });
+    }
+
+    if (nextFuel) {
+      candidates.push({
+        date: nextFuel.data,
+        km: nextFuel.kmAtual,
+      });
+    }
+
+    if (!candidates.length) return null;
+
+    return candidates.sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+  }
+
+  // validação leve (sem timeline completa)
+  async validateKm(
+    vehicleId: string,
+    newDate: Date,
+    newKm: number,
+    tx: any,
+  ) {
+    const [prev, next] = await Promise.all([
+      this.getPreviousEvent(vehicleId, newDate, tx),
+      this.getNextEvent(vehicleId, newDate, tx),
+    ]);
+
     if (prev && newKm < prev.km) {
       throw new AppError(
         `KM inválido. Deve ser maior ou igual ao KM anterior (${prev.km}).`,
@@ -73,12 +136,33 @@ export class VehicleTimelineService {
     }
   }
 
-  // Obter o último KM registrado
+  // SUPER otimizado (1 query só)
   async getLastKm(vehicleId: string, tx: any): Promise<number | null> {
-    const timeline = await this.getTimeline(vehicleId, tx);
+    const [lastUsage, lastFuel, vehicle] = await Promise.all([
+      tx.vehicleUsage.findFirst({
+        where: { vehicleId },
+        orderBy: { eventAt: "desc" },
+      }),
 
-    if (!timeline.length) return null;
+      tx.fuelSupply.findFirst({
+        where: { vehicleId },
+        orderBy: { data: "desc" },
+      }),
 
-    return timeline[timeline.length - 1].km;
+      tx.vehicle.findUnique({
+        where: { id: vehicleId },
+        select: { kmAtual: true },
+      }),
+    ]);
+
+    const candidates: number[] = [];
+
+    if (lastUsage) candidates.push(lastUsage.km);
+    if (lastFuel) candidates.push(lastFuel.kmAtual);
+    if (vehicle?.kmAtual !== null) candidates.push(vehicle.kmAtual);
+
+    if (!candidates.length) return null;
+
+    return Math.max(...candidates);
   }
 }

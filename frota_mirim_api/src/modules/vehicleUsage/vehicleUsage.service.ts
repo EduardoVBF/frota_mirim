@@ -163,11 +163,11 @@ export class VehicleUsageService {
         tx,
       );
 
-      const lastKm = await timelineService.getLastKm(data.vehicleId, tx);
-
       const usage = await tx.vehicleUsage.create({
         data,
       });
+
+      const lastKm = await timelineService.getLastKm(data.vehicleId, tx);
 
       if (lastKm !== null) {
         await tx.vehicle.update({
