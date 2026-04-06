@@ -169,6 +169,7 @@ export function VehicleUsageTable({
 
           {!isVehiclePage && (
             <PrimarySelect
+              searchable
               label="Veículo"
               width="fit"
               className="min-w-50"
@@ -186,6 +187,7 @@ export function VehicleUsageTable({
           )}
 
           <PrimarySelect
+            searchable
             label="Usuário"
             width="fit"
             className="min-w-70"
@@ -202,6 +204,7 @@ export function VehicleUsageTable({
           />
 
           <PrimarySelect
+            searchable
             label="Assistente"
             width="fit"
             className="min-w-70"

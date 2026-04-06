@@ -19,6 +19,7 @@ interface PrimarySelectProps {
   disabled?: boolean;
   className?: string;
   width?: "full" | "auto" | "fit";
+  searchable?: boolean;
 }
 
 export default function PrimarySelect({
@@ -32,11 +33,13 @@ export default function PrimarySelect({
   disabled = false,
   required = false,
   width = "full",
+  searchable = false,
 }: PrimarySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fecha o dropdown se clicar fora dele
+  // Fecha ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -52,12 +55,25 @@ export default function PrimarySelect({
 
   const selectedOption = options.find((opt) => opt.value === value);
 
+  // FILTRO
+  const filteredOptions = options.filter((opt) =>
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div
-      className={`flex flex-col gap-1.5 ${className} ${width === "full" ? "w-full" : width === "auto" ? "w-auto" : width == "fit" ? "w-fit" : ""}`}
+      className={`flex flex-col gap-1.5 ${className} ${
+        width === "full"
+          ? "w-full"
+          : width === "auto"
+          ? "w-auto"
+          : width === "fit"
+          ? "w-fit"
+          : ""
+      }`}
       ref={containerRef}
     >
-      {/* Label e Erro */}
+      {/* Label + erro */}
       <div className="flex justify-between items-end px-1">
         <label className="text-[11px] font-bold uppercase tracking-widest text-muted/80">
           {label}
@@ -83,7 +99,13 @@ export default function PrimarySelect({
         <button
           type="button"
           disabled={disabled}
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            setIsOpen((prev) => {
+              const next = !prev;
+              if (next) setSearchTerm("");
+              return next;
+            });
+          }}
           className={`
             w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 flex items-center justify-between
             bg-alternative-bg border outline-none text-left
@@ -101,13 +123,16 @@ export default function PrimarySelect({
           >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
+
           <ChevronDown
             size={18}
-            className={`transition-transform duration-300 ${isOpen ? "rotate-180 text-accent" : "text-muted"}`}
+            className={`transition-transform duration-300 ${
+              isOpen ? "rotate-180 text-accent" : "text-muted"
+            }`}
           />
         </button>
 
-        {/* Lista de Opções Customizada */}
+        {/* Dropdown */}
         <AnimatePresence>
           {isOpen && !disabled && (
             <motion.ul
@@ -115,16 +140,32 @@ export default function PrimarySelect({
               animate={{ opacity: 1, y: 5, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute z-50 w-full bg-background backdrop-blur-xl border border-accent shadow-xl rounded-xl overflow-auto py-1.5 px-2 max-h-50"
+              className="absolute z-50 w-full bg-background backdrop-blur-xl border border-accent shadow-xl rounded-xl overflow-auto py-1.5 px-2 max-h-60"
             >
-              {options.length > 0 ? (
-                options.map((option) => (
+              {/* Busca */}
+              {searchable && (
+                <div className="px-2 pb-2">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar..."
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-alternative-bg border border-border outline-none focus:border-accent"
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {/* Lista */}
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((option) => (
                   <li key={option.value}>
                     <button
                       type="button"
                       onClick={() => {
                         onChange(option.value);
                         setIsOpen(false);
+                        setSearchTerm("");
                       }}
                       className={`
                         w-full px-4 py-2 text-sm rounded-xl flex items-center justify-between transition-colors
@@ -142,7 +183,7 @@ export default function PrimarySelect({
                 ))
               ) : (
                 <li className="px-4 py-3 text-xs text-muted text-center italic">
-                  Nenhuma opção disponível
+                  Nenhuma opção encontrada
                 </li>
               )}
             </motion.ul>

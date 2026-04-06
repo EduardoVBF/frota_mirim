@@ -148,6 +148,7 @@ export function MaintenanceTable({
         <div className="px-6 py-4 border-b border-border flex items-end gap-4">
           {!isVehiclePage && (
             <PrimarySelect
+              searchable
               label="Veículo"
               value={filters.vehicleId || ""}
               onChange={(val) =>

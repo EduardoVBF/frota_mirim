@@ -167,12 +167,13 @@ export default function AlertsTable({
             <div className="flex items-center gap-4">
               {!isVehiclePage && (
                 <PrimarySelect
+                  searchable
                   label="Veículo"
                   value={filters.vehiclePlate || ""}
                   onChange={(val) =>
                     setFilters({
                       ...filters,
-                      vehiclePlate: val as string || undefined,
+                      vehiclePlate: (val as string) || undefined,
                     })
                   }
                   options={[
@@ -283,8 +284,9 @@ export default function AlertsTable({
                 alerts.map((alert) => (
                   <tr
                     key={alert.id}
-                    className={`border-b border-border ${!alert.isRead ? "bg-accent/5" : ""
-                      }`}
+                    className={`border-b border-border ${
+                      !alert.isRead ? "bg-accent/5" : ""
+                    }`}
                   >
                     <td className="px-6 py-4">
                       {alert.sequenceId.toString().padStart(5, "0")}

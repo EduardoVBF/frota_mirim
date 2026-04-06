@@ -229,6 +229,7 @@ export default function VehicleFormModal({
             <div className="grid grid-cols-2 gap-4">
               <PrimarySelect
                 label="Vencimento Documento"
+                searchable
                 value={vencimentoDocumento ? String(vencimentoDocumento) : ""}
                 onChange={(val) => setVencimentoDocumento(Number(val))}
                 options={[
@@ -250,6 +251,7 @@ export default function VehicleFormModal({
 
               <PrimarySelect
                 label="Vencimento IPVA"
+                searchable
                 value={vencimentoIPVA ? String(vencimentoIPVA) : ""}
                 onChange={(val) => setVencimentoIPVA(Number(val))}
                 options={[

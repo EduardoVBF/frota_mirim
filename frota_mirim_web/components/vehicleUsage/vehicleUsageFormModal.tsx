@@ -238,6 +238,7 @@ export default function VehicleUsageFormModal({
 
       <div className="space-y-4">
         <PrimarySelect
+          searchable
           label="Veículo"
           value={vehicle ? vehicle.id : vehicleId}
           onChange={(val) => setVehicleId(val as string)}
@@ -269,6 +270,7 @@ export default function VehicleUsageFormModal({
         )}
 
         <PrimarySelect
+          searchable
           label="Usuário"
           value={userId}
           onChange={(val) => setUserId(val as string)}
@@ -280,6 +282,7 @@ export default function VehicleUsageFormModal({
         />
 
         <PrimarySelect
+          searchable
           label="Assistente"
           value={assistantId || ""}
           onChange={(val) => setAssistantId((val as string) || null)}

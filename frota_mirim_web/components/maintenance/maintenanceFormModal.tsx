@@ -176,6 +176,7 @@ export default function MaintenanceFormModal({
       <div className="space-y-4">
         {/* VEICULO */}
         <PrimarySelect
+          searchable
           label="Veículo"
           value={vehicleId}
           disabled={!!vehicle}

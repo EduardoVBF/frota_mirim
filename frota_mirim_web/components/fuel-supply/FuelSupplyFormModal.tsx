@@ -181,6 +181,7 @@ export default function FuelSupplyFormModal({
         <form id="fuel-form" onSubmit={handleSubmit} className="space-y-4">
           {!vehicleId && (
             <PrimarySelect
+              searchable
               label="Veículo"
               value={selectedVehicleId}
               onChange={(val) => setSelectedVehicleId(val as string)}
@@ -226,6 +227,7 @@ export default function FuelSupplyFormModal({
           />
 
           <PrimarySelect
+            searchable
             label="Usuário responsável"
             value={userId}
             onChange={(val) => setUserId(val as string)}

@@ -192,7 +192,7 @@ export function FuelHistoryTable({
                 {activeFiltersCount} filtro(s)
               </span>
             )}
-            
+
             <button
               onClick={() => {
                 setEditingItem(null);
@@ -276,12 +276,13 @@ export function FuelHistoryTable({
               />
 
               <PrimarySelect
+                searchable
                 label="Usuário"
                 value={filters.userId || ""}
                 onChange={(val) =>
                   setFilters({
                     ...filters,
-                    userId: val as string || undefined,
+                    userId: (val as string) || undefined,
                   })
                 }
                 options={[

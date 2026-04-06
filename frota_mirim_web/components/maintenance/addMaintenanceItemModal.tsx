@@ -135,6 +135,7 @@ export default function AddMaintenanceItemModal({
       <div className="space-y-4">
         {!isEdit ? (
           <PrimarySelect
+            searchable
             label="Item do catálogo"
             value={itemCatalogId}
             onChange={(val) => setItemCatalogId(val as string)}

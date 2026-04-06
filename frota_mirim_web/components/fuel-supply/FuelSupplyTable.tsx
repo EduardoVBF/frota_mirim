@@ -279,12 +279,13 @@ export function FuelSupplyTable({
           {/* FILTROS AVANÇADOS */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <PrimarySelect
+              searchable
               label="Veículo"
               value={filters.vehicleId || ""}
               onChange={(val) =>
                 setFilters({
                   ...filters,
-                  vehicleId: val as string || undefined,
+                  vehicleId: (val as string) || undefined,
                 })
               }
               options={[
@@ -297,12 +298,13 @@ export function FuelSupplyTable({
             />
 
             <PrimarySelect
+              searchable
               label="Usuário"
               value={filters.userId || ""}
               onChange={(val) =>
                 setFilters({
                   ...filters,
-                  userId: val as string || undefined,
+                  userId: (val as string) || undefined,
                 })
               }
               options={[
