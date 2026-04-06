@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface PrimaryInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface PrimaryInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
+  decimalScale?: number;
 }
 
 export default function PrimaryInput({
@@ -15,15 +17,67 @@ export default function PrimaryInput({
   className = "",
   width = "full",
   disabled = false,
+  decimalScale,
   ...props
 }: PrimaryInputProps) {
   const isPassword = type === "password";
+  const isNumber = type === "number";
+
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    let value = e.target.value;
+
+    if (isNumber) {
+      // aceita vírgula
+      value = value.replace(",", ".");
+
+      // remove inválidos
+      value = value.replace(/[^0-9.]/g, "");
+
+      // evita múltiplos pontos
+      const parts = value.split(".");
+      if (parts.length > 2) {
+        value = parts[0] + "." + parts.slice(1).join("");
+      }
+
+      // limita casas decimais
+      if (decimalScale !== undefined && value.includes(".")) {
+        const [int, dec] = value.split(".");
+        value = int + "." + dec.slice(0, decimalScale);
+      }
+    }
+
+    props.onChange?.({
+      ...e,
+      target: {
+        ...e.target,
+        value,
+      },
+    });
+  }
+
+  // tipo real do input
+  const inputType = isPassword
+    ? showPassword
+      ? "text"
+      : "password"
+    : isNumber
+    ? "text" // number vira text pra aceitar vírgula
+    : type; // outros tipos continuam normais (date, datetime-local)
+
   return (
     <div
-      className={`flex flex-col gap-1.5 ${className} ${width === "full" ? "w-full" : width === "auto" ? "w-auto" : width == "fit" ? "w-fit" : ""}`}
+      className={`flex flex-col gap-1.5 ${className} ${
+        width === "full"
+          ? "w-full"
+          : width === "auto"
+          ? "w-auto"
+          : width == "fit"
+          ? "w-fit"
+          : ""
+      }`}
     >
       <label className="text-[11px] font-bold uppercase tracking-widest text-muted/80">
         {label}
@@ -34,7 +88,9 @@ export default function PrimaryInput({
         <input
           {...props}
           disabled={disabled}
-          type={isPassword && showPassword ? "text" : type}
+          type={inputType}
+          inputMode={isNumber ? "decimal" : props.inputMode}
+          onChange={handleChange}
           onFocus={(e) => {
             setIsFocused(true);
             props.onFocus?.(e);
@@ -58,7 +114,6 @@ export default function PrimaryInput({
           `}
         />
 
-        {/* Toggle de Senha */}
         {isPassword && !disabled && (
           <button
             type="button"
@@ -66,7 +121,11 @@ export default function PrimaryInput({
             className={`
               absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg
               transition-colors duration-200
-              ${isFocused || showPassword ? "text-accent" : "text-muted hover:text-foreground"}
+              ${
+                isFocused || showPassword
+                  ? "text-accent"
+                  : "text-muted hover:text-foreground"
+              }
             `}
             tabIndex={-1}
           >

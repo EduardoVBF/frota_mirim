@@ -114,6 +114,8 @@ export default function StockMovementModal({
         {type === "ENTRY" && (
           <PrimaryInput
             label="Custo unitário"
+            type="number"
+            decimalScale={2}
             value={cost}
             onChange={(e) => setCost(e.target.value)}
           />

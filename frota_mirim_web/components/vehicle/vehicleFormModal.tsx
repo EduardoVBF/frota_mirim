@@ -39,7 +39,7 @@ export default function VehicleFormModal({
   const [marca, setMarca] = useState("");
   const [ano, setAno] = useState<number | "">("");
   const [tipo, setTipo] = useState<VehicleType>("CARRO");
-  const [kmAtual, setKmAtual] = useState<number | "">("");
+  const [kmAtual, setKmAtual] = useState("");
   const [kmUltimoAbastecimento, setKmUltimoAbastecimento] = useState<
     number | ""
   >("");
@@ -57,7 +57,7 @@ export default function VehicleFormModal({
       setMarca(initialData.marca);
       setAno(initialData.ano);
       setTipo(initialData.tipo);
-      setKmAtual(initialData.kmAtual);
+      setKmAtual(String(initialData.kmAtual).replace(".", ","));
       setKmUltimoAbastecimento(initialData.kmUltimoAbastecimento ?? "");
       setVencimentoDocumento(initialData.licensingDueMonth);
       setVencimentoIPVA(initialData.ipvaDueMonth);
@@ -86,7 +86,7 @@ export default function VehicleFormModal({
         marca,
         ano: Number(ano),
         tipo,
-        kmAtual: Number(kmAtual),
+        kmAtual: Number(kmAtual.replace(",", ".")),
         ...(kmUltimoAbastecimento !== "" && {
           kmUltimoAbastecimento: Number(kmUltimoAbastecimento),
         }),
@@ -219,8 +219,9 @@ export default function VehicleFormModal({
               <PrimaryInput
                 label="KM Atual"
                 type="number"
+                decimalScale={1}
                 value={kmAtual}
-                onChange={(e) => setKmAtual(Number(e.target.value))}
+                onChange={(e) => setKmAtual(e.target.value)}
                 error={errors.kmAtual}
               />
             </div>

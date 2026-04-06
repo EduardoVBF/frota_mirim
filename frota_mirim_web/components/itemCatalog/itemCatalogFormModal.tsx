@@ -168,6 +168,8 @@ export default function ItemCatalogFormModal({
 
         <PrimaryInput
           label="Preço padrão"
+          type="number"
+          decimalScale={2}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
         />

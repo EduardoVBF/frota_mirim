@@ -238,6 +238,8 @@ export default function FuelSupplyFormModal({
 
           <PrimaryInput
             label="KM Atual"
+            type="number"
+            decimalScale={1}
             value={kmAtual}
             onChange={(e) => setKmAtual(e.target.value)}
             error={errors.kmAtual}
@@ -245,6 +247,8 @@ export default function FuelSupplyFormModal({
 
           <PrimaryInput
             label="Litros"
+            type="number"
+            decimalScale={2}
             value={litros}
             onChange={(e) => setLitros(e.target.value)}
             error={errors.litros}
@@ -252,6 +256,8 @@ export default function FuelSupplyFormModal({
 
           <PrimaryInput
             label="Valor por Litro"
+            type="number"
+            decimalScale={2}
             value={valorLitro}
             onChange={(e) => setValorLitro(e.target.value)}
             error={errors.valorLitro}

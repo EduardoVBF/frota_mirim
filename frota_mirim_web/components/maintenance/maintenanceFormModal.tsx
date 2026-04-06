@@ -253,6 +253,7 @@ export default function MaintenanceFormModal({
           type="number"
           value={odometer}
           onChange={(e) => setOdometer(e.target.value)}
+          decimalScale={1}
         />
 
         {/* DESCRIÇÃO */}

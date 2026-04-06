@@ -172,6 +172,7 @@ export default function AddMaintenanceItemModal({
           type="number"
           min="1"
           value={quantity}
+          decimalScale={0}
           onChange={(e) => setQuantity(e.target.value)}
         />
 
@@ -180,6 +181,7 @@ export default function AddMaintenanceItemModal({
           type="number"
           step="0.01"
           value={unitPrice}
+          decimalScale={2}
           onChange={(e) => setUnitPrice(e.target.value)}
         />
 

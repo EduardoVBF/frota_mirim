@@ -71,6 +71,8 @@ export default function StockConfigModal({
 
         <PrimaryInput
           label="Quantidade mínima"
+          type="number"
+          decimalScale={0}
           value={minimum}
           onChange={(e) => setMinimum(e.target.value)}
         />

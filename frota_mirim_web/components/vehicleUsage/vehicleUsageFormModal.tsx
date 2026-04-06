@@ -322,9 +322,11 @@ export default function VehicleUsageFormModal({
 
         <PrimaryInput
           label="KM"
+          type="number"
           value={km}
           onChange={(e) => setKm(e.target.value)}
           error={errors.km}
+          decimalScale={1}
         />
 
         <PrimarySelect
