@@ -364,6 +364,7 @@ model MaintenanceOrder {
   type   MaintenanceType
   status MaintenanceStatus @default(OPEN)
 
+  title String
   description String?
 
   odometer Int
