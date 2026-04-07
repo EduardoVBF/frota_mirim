@@ -1,3 +1,4 @@
+import { maintenanceAttachmentsRoutes } from "./modules/maintenanceAttachments/maintenanceAttachments.routes";
 import { maintenanceItemRoutes } from "./modules/maintenanceItem/maintenanceItem.routes";
 import { userPhonesRoutes } from "./modules/usersTelephones/usersTelephones.routes";
 import { vehicleUsageRoutes } from "./modules/vehicleUsage/vehicleUsage.routes";
@@ -24,6 +25,7 @@ app.register(async (app) => {
 
   await registerPlugins(app);
 
+  await app.register(maintenanceAttachmentsRoutes);
   await app.register(maintenanceItemRoutes);
   await app.register(vehicleUsageRoutes);
   await app.register(itemCatalogRoutes);

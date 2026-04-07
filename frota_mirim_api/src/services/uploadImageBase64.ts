@@ -1,24 +1,49 @@
 import { bucket } from "../lib/firabase";
 import { randomUUID } from "crypto";
 
+const allowedMimeTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+];
+
+function getExtensionFromMime(mime: string) {
+  const map: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "application/pdf": "pdf",
+  };
+
+  return map[mime] || "bin";
+}
+
 export async function uploadBase64ToFirebase(
   base64: string,
   folder: string
 ): Promise<string> {
-  const matches = base64.match(/^data:(image\/\w+);base64,(.+)$/);
+  // Aceita QUALQUER mime (não só imagem)
+  const matches = base64.match(/^data:([a-zA-Z0-9/+.-]+);base64,(.+)$/);
 
   if (!matches) {
-    throw new Error("Imagem base64 inválida");
+    throw new Error("Arquivo base64 inválido");
   }
 
   const mimeType = matches[1];
   const base64Data = matches[2];
 
-  // Converter para buffer
+  // Valida tipo permitido
+  if (!allowedMimeTypes.includes(mimeType)) {
+    throw new Error("Tipo de arquivo não permitido");
+  }
+
+  // Converter base64 → buffer
   const buffer = Buffer.from(base64Data, "base64");
 
-  // Nome do arquivo
-  const fileName = `${folder}/${randomUUID()}`;
+  // Gerar nome com extensão correta
+  const extension = getExtensionFromMime(mimeType);
+  const fileName = `${folder}/${randomUUID()}.${extension}`;
 
   const file = bucket.file(fileName);
 
@@ -32,6 +57,6 @@ export async function uploadBase64ToFirebase(
   // Tornar público
   await file.makePublic();
 
-  // Retornar URL
+  // URL pública
   return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 }
