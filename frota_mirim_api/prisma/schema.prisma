@@ -139,10 +139,11 @@ model User {
   vehicleUsagesAsDriver    VehicleUsage[] @relation("Driver")
   vehicleUsagesAsAssistant VehicleUsage[] @relation("Assistant")
 
-  performedMaintenances MaintenanceOrder[] @relation("MaintenancePerformedByUser")
-  createdMaintenances   MaintenanceOrder[] @relation("MaintenanceCreatedBy")
-  updatedMaintenances   MaintenanceOrder[] @relation("MaintenanceUpdatedBy")
-  stockMovementsCreated StockMovement[]    @relation("StockMovementCreatedByUser")
+  performedMaintenances         MaintenanceOrder[]      @relation("MaintenancePerformedByUser")
+  createdMaintenances           MaintenanceOrder[]      @relation("MaintenanceCreatedBy")
+  updatedMaintenances           MaintenanceOrder[]      @relation("MaintenanceUpdatedBy")
+  stockMovementsCreated         StockMovement[]         @relation("StockMovementCreatedByUser")
+  maintenanceAttachmentsCreated MaintenanceAttachment[] @relation("MaintenanceAttachmentCreatedByUser")
 
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -187,12 +188,12 @@ model Vehicle {
   kmAtual               Int
   kmUltimoAbastecimento Int?
 
-  ipvaDueMonth      Int @default(1)
-  licensingDueMonth Int @default(1)
+  ipvaDueMonth      Int  @default(1)
+  licensingDueMonth Int  @default(1)
   ipvaPaidYear      Int?
   licensingPaidYear Int?
 
-  status VehicleStatus @default(AVAILABLE)
+  status               VehicleStatus @default(AVAILABLE)
   unavailabilityReason String?
 
   isActive Boolean @default(true)
@@ -364,7 +365,7 @@ model MaintenanceOrder {
   type   MaintenanceType
   status MaintenanceStatus @default(OPEN)
 
-  title String
+  title       String
   description String?
 
   odometer Int
@@ -395,6 +396,7 @@ model MaintenanceOrder {
   updatedByUser   User?   @relation("MaintenanceUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
 
   maintenanceItems MaintenanceItem[]
+  attachments      MaintenanceAttachment[]
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -435,6 +437,27 @@ model MaintenanceItem {
   @@index([maintenanceOrderId])
   @@index([itemCatalogId])
   @@index([typeSnapshot])
+}
+
+// ANEXOS DE MANUTENÇÃO (FOTOS, NOTAS FISCAIS, ETC)
+model MaintenanceAttachment {
+  id String @id @default(uuid())
+
+  maintenanceOrderId String
+  maintenanceOrder   MaintenanceOrder @relation(fields: [maintenanceOrderId], references: [id], onDelete: Cascade)
+
+  name    String // nome amigável
+  fileUrl String
+
+  mimeType String // image/jpeg, application/pdf
+  size     Int?
+
+  createdByUserId String?
+  createdByUser   User?   @relation("MaintenanceAttachmentCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([maintenanceOrderId])
 }
 
 // ALERTAS
