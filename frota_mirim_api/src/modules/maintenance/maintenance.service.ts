@@ -2,18 +2,21 @@ import { MaintenanceQueryDTO, MAINTENANCE_STATUS } from "./maintenance.schema";
 import { AlertsService } from "../alerts/alerts.service";
 import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
-import DOMPurify from "isomorphic-dompurify";
+// import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 import { Prisma } from "@prisma/client";
 
 const alertsService = new AlertsService();
 
 export class MaintenanceService {
   /* SANITIZE HTML */
+
   private sanitizeHtml(html?: string) {
     if (!html) return null;
 
-    return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ["p", "strong", "em", "ul", "ol", "li", "h2", "h3", "br"],
+    return sanitizeHtml(html, {
+      allowedTags: ["p", "strong", "em", "ul", "ol", "li", "h2", "h3", "br"],
+      allowedAttributes: {},
     });
   }
 
