@@ -1,12 +1,32 @@
-import { prisma } from "../../shared/database/prisma";
-import { AppError } from "../../infra/errors/app-error";
 import { MaintenanceQueryDTO, MAINTENANCE_STATUS } from "./maintenance.schema";
-import { Prisma } from "@prisma/client";
 import { AlertsService } from "../alerts/alerts.service";
+import { AppError } from "../../infra/errors/app-error";
+import { prisma } from "../../shared/database/prisma";
+import DOMPurify from "isomorphic-dompurify";
+import { Prisma } from "@prisma/client";
 
 const alertsService = new AlertsService();
 
 export class MaintenanceService {
+  /* SANITIZE HTML */
+  private sanitizeHtml(html?: string) {
+    if (!html) return null;
+
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ["p", "strong", "em", "ul", "ol", "li", "h2", "h3", "br"],
+    });
+  }
+
+  private sanitizeText(text?: string) {
+    if (!text) return null;
+    return text.trim();
+  }
+
+  private isRichTextEmpty(html?: string | null) {
+    if (!html) return true;
+    return html.replace(/<[^>]+>/g, "").trim() === "";
+  }
+
   /* INTERNAL: CHECK STOCK ALERTS */
   private async checkStockAlerts(
     itemCatalogId: string,
@@ -185,6 +205,12 @@ export class MaintenanceService {
 
       where.OR = [
         {
+          title: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
           description: {
             contains: search,
             mode: "insensitive",
@@ -339,9 +365,13 @@ export class MaintenanceService {
 
       const nextSequence = (last._max.sequenceId ?? 0) + 1;
 
+      const description = this.sanitizeHtml(data.description);
+
       const maintenance = await tx.maintenanceOrder.create({
         data: {
           ...data,
+          title: this.sanitizeText(data.title),
+          description: this.isRichTextEmpty(description) ? null : description,
           sequenceId: nextSequence,
           createdByUserId: userId,
         },
@@ -360,10 +390,24 @@ export class MaintenanceService {
     const maintenance = await this.ensureMaintenanceEditable(id);
 
     return prisma.$transaction(async (tx) => {
+      const description =
+        data.description !== undefined
+          ? this.sanitizeHtml(data.description)
+          : undefined;
+
       const updated = await tx.maintenanceOrder.update({
         where: { id },
         data: {
           ...data,
+
+          ...(data.title !== undefined && {
+            title: this.sanitizeText(data.title),
+          }),
+
+          ...(data.description !== undefined && {
+            description: this.isRichTextEmpty(description) ? null : description,
+          }),
+
           updatedByUserId: userId,
         },
       });

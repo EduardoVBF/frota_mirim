@@ -18,6 +18,8 @@ export const maintenanceParamsSchema = z.object({
 export const createMaintenanceSchema = z.object({
   vehicleId: z.uuid(),
   type: maintenanceTypeSchema,
+
+  title: z.string().min(1, "Título é obrigatório"),
   description: z.string().optional(),
   odometer: z.number().min(0),
 
