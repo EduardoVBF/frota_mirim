@@ -33,6 +33,8 @@ export type Maintenance = {
 
   status: MaintenanceStatus;
 
+  title: string;
+
   description?: string;
 
   odometer: number;
@@ -119,6 +121,8 @@ export type CreateMaintenancePayload = {
 
   type: MaintenanceType;
 
+  title: string;
+  
   description?: string;
 
   performerType?: "INTERNAL" | "EXTERNAL";

@@ -8,6 +8,7 @@ import { getVehicles, Vehicle } from "@/services/vehicles.service";
 import PrimarySelect from "@/components/form/primarySelect";
 import PrimaryModal from "@/components/form/primaryModal";
 import PrimaryInput from "@/components/form/primaryInput";
+import PrimaryRichText from "../form/primaryRichText";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Car, Gauge } from "lucide-react";
@@ -28,6 +29,8 @@ export default function MaintenanceFormModal({
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [vehicleId, setVehicleId] = useState("");
+
+  const [title, setTitle] = useState("");
 
   const [type, setType] = useState<"PREVENTIVE" | "CORRECTIVE">("PREVENTIVE");
   const [performerType, setPerformerType] = useState<"INTERNAL" | "EXTERNAL">(
@@ -81,6 +84,7 @@ export default function MaintenanceFormModal({
       setType(maintenance.type);
       setPerformerType(maintenance.performerType);
       setOdometer(String(maintenance.odometer));
+      setTitle(maintenance.title || "");
       setDescription(maintenance.description || "");
       setBlocksVehicle(maintenance.blocksVehicle ?? false);
     } else {
@@ -88,6 +92,7 @@ export default function MaintenanceFormModal({
       setType("PREVENTIVE");
       setPerformerType("INTERNAL");
       setOdometer("");
+      setTitle("");
       setDescription("");
       setBlocksVehicle(false);
     }
@@ -98,6 +103,7 @@ export default function MaintenanceFormModal({
     setType("PREVENTIVE");
     setPerformerType("INTERNAL");
     setOdometer("");
+    setTitle("");
     setDescription("");
     onClose();
   };
@@ -113,6 +119,11 @@ export default function MaintenanceFormModal({
       return;
     }
 
+    if (!title.trim()) {
+      toast.error("Informe o título da manutenção");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -122,6 +133,7 @@ export default function MaintenanceFormModal({
           type,
           performerType,
           odometer: Number(odometer),
+          title,
           description,
           blocksVehicle,
         });
@@ -133,6 +145,7 @@ export default function MaintenanceFormModal({
           type,
           performerType,
           odometer: Number(odometer),
+          title,
           description,
           blocksVehicle,
         });
@@ -257,11 +270,18 @@ export default function MaintenanceFormModal({
           decimalScale={1}
         />
 
-        {/* DESCRIÇÃO */}
         <PrimaryInput
-          label="Descrição"
+          label="Título"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Ex: Troca de óleo"
+        />
+
+        <PrimaryRichText
+          label="Descrição detalhada"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={setDescription}
+          placeholder="Descreva a manutenção..."
         />
       </div>
     </PrimaryModal>

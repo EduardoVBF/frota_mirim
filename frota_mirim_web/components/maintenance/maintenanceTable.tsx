@@ -225,12 +225,12 @@ export function MaintenanceTable({
             <thead>
               <tr className="bg-background/50 text-[10px] uppercase tracking-widest text-muted border-b border-border">
                 <th className="px-6 py-4">#</th>
-                <th className="px-6 py-4">Data</th>
+                <th className="px-6 py-4">Data/KM</th>
+                <th className="px-6 py-4">Título</th>
                 <th className="px-6 py-4">Veículo</th>
                 <th className="px-6 py-4">Disponibilidade</th>
                 <th className="px-6 py-4">Tipo</th>
                 <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">KM</th>
                 <th className="px-6 py-4">Total</th>
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
@@ -254,7 +254,19 @@ export function MaintenanceTable({
                       </td>
 
                       <td className="px-6 py-4">
-                        {new Date(maintenance.createdAt).toLocaleDateString()}
+                        <p>
+                          {new Date(maintenance.createdAt).toLocaleDateString()}
+                        </p>
+                        <p>
+                          {maintenance.odometer && `${maintenance.odometer} km`}
+                        </p>
+                      </td>
+
+                      <td
+                        className="px-6 py-4 text-xs max-w-40"
+                        title={maintenance.title}
+                      >
+                        <p className="line-clamp-2">{maintenance.title}</p>
                       </td>
 
                       <td className="px-6 py-4">
@@ -303,8 +315,6 @@ export function MaintenanceTable({
                       <td className="px-6 py-4">
                         {handleStatusBadge(maintenance.status)}
                       </td>
-
-                      <td className="px-6 py-4">{maintenance.odometer} km</td>
 
                       <td className="px-6 py-4">R$ {maintenance.totalCost}</td>
 

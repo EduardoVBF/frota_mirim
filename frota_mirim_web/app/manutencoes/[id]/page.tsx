@@ -14,6 +14,7 @@ import {
   ClipboardList,
   Pencil,
   Activity,
+  TextInitial,
 } from "lucide-react";
 import { MaintenanceItemsTable } from "@/components/maintenance/maintenanceItemsTable";
 import MaintenanceStatusModal from "@/components/maintenance/MaintenanceStatusModal";
@@ -23,6 +24,7 @@ import { FadeIn } from "@/components/motion/fadeIn";
 import LoaderComp from "@/components/loaderComp";
 import toast, { Toaster } from "react-hot-toast";
 import { useParams } from "next/navigation";
+import DOMPurify from "dompurify";
 import Link from "next/link";
 import dayjs from "dayjs";
 
@@ -121,7 +123,7 @@ export default function MaintenanceDetailsPage() {
         }}
       />
 
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* HEADER */}
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -212,6 +214,12 @@ export default function MaintenanceDetailsPage() {
                 Informações da manutenção
               </div>
 
+              {/* Título */}
+              <div className="">
+                <p className="text-xs text-muted uppercase mb-2">Título</p>
+                <p>{maintenance.title}</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* VEÍCULO */}
                 <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background">
@@ -226,7 +234,10 @@ export default function MaintenanceDetailsPage() {
                         {maintenance.vehicle.modelo}
                       </p>
                       <p>-</p>
-                      <Link href={`/veiculos/${maintenance.vehicle.placa}`} className="text-muted">
+                      <Link
+                        href={`/veiculos/${maintenance.vehicle.placa}`}
+                        className="text-muted"
+                      >
                         {maintenance.vehicle.placa}
                       </Link>
                     </div>
@@ -277,20 +288,26 @@ export default function MaintenanceDetailsPage() {
                   </div>
                 </div>
               </div>
-
-              {/* DESCRIÇÃO */}
-              {maintenance.description && (
-                <div className="border-t border-border pt-4">
-                  <p className="text-xs text-muted uppercase mb-2">Descrição</p>
-
-                  <p className="text-sm leading-relaxed text-muted bg-background border border-border rounded-xl p-4">
-                    {maintenance.description}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
+
+        {/* DESCRIÇÃO */}
+        {maintenance.description && (
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted mb-2">
+              <TextInitial size={16} className="text-accent" />
+              Descrição
+            </div>
+
+            <div
+              className="prose prose-sm max-w-none text-muted bg-background border border-border rounded-xl p-4"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(maintenance.description),
+              }}
+            />
+          </div>
+        )}
 
         {/* ITENS */}
         <MaintenanceItemsTable
