@@ -16,6 +16,7 @@ import {
   Activity,
   TextInitial,
 } from "lucide-react";
+import { MaintenanceAttachments } from "@/components/maintenance/MaintenanceAttachments";
 import { MaintenanceItemsTable } from "@/components/maintenance/maintenanceItemsTable";
 import MaintenanceStatusModal from "@/components/maintenance/MaintenanceStatusModal";
 import MaintenanceFormModal from "@/components/maintenance/maintenanceFormModal";
@@ -308,6 +309,11 @@ export default function MaintenanceDetailsPage() {
             />
           </div>
         )}
+
+        <MaintenanceAttachments
+          maintenanceId={maintenance.id}
+          onUpdate={fetchMaintenance}
+        />
 
         {/* ITENS */}
         <MaintenanceItemsTable

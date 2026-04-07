@@ -1,3 +1,4 @@
+import { MaintenanceAttachment } from "./maintenanceAttachments.service";
 import { api } from "./api";
 import qs from "qs";
 
@@ -67,6 +68,7 @@ export type Maintenance = {
   };
 
   maintenanceItems: MaintenanceItem[];
+  attachments?: MaintenanceAttachment[];
 };
 
 export type MaintenanceFilters = {
