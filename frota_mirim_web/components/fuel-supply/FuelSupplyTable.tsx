@@ -424,9 +424,15 @@ export function FuelSupplyTable({
 
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold">
-                        {dayjs.utc(item.data).format("DD/MM/YYYY")}
-                      </span>
+                      <p>
+                        {new Date(item.data).toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
                       <span className="text-xs text-muted">
                         {item.kmAtual.toLocaleString()} km
                       </span>

@@ -9,6 +9,7 @@ import {
   getVehicleById,
 } from "@/services/vehicles.service";
 import { translateApiErrors } from "@/utils/translateApiError";
+import { toUTCISOString } from "@/utils/convertToUTCISOString";
 import { getAdminUsers } from "@/services/users.service";
 import React, { useEffect, useState } from "react";
 import PrimarySelect from "../form/primarySelect";
@@ -134,7 +135,7 @@ export default function FuelSupplyFormModal({
       await onSubmit({
         vehicleId: finalVehicleId,
         userId,
-        data,
+        data: toUTCISOString(data),
         kmAtual: Number(kmAtual),
         litros: Number(litros),
         valorLitro: Number(valorLitro),
