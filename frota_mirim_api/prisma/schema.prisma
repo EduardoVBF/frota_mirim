@@ -116,6 +116,18 @@ enum AlertEntityType {
   DOCUMENT
 }
 
+enum MaintenanceHistoryAction {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  ITEM_ADDED
+  ITEM_REMOVED
+  ITEM_UPDATED
+  ATTACHMENT_ADDED
+  ATTACHMENT_REMOVED
+  RESPONSIBLE_CHANGED
+}
+
 // USER
 model User {
   id           String @id @default(uuid())
@@ -144,6 +156,8 @@ model User {
   updatedMaintenances           MaintenanceOrder[]      @relation("MaintenanceUpdatedBy")
   stockMovementsCreated         StockMovement[]         @relation("StockMovementCreatedByUser")
   maintenanceAttachmentsCreated MaintenanceAttachment[] @relation("MaintenanceAttachmentCreatedByUser")
+  maintenanceHistoryActor       MaintenanceHistory[]    @relation("MaintenanceHistoryActor")
+  maintenanceHistoryResponsible MaintenanceHistory[]    @relation("MaintenanceHistoryResponsible")
 
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -397,6 +411,7 @@ model MaintenanceOrder {
 
   maintenanceItems MaintenanceItem[]
   attachments      MaintenanceAttachment[]
+  history          MaintenanceHistory[]
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -458,6 +473,37 @@ model MaintenanceAttachment {
   createdAt DateTime @default(now())
 
   @@index([maintenanceOrderId])
+}
+
+// HISTÓRICO DE MANUTENÇÃO (LOG DE AÇÕES REALIZADAS NAS ORDENS DE MANUTENÇÃO)
+model MaintenanceHistory {
+  id String @id @default(uuid())
+
+  maintenanceOrderId String
+  maintenanceOrder   MaintenanceOrder @relation(fields: [maintenanceOrderId], references: [id], onDelete: Cascade)
+
+  action MaintenanceHistoryAction
+
+  // Quem executou a ação (sempre usuário logado)
+  actorUserId String?
+  actorUser   User?  @relation("MaintenanceHistoryActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  // Quem é responsável (editável depois)
+  responsibleUserId String?
+  responsibleUser   User?   @relation("MaintenanceHistoryResponsible", fields: [responsibleUserId], references: [id], onDelete: SetNull)
+
+  metadata Json?
+
+  description String?
+
+  createdAt DateTime @default(now())
+
+  @@index([maintenanceOrderId, createdAt])
+  @@index([maintenanceOrderId, action])
+  @@index([responsibleUserId])
+  @@index([maintenanceOrderId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 // ALERTAS
