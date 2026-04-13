@@ -116,7 +116,7 @@ export class MaintenanceHistoryService {
     });
   }
 
-  // 🔒 CREATE HISTORY (uso interno)
+  // CREATE HISTORY (uso interno)
   async createHistory(
     params: {
       maintenanceOrderId: string;
@@ -142,7 +142,7 @@ export class MaintenanceHistoryService {
     });
   }
 
-  // 🔥 HELPER - BUILD CHANGES
+  // HELPER - BUILD CHANGES
   buildChanges(oldData: any, newData: any, fields: FieldConfig[]) {
     const changes: any[] = [];
 

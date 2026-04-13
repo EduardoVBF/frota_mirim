@@ -50,7 +50,7 @@ export class MaintenanceItemService {
         },
       });
 
-      // 🔥 HISTÓRICO - ITEM ADDED
+      // HISTÓRICO - ITEM ADDED
       await historyService.createHistory(
         {
           maintenanceOrderId: maintenanceId,
@@ -106,7 +106,7 @@ export class MaintenanceItemService {
         },
       });
 
-      // 🔥 BUILD CHANGES
+      // BUILD CHANGES
       const changes = historyService.buildChanges(
         item,
         { quantity, unitPrice, totalPrice },
@@ -117,7 +117,7 @@ export class MaintenanceItemService {
         ]
       );
 
-      // 🔥 HISTÓRICO - ITEM UPDATED
+      // HISTÓRICO - ITEM UPDATED
       if (changes.length > 0) {
         await historyService.createHistory(
           {
@@ -167,7 +167,7 @@ export class MaintenanceItemService {
         where: { id },
       });
 
-      // 🔥 HISTÓRICO - ITEM REMOVED
+      // HISTÓRICO - ITEM REMOVED
       await historyService.createHistory(
         {
           maintenanceOrderId: item.maintenanceOrderId,
