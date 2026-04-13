@@ -16,6 +16,7 @@ import {
   Activity,
   TextInitial,
 } from "lucide-react";
+import { MaintenanceHistoryTimeline } from "@/components/maintenance/MaintenanceHistoryTimeline";
 import { MaintenanceAttachments } from "@/components/maintenance/MaintenanceAttachments";
 import { MaintenanceItemsTable } from "@/components/maintenance/maintenanceItemsTable";
 import MaintenanceStatusModal from "@/components/maintenance/MaintenanceStatusModal";
@@ -310,16 +311,20 @@ export default function MaintenanceDetailsPage() {
           </div>
         )}
 
-        <MaintenanceAttachments
-          maintenanceId={maintenance.id}
-          onUpdate={fetchMaintenance}
-        />
-
         {/* ITENS */}
         <MaintenanceItemsTable
           maintenance={maintenance}
           onUpdate={fetchMaintenance}
         />
+
+        {/* ANEXOS */}
+        <MaintenanceAttachments
+          maintenanceId={maintenance.id}
+          onUpdate={fetchMaintenance}
+        />
+
+        {/* HISTÓRICO */}
+        <MaintenanceHistoryTimeline maintenanceId={maintenance.id} />
       </div>
     </FadeIn>
   );
