@@ -17,7 +17,7 @@ export async function createAttachmentController(
     fileBase64: string;
   };
 
-  const userId = (request.user as { id: string })?.id;
+  const userId = (request.user as any)?.sub;
 
   const result = await service.createAttachment(maintenanceId, body, userId);
 
@@ -31,7 +31,9 @@ export async function deleteAttachmentController(
 ) {
   const { id } = request.params as { id: string };
 
-  await service.deleteAttachment(id);
+  const userId = (request.user as any)?.sub;
+
+  await service.deleteAttachment(id, userId);
 
   return reply.status(204).send();
 }

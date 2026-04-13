@@ -35,7 +35,7 @@ export async function createMaintenanceController(
 ) {
   const body = createMaintenanceSchema.parse(request.body);
 
-  const userId = (request.user as any)?.id;
+  const userId = (request.user as any)?.sub;
 
   const maintenance = await service.createMaintenance(body, userId);
 
@@ -49,7 +49,7 @@ export async function updateMaintenanceController(
   const { id } = maintenanceParamsSchema.parse(request.params);
   const body = updateMaintenanceSchema.parse(request.body);
 
-  const userId = (request.user as any)?.id;
+  const userId = (request.user as any)?.sub;
 
   const maintenance = await service.updateMaintenance(id, body, userId);
 
@@ -62,8 +62,9 @@ export async function updateMaintenanceStatusController(
 ) {
   const { id } = maintenanceParamsSchema.parse(request.params);
   const body = maintenanceStatusUpdateSchema.parse(request.body);
+  const userId = (request.user as any)?.sub;
 
-  const maintenance = await service.updateMaintenanceStatus(id, body.status);
+  const maintenance = await service.updateMaintenanceStatus(id, body.status, userId);
 
   return reply.send(maintenance);
 }
@@ -74,7 +75,7 @@ export async function finalizeMaintenanceController(
 ) {
   const { id } = maintenanceParamsSchema.parse(request.params);
 
-  const userId = (request.user as any)?.id;
+  const userId = (request.user as any)?.sub;
 
   const maintenance = await service.finalizeMaintenance(id, userId);
 

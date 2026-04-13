@@ -1,6 +1,9 @@
 import { uploadBase64ToFirebase } from "../../services/uploadImageBase64";
 import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
+import { MaintenanceHistoryService } from "../maintenanceHistory/maintenanceHistory.service";
+
+const historyService = new MaintenanceHistoryService();
 
 export class MaintenanceAttachmentsService {
   private allowedMimeTypes = [
@@ -45,14 +48,12 @@ export class MaintenanceAttachmentsService {
       throw new AppError("Tipo de arquivo inválido.", 400);
     }
 
-    // Valida tipo permitido
     if (!this.allowedMimeTypes.includes(mimeType)) {
       throw new AppError("Tipo de arquivo não permitido.", 400);
     }
 
     const size = this.calculateSize(data.fileBase64);
 
-    // Valida tamanho (5MB imagem / 10MB pdf)
     if (size) {
       const maxSize =
         mimeType === "application/pdf" ? 100 * 1024 * 1024 : 5 * 1024 * 1024;
@@ -62,13 +63,14 @@ export class MaintenanceAttachmentsService {
       }
     }
 
-    // upload firebase
+    // Upload
     const fileUrl = await uploadBase64ToFirebase(
       data.fileBase64,
       `maintenance/${maintenanceId}`
     );
 
-    return prisma.maintenanceAttachment.create({
+    // Criar attachment
+    const attachment = await prisma.maintenanceAttachment.create({
       data: {
         maintenanceOrderId: maintenanceId,
         name: data.name.trim(),
@@ -78,9 +80,25 @@ export class MaintenanceAttachmentsService {
         createdByUserId: userId,
       },
     });
+
+    // HISTÓRICO
+    await historyService.createHistory({
+      maintenanceOrderId: maintenanceId,
+      action: "ATTACHMENT_ADDED",
+      actorUserId: userId,
+      metadata: {
+        context: {
+          attachmentId: attachment.id,
+          fileName: attachment.name,
+          mimeType: attachment.mimeType,
+        },
+      },
+    });
+
+    return attachment;
   }
 
-  async deleteAttachment(id: string) {
+  async deleteAttachment(id: string, userId?: string) {
     const attachment = await prisma.maintenanceAttachment.findUnique({
       where: { id },
     });
@@ -89,11 +107,21 @@ export class MaintenanceAttachmentsService {
       throw new AppError("Anexo não encontrado.", 404);
     }
 
-    // 🔥 FUTURO (IMPORTANTE)
-    // await deleteFromFirebase(attachment.fileUrl);
-
     await prisma.maintenanceAttachment.delete({
       where: { id },
+    });
+
+    // HISTÓRICO
+    await historyService.createHistory({
+      maintenanceOrderId: attachment.maintenanceOrderId,
+      action: "ATTACHMENT_REMOVED",
+      actorUserId: userId,
+      metadata: {
+        context: {
+          attachmentId: attachment.id,
+          fileName: attachment.name,
+        },
+      },
     });
 
     return { success: true };

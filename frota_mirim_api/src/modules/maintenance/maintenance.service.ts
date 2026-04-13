@@ -1,16 +1,15 @@
+import { MaintenanceHistoryService } from "../maintenanceHistory/maintenanceHistory.service";
 import { MaintenanceQueryDTO, MAINTENANCE_STATUS } from "./maintenance.schema";
 import { AlertsService } from "../alerts/alerts.service";
 import { AppError } from "../../infra/errors/app-error";
 import { prisma } from "../../shared/database/prisma";
-// import DOMPurify from "isomorphic-dompurify";
 import sanitizeHtml from "sanitize-html";
 import { Prisma } from "@prisma/client";
 
 const alertsService = new AlertsService();
-
+const historyService = new MaintenanceHistoryService();
 export class MaintenanceService {
   /* SANITIZE HTML */
-
   private sanitizeHtml(html?: string) {
     if (!html) return null;
 
@@ -380,6 +379,23 @@ export class MaintenanceService {
         },
       });
 
+      await historyService.createHistory(
+        {
+          maintenanceOrderId: maintenance.id,
+          action: "CREATED",
+          actorUserId: userId,
+          metadata: {
+            context: {
+              title: maintenance.title,
+              type: maintenance.type,
+              vehicleId: maintenance.vehicleId,
+              odometer: maintenance.odometer,
+            },
+          },
+        },
+        tx,
+      );
+
       if (data.blocksVehicle) {
         await this.updateVehicleStatus(tx, data.vehicleId);
       }
@@ -393,6 +409,15 @@ export class MaintenanceService {
     const maintenance = await this.ensureMaintenanceEditable(id);
 
     return prisma.$transaction(async (tx) => {
+      const changes = historyService.buildChanges(maintenance, data, [
+        { field: "title", label: "Título" },
+        { field: "description", label: "Descrição" },
+        { field: "odometer", label: "Odômetro" },
+        { field: "blocksVehicle", label: "Bloqueia veículo" },
+        { field: "type", label: "Tipo" },
+        { field: "performerType", label: "Local" },
+      ]);
+
       const description =
         data.description !== undefined
           ? this.sanitizeHtml(data.description)
@@ -415,6 +440,18 @@ export class MaintenanceService {
         },
       });
 
+      if (changes.length > 0) {
+        await historyService.createHistory(
+          {
+            maintenanceOrderId: id,
+            action: "UPDATED",
+            actorUserId: userId,
+            metadata: { changes },
+          },
+          tx,
+        );
+      }
+
       if (data.blocksVehicle !== undefined) {
         await this.updateVehicleStatus(tx, maintenance.vehicleId);
       }
@@ -424,8 +461,9 @@ export class MaintenanceService {
   }
 
   /* UPDATE STATUS */
-  async updateMaintenanceStatus(id: string, status: string) {
+  async updateMaintenanceStatus(id: string, status: string, userId?: string) {
     const maintenance = await this.ensureMaintenanceExists(id);
+    const oldStatus = maintenance.status;
 
     return prisma.$transaction(async (tx) => {
       const updated = await tx.maintenanceOrder.update({
@@ -435,6 +473,27 @@ export class MaintenanceService {
           completedAt: status === "DONE" ? new Date() : null,
         },
       });
+
+      if (oldStatus !== status) {
+        await historyService.createHistory(
+          {
+            maintenanceOrderId: id,
+            action: "STATUS_CHANGED",
+            actorUserId: userId,
+            metadata: {
+              changes: [
+                {
+                  field: "status",
+                  label: "Status",
+                  from: oldStatus,
+                  to: status,
+                },
+              ],
+            },
+          },
+          tx,
+        );
+      }
 
       await this.updateVehicleStatus(tx, maintenance.vehicleId);
 
@@ -570,6 +629,25 @@ export class MaintenanceService {
           totalCost,
         },
       });
+
+      await historyService.createHistory(
+        {
+          maintenanceOrderId: maintenance.id,
+          action: "STATUS_CHANGED",
+          actorUserId: userId,
+          metadata: {
+            changes: [
+              {
+                field: "status",
+                label: "Status",
+                from: maintenance.status,
+                to: "DONE",
+              },
+            ],
+          },
+        },
+        tx,
+      );
 
       await this.updateVehicleStatus(tx, maintenance.vehicleId);
 
