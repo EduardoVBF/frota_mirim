@@ -251,6 +251,8 @@ export class MaintenanceService {
                 marca: true,
               },
             },
+            maintenanceItems: true,
+            attachments: true,
           },
           orderBy: {
             [sortBy]: sortOrder,
@@ -340,6 +342,7 @@ export class MaintenanceService {
           },
         },
         maintenanceItems: true,
+        attachments: true,
       },
     });
 
